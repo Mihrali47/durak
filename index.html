@@ -1,4 +1,7 @@
-<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="description" content="Kahvehane oyun salonu: Durak, Okey, Pişti, Satranç. Ücretsiz, kayıt yok."><style>body{margin:0}</style></head><body>
+<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="description" content="Kahvehane oyun salonu: Durak, Okey, Pişti, Satranç. Ücretsiz, kayıt yok."><style>body{margin:0}.new{display:inline-block;align-self:flex-start;font:700 11px/1 var(--body,system-ui);letter-spacing:.04em;background:#e8b84a;color:#2a1d05;padding:5px 8px;border-radius:999px;margin-bottom:8px}
+.foot{margin:40px 0 24px;text-align:center;font-size:13px;opacity:.7;line-height:1.7}.foot a{color:inherit}
+.inst{display:none;margin:18px auto 0;padding:12px 18px;border-radius:12px;border:1px solid #e8b84a;background:transparent;color:#e8b84a;font:700 15px/1 var(--body,system-ui);cursor:pointer}
+</style><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="icon-192.png"><meta name="theme-color" content="#2a1d14"><meta property="og:title" content="Kahvehane Oyun Salonu"><meta property="og:description" content="Durak, Okey, Pişti, Satranç. Ücretsiz, kayıt yok. Arkadaşına link at, birlikte oynayın."><meta name="apple-mobile-web-app-capable" content="yes"></head><body>
 <script>(function(){var h=(location.hash||"").slice(1);if(/^[A-Za-z0-9]{5}$/.test(h))location.replace("durak/#"+h)})();</script>
 <title>Kahvehane Oyun Salonu</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -61,6 +64,13 @@ h2{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute
   <section>
     <h2>Açık masalar</h2>
     <div class="grid">
+      <a class="game" href="durak/">
+        <div class="art durak"><div class="cards"><span style="color:#161616">6</span><span style="color:#c41f2e">♥&#xFE0E;</span><span style="color:#161616">A</span></div></div>
+        <div class="body"><span class="new">Yeni · Arkadaşınla online</span><h3>Durak</h3>
+          <p>Rus kahvehanelerinin kart oyunu. Saldır, kozla kes, kesemezsen al. Deste bitince elinde kart kalan durak olur. Arkadaşına link at, girişsiz oynayın.</p>
+          <div class="tags"><span class="tag">2-6 kişi</span><span class="tag">Linkle online</span><span class="tag">Atmalı / Aktarmalı</span></div>
+          <span class="play">Masaya otur →</span></div>
+      </a>
       <a class="game" href="satranc/">
         <div class="art chess"><span class="badge">♞</span></div>
         <div class="body"><h3>Kavgacı Satranç</h3>
@@ -80,13 +90,6 @@ h2{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute
         <div class="body"><h3>101 Okey</h3>
           <p>Dört kişilik kahvehane okeyi. 101 ya da 5 çiftle aç, masaya işle, Nuri, Rıza ve Hamdi Abi'den önce bitir.</p>
           <div class="tags"><span class="tag">4 kişi</span><span class="tag">3 / 5 / 9 el</span></div>
-          <span class="play">Masaya otur →</span></div>
-      </a>
-      <a class="game" href="durak/">
-        <div class="art durak"><div class="cards"><span style="color:#161616">6</span><span style="color:#c41f2e">♥&#xFE0E;</span><span style="color:#161616">A</span></div></div>
-        <div class="body"><h3>Durak</h3>
-          <p>Rus kahvehanelerinin kart oyunu. Saldır, kozla kes, kesemezsen al. Deste bitince elinde kart kalan durak olur. Arkadaşına link at, girişsiz oynayın.</p>
-          <div class="tags"><span class="tag">2-6 kişi</span><span class="tag">Linkle online</span><span class="tag">Atmalı / Aktarmalı</span></div>
           <span class="play">Masaya otur →</span></div>
       </a>
       <a class="game" href="kahvehane/">
@@ -109,5 +112,10 @@ h2{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute
     </div>
   </section>
 </div>
-
+<p class="foot">Ücretsiz · Kayıt yok · Reklamsız<br>Telefonunda uygulama gibi kullanmak için tarayıcı menüsünden <b>Ana ekrana ekle</b>'yi seç.<br><button class="inst" id="inst">📲 Telefona kur</button></p>
+<script>
+if('serviceWorker'in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+let dp=null;addEventListener('beforeinstallprompt',e=>{e.preventDefault();dp=e;document.getElementById('inst').style.display='inline-block'});
+document.getElementById('inst').onclick=async()=>{if(!dp)return;dp.prompt();await dp.userChoice;dp=null;document.getElementById('inst').style.display='none'};
+</script>
 </body></html>
