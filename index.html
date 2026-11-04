@@ -638,8 +638,9 @@ const TEST_BUILD=true; // test sürümü: herkes sınırsız gold (satış başl
 const isTest=()=>{if(TEST_BUILD)return true;try{return (localStorage.getItem('durak_name')||'').trim().toLocaleLowerCase('tr')==='test'}catch(e){return false}};
 const goldHave=()=>isTest()?1e9:(PF.gold||0);
 function spendGold(n){if(!isTest())PF.gold=(PF.gold||0)-n}
+const coinHave=()=>isTest()?1e12:PF.coins;const coinTxt=()=>isTest()?'∞':fmt(PF.coins);
 const IC={c:'<span class="ic c">C</span>',g:'<span class="ic g">G</span>'};
-function showCoins(){$('coins').innerHTML=IC.c+fmt(PF.coins)+'<span class="wide"> coin</span>';$('golds').innerHTML=IC.g+(isTest()?'∞':fmt(PF.gold||0))+'<span class="wide"> gold</span>'}
+function showCoins(){$('coins').innerHTML=IC.c+coinTxt()+'<span class="wide"> coin</span>';$('golds').innerHTML=IC.g+(isTest()?'∞':fmt(PF.gold||0))+'<span class="wide"> gold</span>'}
 /* mağaza: gold ile coin al; gold paketleri ileride gerçek ödeme ile */
 /* gold → coin: 1 gold = 100 coin, büyük pakette bonus */
 const RATE=100,SWAP=[[1,0],[5,0],[10,2],[20,5],[50,10],[100,15]];
@@ -666,7 +667,7 @@ const owns=(t,k)=>{const it=LOOKS[t].find(x=>x[0]===k);return it&&(!it[3]||(PF.o
 function showShop(){
   const gs=giftState(),q=quests();
   open(`<h2>Mağaza ve ödüller</h2>
-  <div class="wallet"><div>${IC.c}<b>${fmt(PF.coins)}</b><br><small>coin · masada bahis</small></div><div>${IC.g}<b>${isTest()?'∞':fmt(PF.gold||0)}</b><br><small>${isTest()?'test hesabı · sınırsız':'gold · özel işler'}</small></div></div>
+  <div class="wallet"><div>${IC.c}<b>${coinTxt()}</b><br><small>coin · masada bahis</small></div><div>${IC.g}<b>${isTest()?'∞':fmt(PF.gold||0)}</b><br><small>${isTest()?'test hesabı · sınırsız':'gold · özel işler'}</small></div></div>
   <div><p class="lbl">Günlük ödül · her gün gel, ödül büyüsün</p><div class="days">${DAYS.map(([k,v],i)=>`<div class="${i<gs.idx||(!gs.ready&&i===gs.idx)?'done':''} ${gs.ready&&i===gs.idx?'now':''}">${i+1}. gün<b>${k==='c'?IC.c:IC.g}${fmt(v)}</b></div>`).join('')}</div>
    <div class="rowb" style="margin-top:8px"><button class="btn ${gs.ready?'pass':'ghost'}" id="gift" ${gs.ready?'':'disabled'}>${gs.ready?'Bugünkü ödülü al':'Yarın yine gel'}</button></div></div>
   <div><p class="lbl">Günlük görevler</p><ul class="quests">${q.ids.map(k=>{const [,t,n,cur,v]=QPOOL.find(x=>x[0]===k),p=q.p[k]||0,dn=q.c.includes(k);
@@ -682,8 +683,8 @@ function showShop(){
   document.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>{const k=b.dataset.q,[,t,n,cur,v]=QPOOL.find(x=>x[0]===k);if(q.c.includes(k)||(q.p[k]||0)<n)return;q.c.push(k);if(cur==='c')PF.coins+=v;else PF.gold=(PF.gold||0)+v;savePF();showCoins();markDot();toast(`+${fmt(v)} ${cur==='c'?'coin':'gold'}`);checkAch();showShop()});
   document.querySelectorAll('.shop [data-i]').forEach(b=>b.onclick=()=>{const [g,bo]=SWAP[+b.dataset.i],c=swapCoins(g,bo);if(goldHave()<g)return;spendGold(g);PF.coins+=c;savePF();showCoins();toast(`${g} gold → ${fmt(c)} coin${bo?` (+%${bo} bonus)`:''}`);checkAch();showShop()});
   document.querySelectorAll('.looks [data-t]').forEach(b=>b.onclick=()=>{const t=b.dataset.t,k=b.dataset.k,it=LOOKS[t].find(x=>x[0]===k);
-    if(!owns(t,k)){const [,,,cur,price]=it;const have=cur==='c'?PF.coins:goldHave();if(have<price)return toast(`Yeterli ${cur==='c'?'coin':'gold'} yok.`);
-      if(cur==='c')PF.coins-=price;else spendGold(price);PF.own=[...(PF.own||[]),t+':'+k];savePF();showCoins();toast(`${it[1]} senin oldu!`)}
+    if(!owns(t,k)){const [,,,cur,price]=it;const have=cur==='c'?coinHave():goldHave();if(have<price)return toast(`Yeterli ${cur==='c'?'coin':'gold'} yok.`);
+      if(cur==='c'){if(!isTest())PF.coins-=price}else spendGold(price);PF.own=[...(PF.own||[]),t+':'+k];savePF();showCoins();toast(`${it[1]} senin oldu!`)}
     U[t==='felt'?'felt':'back']=k;saveSet();showShop()});
 }
 function lookBtn(t,[k,name,col,cur,price]){const own=owns(t,k),on=(t==='felt'?U.felt:U.back)===k;
@@ -907,7 +908,7 @@ function layoutHand(){
 }
 addEventListener('resize',layoutHand);
 function showInfo(){
-  open(`<h2>Puan ve olaylar</h2><div class="prof"><div><b>${fmt(PF.coins)}</b><small>coin · ${isTest()?'∞':fmt(PF.gold||0)} gold</small></div><div><b>${PF.streak} / ${PF.best}</b><small>seri / en iyi</small></div><div><b>${PF.rating}</b><small>${league(PF.rating)}</small></div></div><div><p class="lbl">Kaç kere durak oldu</p><div class="score" style="--o:${D.n}">${[...Array(D.n).keys()].map(p=>`<div><b>${G.duraks[p]}</b><small>${NAMES[p]}</small></div>`).join('')}</div></div>
+  open(`<h2>Puan ve olaylar</h2><div class="prof"><div><b>${coinTxt()}</b><small>coin · ${isTest()?'∞':fmt(PF.gold||0)} gold</small></div><div><b>${PF.streak} / ${PF.best}</b><small>seri / en iyi</small></div><div><b>${PF.rating}</b><small>${league(PF.rating)}</small></div></div><div><p class="lbl">Kaç kere durak oldu</p><div class="score" style="--o:${D.n}">${[...Array(D.n).keys()].map(p=>`<div><b>${G.duraks[p]}</b><small>${NAMES[p]}</small></div>`).join('')}</div></div>
   <div><p class="lbl">İstatistik</p><div class="prof"><div><b>${PF.games}</b><small>el</small></div><div><b>${PF.wins||0}</b><small>kurtuldun</small></div><div><b>${PF.games?Math.round(100*(PF.games-PF.duraks)/PF.games):0}%</b><small>durak olmama</small></div></div></div>
   <div><p class="lbl">Başarımlar (${(PF.ach||[]).length}/${ACH.length})</p><ul class="achs">${ACH.map(([k,t,d])=>`<li class="${(PF.ach||[]).includes(k)?'on':''}"><b>${t}</b><small>${d}</small></li>`).join('')}</ul></div>
   <div><p class="lbl">Son olanlar</p><ul class="log">${U.logs.slice(0,30).map(l=>`<li>${l.t}</li>`).join('')||'<li>Henüz bir şey olmadı.</li>'}</ul></div>
@@ -1149,7 +1150,7 @@ function startGame(){
   G=G&&G.n===U.n?G:{n:U.n,duraks:Array(U.n).fill(0),games:0,lastDurak:null};
   const first=G.lastDurak!=null?(G.lastDurak+1)%U.n:null;
   if(U.n*6>U.deck){U.deck=36;saveSet()}
-  if(PF.coins<U.stake){PF.coins+=500;savePF();setTimeout(()=>toast('Kahveci 500 coin borç verdi. Bol şans!'),400)}
+  if(coinHave()<U.stake){PF.coins+=500;savePF();setTimeout(()=>toast('Kahveci 500 coin borç verdi. Bol şans!'),400)}
   newDeal(U.n,{transfer:U.transfer,deck:U.deck,neighbors:U.neighbors,cheat:U.cheat,draw:U.draw,first5:U.first5,showTrump:U.showTrump,closer:me},first);U.tookCards=false;U.multi=[];
   U.sel=null;$('log').innerHTML='';
   log(`Yeni el. Koz ${SN[D.trump]}. ${D.attacker===me?'İlk saldırı sende.':NAMES[D.attacker]+' başlıyor.'}`,true);
@@ -1165,13 +1166,13 @@ function gameEnd(){
   const ST=(ON&&D.opts&&D.opts.stake)||U.stake;
   if(dk===me){delta=-ST;rd=-12;PF.streak=0;PF.duraks++}else if(dk!=null){delta=Math.round(ST*.96);rd=10;PF.streak++;PF.best=Math.max(PF.best,PF.streak);PF.wins=(PF.wins||0)+1;if(D.n>=5)PF.big=(PF.big||0)+1;if(!U.tookCards&&D.resigned==null){PF.clean=(PF.clean||0)+1;qInc('temiz')}qInc('kurtul');qSet('seri',PF.streak)}
   qInc('oyna');
-  const oldL=league(PF.rating);PF.coins=Math.max(0,PF.coins+delta);PF.rating+=rd;savePF();checkAch();showCoins();const newL=league(PF.rating);
+  const oldL=league(PF.rating);if(!isTest())PF.coins=Math.max(0,PF.coins+delta);PF.rating+=rd;savePF();checkAch();showCoins();const newL=league(PF.rating);
   for(let p=1;p<D.n;p++)botReact(p,p===dk?'bad':'good');
   const order=D.outOrder.map(p=>NAMES[p]);const dref=D;
   setTimeout(()=>{if(D!==dref||!D.ended)return; // bu arada yeni el başladıysa eski sonucu gösterme
     open(`<h2>${dk==null?'Berabere!':D.resigned===me?'Pes ettin':D.resigned!=null?NAMES[dk]+' pes etti':dk===me?'Durak sensin!':NAMES[dk]+' durak oldu'}</h2>
     <p class="muted">${D.resigned===me?'Pes ettin, bahsi kaybettin.':D.resigned!=null?'Rakibin pes etti, el senin.':dk==null?'Son turda herkes elini aynı anda bitirdi.':!D.hands[dk].length?'Son kartlar aynı anda bitti; beraberlik kapalı olduğu için savunan durak oldu.':dk===me?'Elinde son kartlar kaldı. Bir dahaki ele sen dağıtıyorsun.':'Elinde en son kart kalan o oldu.'}</p>
-    <div class="bigwin ${delta>0?'up':delta<0?'down':''}">${IC.c}${delta>0?'+':''}${fmt(delta)}${delta>0?'<small>bahis '+fmt(ST)+' · kahve parası %4</small>':''}</div><div class="prof"><div><b>${fmt(PF.coins)}</b><small>coin</small></div><div><b>${PF.streak}</b><small>seri</small></div><div><b>${PF.rating}</b><small>${newL}</small></div></div>
+    <div class="bigwin ${delta>0?'up':delta<0?'down':''}">${IC.c}${delta>0?'+':''}${fmt(delta)}${delta>0?'<small>bahis '+fmt(ST)+' · kahve parası %4</small>':''}</div><div class="prof"><div><b>${coinTxt()}</b><small>coin</small></div><div><b>${PF.streak}</b><small>seri</small></div><div><b>${PF.rating}</b><small>${newL}</small></div></div>
     ${newL!==oldL?`<p class="muted">${rd>0?'Lig atladın':'Lig düştün'}: <b>${newL}</b></p>`:''}
     ${order.length?`<div><p class="lbl">Çıkış sırası</p><ol class="rank">${order.map(x=>`<li>${x}</li>`).join('')}${dk!=null?`<li>${NAMES[dk]} <b>(durak)</b></li>`:''}</ol></div>`:''}
     <div class="rowb"><button class="btn pass" id="again">Bir el daha</button><button class="btn ghost" id="toMenu">Menü</button></div>`);
@@ -1313,7 +1314,7 @@ function showHostSetup(){
   <div><p class="lbl">Hız (düşünme süresi)</p>${seg('hM',[[30,'Normal · 30 sn'],[15,'Hızlı · 15 sn']],U.timer>=30?30:15)}</div>
   <div class="rowb"><button class="btn pass" id="hGo">Masa kur, link gönder</button><button class="btn ghost" id="hBack">Geri</button></div>`);
   bindSeg('hB',v=>U.stake=+v);bindSeg('hD',v=>U.deck=+v);bindSeg('hT',v=>U.transfer=v==='1');bindSeg('hC',v=>U.cheat=v==='1');bindSeg('hR',v=>U.draw=v==='1');bindSeg('hM',v=>U.timer=+v);
-  $('hBack').onclick=showMenu;$('hGo').onclick=()=>{if(PF.coins<U.stake){toast('Bu bahis için coin yetmiyor. Mağazadan coin alabilirsin.');return}hostOnline()}}
+  $('hBack').onclick=showMenu;$('hGo').onclick=()=>{if(coinHave()<U.stake){toast('Bu bahis için coin yetmiyor. Mağazadan coin alabilirsin.');return}hostOnline()}}
 function showMenu(){
   let rec={g:0,d:0};try{rec=JSON.parse(localStorage.getItem('durak_rec'))||rec}catch(e){}
   const inGame=D&&!D.ended;
@@ -1341,7 +1342,7 @@ function showMenu(){
   <div class="sec"><p class="lbl">Arkadaşınla online (2 kişi, kayıt yok)</p><div class="rowb"><button class="btn" id="goOn">Masa kur, link gönder</button></div>
   <div class="rowb"><input id="codeIn" maxlength="5" placeholder="Kod" aria-label="Masa kodu" style="flex:1 1 120px;height:48px;border-radius:12px;border:1px solid #c5ced6;padding:0 12px;font:700 18px/1 var(--body);letter-spacing:.2em;text-transform:uppercase"><button class="btn ghost" id="joinOn">Katıl</button></div></div>
   <div class="rowb"><button class="btn pass" id="go">${inGame?'Yeni el':'Masaya otur'}</button>${inGame?'<button class="btn ghost" id="back">Oyuna dön</button>':''}</div>
-  <p class="muted">${fmt(PF.coins)} coin · ${isTest()?'∞':fmt(PF.gold||0)} gold · ${league(PF.rating)} · ${PF.games?`${PF.games} elde ${PF.duraks} kere durak oldun.`:'Rakiplerin Nuri, Rıza, Hamdi Abi, Cemil ve Kâzım.'}</p>`);
+  <p class="muted">${coinTxt()} coin · ${isTest()?'∞':fmt(PF.gold||0)} gold · ${league(PF.rating)} · ${PF.games?`${PF.games} elde ${PF.duraks} kere durak oldun.`:'Rakiplerin Nuri, Rıza, Hamdi Abi, Cemil ve Kâzım.'}</p>`);
   $('nameIn').oninput=e=>{try{localStorage.setItem('durak_name',e.target.value.trim())}catch(x){};showCoins()};
   bindSeg('sN',v=>U.n=+v);bindSeg('sT',v=>U.transfer=v==='1');bindSeg('sS',v=>U.speed=+v);bindSeg('sB',v=>U.stake=+v);bindSeg('sD',v=>U.deck=+v);bindSeg('sR',v=>U.neighbors=v==='1');bindSeg('sC',v=>U.cheat=v==='1');bindSeg('sM',v=>U.timer=+v);bindSeg('sSh',v=>U.showTrump=v==='1');bindSeg('sDr',v=>U.draw=v==='1');bindSeg('sF5',v=>U.first5=v==='1');bindSeg('sO',v=>{U.sort=v;if(D)render()});bindSeg('sF',v=>U.felt=v);bindSeg('sK',v=>U.back=v);
   $('goShop').onclick=()=>showShop();
