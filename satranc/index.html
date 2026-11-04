@@ -1,4 +1,4 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html><head><script src="../mqtt.min.js"></script><script src="../relaydb.js"></script><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>Kavgacı Satranç</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -184,7 +184,7 @@ svg.ch{position:absolute;left:-3%;top:-4%;width:106%;height:106%;overflow:visibl
 
   <main class="stage">
     <section class="play" id="play">
-      <div class="pbar" id="barTop"><span class="av" id="avTop">🤖</span><div class="pinfo"><b id="nmTop">Claude</b><span class="tray" id="trayTop"></span></div><span class="pill">Sırada</span></div>
+      <div class="pbar" id="barTop"><span class="av" id="avTop">🤖</span><div class="pinfo"><b id="nmTop">Bilgisayar</b><span class="tray" id="trayTop"></span></div><span class="pill">Sırada</span></div>
       <div class="frame">
         <div id="board">
           <div class="grid" id="grid"></div>
@@ -202,7 +202,7 @@ svg.ch{position:absolute;left:-3%;top:-4%;width:106%;height:106%;overflow:visibl
         <div class="onlinfo" id="onlInfo" hidden><p class="lbl">Online oyun · <span id="onlCode"></span></p><div class="linkbox"><input id="onlLink" readonly aria-label="Davet linki"><button class="btn" id="onlCopy">Linki kopyala</button></div></div>
         <p class="lbl">Mod</p>
         <div class="seg" role="group" aria-label="Mod">
-          <button id="mBot" aria-pressed="false">Claude'a karşı</button>
+          <button id="mBot" aria-pressed="false">Bilgisayara karşı</button>
           <button id="mDuo" aria-pressed="false">Arkadaşla</button>
           <button id="mWatch" aria-pressed="true">İzle</button>
         </div>
@@ -236,9 +236,9 @@ svg.ch{position:absolute;left:-3%;top:-4%;width:106%;height:106%;overflow:visibl
       <h2 id="menuT">Kavgacı <span>Satranç</span></h2>
       <p class="mtag">Taşlar yürür, çifte atar, yumruk sallar. Nasıl oynamak istersin?</p>
       <div class="modes" id="modes">
-        <button data-m="bot"><span class="mi">🤖</span><span><b>Claude'a karşı</b><small>Mavilerle sen oynarsın</small></span></button>
+        <button data-m="bot"><span class="mi">🤖</span><span><b>Bilgisayara karşı</b><small>Mavilerle sen oynarsın</small></span></button>
         <button data-m="duo"><span class="mi">🤝</span><span><b>Arkadaşla</b><small>Aynı ekranda sırayla</small></span></button>
-        <button data-m="watch"><span class="mi">🍿</span><span><b>İzle</b><small>İki tarafı da Claude oynar</small></span></button>
+        <button data-m="watch"><span class="mi">🍿</span><span><b>İzle</b><small>İki tarafı da bilgisayar oynar</small></span></button>
         <button id="onlineBtn"><span class="mi">🌐</span><span><b>Online oyna</b><small>Link gönder, telefondan birlikte oynayın</small></span></button>
       </div>
       <div class="onl" id="onl" hidden>
@@ -568,13 +568,13 @@ function refresh(){const chk=!over&&inCheck(state)?kingSq(state.b,state.turn):-1
     const mv=tg.find(m=>m.to===i);e.classList.toggle('tgt',!!mv&&!mv.cap);e.classList.toggle('ctgt',!!mv&&!!mv.cap);e.classList.toggle('chk',i===chk);
     const p=state.b[i];e.setAttribute('aria-label',sqName(i)+(p?' '+(p.c==='w'?'mavi ':'siyah ')+NAME[p.t]:' boş'))});
   $('dot').className='dot '+state.turn;
-  const nameOf=c=>mode==='watch'?'Claude · '+col(c):mode==='bot'?(c===BOT?'Claude · Siyah':'Sen · Mavi'):mode==='online'?(c===online.color?'Sen · ':(online.data&&online.data[c==='w'?'white':'black']?'Rakip · ':'Rakip bekleniyor · '))+col(c):col(c);
+  const nameOf=c=>mode==='watch'?'Bilgisayar · '+col(c):mode==='bot'?(c===BOT?'Bilgisayar · Siyah':'Sen · Mavi'):mode==='online'?(c===online.color?'Sen · ':(online.data&&online.data[c==='w'?'white':'black']?'Rakip · ':'Rakip bekleniyor · '))+col(c):col(c);
   const avOf=c=>mode==='duo'?(c==='w'?'🔵':'⚫'):mode==='online'?(c===online.color?'🙂':'😈'):mode==='bot'?(c===BOT?'🤖':'🙂'):'🤖';
   const tc=topC(),bc=tc==='w'?'b':'w';$('nmTop').textContent=nameOf(tc);$('nmBot').textContent=nameOf(bc);$('avTop').textContent=avOf(tc);$('avBot').textContent=avOf(bc);
   $('barTop').classList.toggle('on',!over&&state.turn===tc);$('barBot').classList.toggle('on',!over&&state.turn===bc);
   const botTurn=autoTurn();
-  if(!over){$('st').textContent=(mode==='watch'?'Claude ('+col(state.turn).toLowerCase()+')':botTurn?'Claude (siyah)':col(state.turn))+(chk>=0?' — ŞAH!':' oynar');
-    $('sub').textContent=busy?'Kavga sürüyor…':mode==='watch'?'İki tarafı da Claude oynuyor. Arkana yaslan, izle.':botTurn?'Claude düşünüyor…':chk>=0?'Şahını kurtarman lazım.':'Bir taşa dokun, sonra gideceği kareye.'}
+  if(!over){$('st').textContent=(mode==='watch'?'Bilgisayar ('+col(state.turn).toLowerCase()+')':botTurn?'Bilgisayar (siyah)':col(state.turn))+(chk>=0?' — ŞAH!':' oynar');
+    $('sub').textContent=busy?'Kavga sürüyor…':mode==='watch'?'İki tarafı da bilgisayar oynuyor. Arkana yaslan, izle.':botTurn?'Bilgisayar düşünüyor…':chk>=0?'Şahını kurtarman lazım.':'Bir taşa dokun, sonra gideceği kareye.'}
   for(const t of 'PNBRQK'){const e=$('k'+t);if(e)e.textContent=kills[t]?'×'+kills[t]:''}
   if(mode==='online'&&!over){const waiting=!online.data||!online.data.black||!online.data.white,mine=state.turn===online.color;
     $('st').textContent=online.color==='spec'?'İzleyicisin':waiting?'Rakip bekleniyor':mine?'Sıra sende'+(chk>=0?' — ŞAH!':''):'Rakibin sırası';
@@ -593,11 +593,11 @@ const ART='https://claude.ai/artifact/TZMvb354GCgFYQPRUy4stg';
 const freshOnline=()=>({code:null,ref:null,unsub:null,me:null,color:null,data:null,list:[],pending:[],needSync:false,emoT:0,first:true,claiming:false});
 let online=freshOnline(),DBP=null,USERP=null;
 function caps(){if(!DBP){const u=window.claude&&window.claude.use;DBP=u?window.claude.use('db').catch(()=>null):Promise.resolve(null);USERP=u?window.claude.use('user').catch(()=>null):Promise.resolve(null)}return Promise.all([DBP,USERP])}
-const NOACCESS='Online oyun bu görünümde açılamadı. Oynamak için claude.ai hesabına giriş yapmış olman ve sayfa sahibinin seni Paylaş menüsünden Düzenleyici olarak eklemiş olması gerekiyor.';
+const NOACCESS='Bağlantı kurulamadı. İnternet bağlantını kontrol edip sayfayı yenile.';
 function newCode(){const A='ABCDEFGHJKMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<6;i++)s+=A[Math.floor(Math.random()*A.length)];return s}
 function onlMsg(t,err){const e=$('onlMsg');e.textContent=t;e.classList.toggle('err',!!err)}
 function showOnlPanel(on){$('modes').hidden=on;$('onl').hidden=!on;$('sndrow').hidden=on}
-function linkFor(c){return ART+'#'+c}
+function linkFor(c){return (location.protocol.startsWith('http')&&!/claude\.ai/.test(location.host)?location.href.split('#')[0]:ART)+'#'+c}
 function copyText(inp,btn){const v=inp.value,done=()=>{const o=btn.textContent;btn.textContent='Kopyalandı ✓';setTimeout(()=>btn.textContent=o,1500)};
   try{navigator.clipboard.writeText(v).then(done,()=>{inp.focus();inp.select()})}catch(e){inp.focus();inp.select()}}
 async function hostGame(){onlMsg('Oyun kuruluyor…');const[db,user]=await caps();if(!db||!user){onlMsg(NOACCESS,1);return}
@@ -659,7 +659,7 @@ function endCheck(){const onlyKings=state.b.every(p=>!p||p.t==='K'),tooLong=mode
     if(onlyKings){T='Berabere';S='Sahada sadece iki şah kaldı, kavga bitti.'}
     else if(tooLong){T='Berabere';S='İki taraf da yoruldu, maç uzadı.'}
     else if(inCheck(state)){const w=state.turn==='w'?'b':'w';T='Şah mat!';say('mat');SFX.win();setTimeout(confetti,300);
-      state.b.forEach(p=>{if(!p)return;const e=els.get(p.id);if(p.c===w)setTimeout(()=>react(e,'😎'),400+Math.random()*500);else if(p.t==='K')react(e,'😵')});S=mode==='watch'?`${col(w)} kazandı! Yeni maç birazdan başlıyor.`:mode==='bot'?(w===BOT?'Claude kazandı. Rövanş?':'Sen kazandın, Claude yere serildi!'):`${col(w)} kazandı.`}
+      state.b.forEach(p=>{if(!p)return;const e=els.get(p.id);if(p.c===w)setTimeout(()=>react(e,'😎'),400+Math.random()*500);else if(p.t==='K')react(e,'😵')});S=mode==='watch'?`${col(w)} kazandı! Yeni maç birazdan başlıyor.`:mode==='bot'?(w===BOT?'Bilgisayar kazandı. Rövanş?':'Sen kazandın, bilgisayar yere serildi!'):`${col(w)} kazandı.`}
     else{T='Pat';S='Hamle kalmadı, oyun berabere.'}
     $('overT').textContent=T;$('overS').textContent=S;$('over').hidden=false;$('st').textContent=T;$('sub').textContent=S;
     if(mode==='watch'){clearTimeout(restartT);restartT=setTimeout(()=>{if(mode==='watch'&&over)newGame()},6000)}}}
@@ -681,7 +681,6 @@ function openMenu(){$('menu').hidden=false;showOnlPanel(false);$('menuClose').hi
 function closeMenu(){$('menu').hidden=true}
 $('menuBtn').onclick=openMenu;$('menuClose').onclick=closeMenu;
 $('menu').querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{actx();SFX.pop();leaveOnline();started=true;closeMenu();setMode(b.dataset.m);newGame()});
-if(!(window.claude&&window.claude.use)){const ob=$('onlineBtn');ob.querySelector('small').textContent='Yakında: linkle girişsiz online';ob.disabled=true;ob.style.opacity=.5}
 $('onlineBtn').onclick=()=>{actx();SFX.pop();showOnlPanel(true);onlMsg('Bir oyun kur ve linki arkadaşına gönder ya da sana gelen kodla katıl.');caps()};
 $('onlBack').onclick=()=>{showOnlPanel(false);$('linkBox').hidden=true;$('hostBtn').hidden=false;$('joinRow').hidden=false;$('enterBtn').hidden=true};
 $('hostBtn').onclick=hostGame;$('enterBtn').onclick=()=>enterOnline($('enterBtn').dataset.code);
@@ -697,7 +696,7 @@ newGame();
 const hashCode=(location.hash||'').slice(1).toUpperCase();
 if(/^[A-Z0-9]{6}[MS]?$/.test(hashCode)){showOnlPanel(true);$('codeIn').value=hashCode;$('hostBtn').hidden=true;
   const t=hashCode.length===7?(hashCode.endsWith('M')?' Mavi takımla oynayacaksın.':' Siyah takımla oynayacaksın.'):'';
-  onlMsg('Bir oyuna davet edildin. Oyun kodu: '+hashCode.slice(0,6)+'.'+t+' Katıl düğmesine bas.');caps()}
+  onlMsg('Bir oyuna davet edildin. Oyun kodu: '+hashCode.slice(0,6)+'.'+t+' Bağlanılıyor…');caps().then(()=>enterOnline(hashCode))}
 })();
 </script>
 
