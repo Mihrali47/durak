@@ -858,7 +858,7 @@ function render(){
   $('bCatch').hidden=!(D.opts.cheat&&!D.ended&&D.table.length&&!D.accused.has(me));
   U.multi=(U.multi||[]).filter(id=>D.hands[me].some(c=>c.id===id));if(o.mode!=='attack')U.multi=[];
   $('bMulti').hidden=!(U.multi.length>0);
-  $('bUndo').hidden=!(!ON&&!U.busy&&!D.ended&&undoable(me)!=null);$('bMulti').textContent=`At (${U.multi.length})`;
+  $('bUndo').hidden=!(!U.busy&&!D.ended&&undoable(me)!=null);if(ON)$('bUndo').style.setProperty('--t','100%');$('bMulti').textContent=`At (${U.multi.length})`;
   $('bPass').hidden=!(o.mode==='throw'||o.mode==='give');$('bPass').textContent=o.mode==='give'?'Alsın':'Pas';
   // durum: kısa
   const st=$('status');
@@ -1093,7 +1093,7 @@ function RUNSOON(){clearTimeout(U.rt);if(ON||!D||D.ended)return run();const o=my
   U.rti=setInterval(()=>{const l=Math.max(0,1-(Date.now()-t0)/T);bu.style.setProperty('--t',(l*100)+'%');if(!l)clearInterval(U.rti)},100)}
 $('bUndo').onclick=async()=>{if(U.busy)return;if(goldHave()<1){clearTimeout(U.rt);clearInterval(U.rti);toast('Geri almak için 1 gold lazım. Mağazadan günlük hediyeni alabilirsin.');return showShop()}
   const i=undoable(me);if(i==null)return;const el=document.querySelector(`#field [data-cid="${D.table[i].a.id}"]`),fr=el?centerOf(el):null;
-  const r=undo(me);if(!r.ok)return toast(r.msg);clearTimeout(U.rt);spendGold(1);savePF();showCoins();snd.card();log(`${cname(r.card)} kartını geri aldın (1 gold)`);
+  const r=undo(me);if(!r.ok)return toast(r.msg);clearTimeout(U.rt);spendGold(1);savePF();showCoins();snd.card();log(`${cname(r.card)} kartını geri aldın (1 gold)`);tag(me,'Geri aldı');
   U.busy=true;render();const he=document.querySelector(`#hand [data-id="${r.card.id}"]`);if(he&&fr){he.style.visibility='hidden';await flyFree(r.card,fr,{...centerOf(he),w:he.offsetWidth},{ms:260,rot1:rotOf(he)});he.style.visibility=''}
   U.busy=false;render();RUNSOON()};
 async function run(){
