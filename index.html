@@ -1158,15 +1158,15 @@ function gameEnd(){
   qInc('oyna');
   const oldL=league(PF.rating);PF.coins=Math.max(0,PF.coins+delta);PF.rating+=rd;savePF();checkAch();showCoins();const newL=league(PF.rating);
   for(let p=1;p<D.n;p++)botReact(p,p===dk?'bad':'good');
-  const order=D.outOrder.map(p=>NAMES[p]);
-  setTimeout(()=>{
+  const order=D.outOrder.map(p=>NAMES[p]);const dref=D;
+  setTimeout(()=>{if(D!==dref||!D.ended)return; // bu arada yeni el başladıysa eski sonucu gösterme
     open(`<h2>${dk==null?'Berabere!':D.resigned===me?'Pes ettin':D.resigned!=null?NAMES[dk]+' pes etti':dk===me?'Durak sensin!':NAMES[dk]+' durak oldu'}</h2>
     <p class="muted">${D.resigned===me?'Pes ettin, bahsi kaybettin.':D.resigned!=null?'Rakibin pes etti, el senin.':dk==null?'Son turda herkes elini aynı anda bitirdi.':!D.hands[dk].length?'Son kartlar aynı anda bitti; beraberlik kapalı olduğu için savunan durak oldu.':dk===me?'Elinde son kartlar kaldı. Bir dahaki ele sen dağıtıyorsun.':'Elinde en son kart kalan o oldu.'}</p>
     <div class="bigwin ${delta>0?'up':delta<0?'down':''}">${IC.c}${delta>0?'+':''}${fmt(delta)}${delta>0?'<small>bahis '+fmt(ST)+' · kahve parası %4</small>':''}</div><div class="prof"><div><b>${fmt(PF.coins)}</b><small>coin</small></div><div><b>${PF.streak}</b><small>seri</small></div><div><b>${PF.rating}</b><small>${newL}</small></div></div>
     ${newL!==oldL?`<p class="muted">${rd>0?'Lig atladın':'Lig düştün'}: <b>${newL}</b></p>`:''}
     ${order.length?`<div><p class="lbl">Çıkış sırası</p><ol class="rank">${order.map(x=>`<li>${x}</li>`).join('')}${dk!=null?`<li>${NAMES[dk]} <b>(durak)</b></li>`:''}</ol></div>`:''}
     <div class="rowb"><button class="btn pass" id="again">Bir el daha</button><button class="btn ghost" id="toMenu">Menü</button></div>`);
-    $('again').onclick=()=>{close();if(ON){if(ON.seat===0)return onlineRematch();send({t:'rematch'});toast('Arkadaşına haber verildi, yeni el başlıyor');return}startGame()};$('toMenu').onclick=showMenu;
+    $('again').onclick=()=>{close();if(!D.ended)return;if(ON){if(ON.seat===0)return onlineRematch();send({t:'rematch'});toast('Arkadaşına haber verildi, yeni el başlıyor');return}startGame()};$('toMenu').onclick=showMenu;
   },1200);
 }
 
@@ -1257,7 +1257,7 @@ function wire(c,onOpen){
     if(ON.seat===1){const code=ON.code;return autoReconnect(code,0);open(`<h2>Bağlantı koptu</h2><p>Masayla bağlantın kesildi. Arkadaşın sayfayı kapatmadıysa yeniden bağlanabilirsin, oyun kaldığı yerden devam eder.</p><div class="rowb"><button class="btn" id="rc">Yeniden bağlan</button><button class="btn ghost" id="cl">Menü</button></div>`);$('rc').onclick=()=>joinOnline(code);$('cl').onclick=()=>{leaveOnline();showMenu()}}
     else toast('Arkadaşının bağlantısı koptu, geri gelmesini bekliyorsun');});
 }
-async function applyRemote(prev){
+async function applyRemote(prev){if(prev&&prev.ended&&!D.ended)close();
   close();U.sel=null;
   if(!prev){tKey='';render();return}
   const addTable=D.table.flatMap(x=>[x.a,...(x.d?[x.d]:[])]).filter(c=>!prev.tableIds.has(c.id));
@@ -1269,7 +1269,7 @@ async function applyRemote(prev){
   tKey='';render();
   if(D.ended&&!prev.ended)gameEnd();
 }
-function onlineRematch(){wake();const first=D.durak!=null?(D.durak+1)%2:null;newDeal(2,ON.meta.opts||D.opts,first);lastPushed='';tKey='';render();push()}
+function onlineRematch(){if(!D||!D.ended)return;wake();const first=D.durak!=null?(D.durak+1)%2:null;newDeal(2,ON.meta.opts||D.opts,first);lastPushed='';tKey='';render();push()}
 function leaveOnline(){clearInterval(HB);try{CONN&&CONN.close()}catch(e){}try{PEER&&PEER.destroy()}catch(e){}CONN=null;PEER=null;ON=null;NAMES=['Sen','Nuri','Rıza','Hamdi']}
 setTimeout(()=>{const h=(location.hash||'').slice(1).toUpperCase();if(/^[A-Z0-9]{5}$/.test(h)){close();joinOnline(h)}},0);
 addEventListener('hashchange',()=>{const h=(location.hash||'').slice(1).toUpperCase();if(/^[A-Z0-9]{5}$/.test(h)&&(!ON||ON.code!==h)){close();joinOnline(h)}});
