@@ -1226,7 +1226,7 @@ function joinOnline(code,silent){
 }
 let HB=null,lastSeen=0;
 function heartbeat(){clearInterval(HB);lastSeen=Date.now();HB=setInterval(()=>{if(!ON){clearInterval(HB);return}send({t:'ping'});if(D&&ON.started&&CONN&&CONN.open&&!U.busy){try{send({t:'state',state:mapState(ser(),-ON.seat),ver:ON.ver,from:ON.seat,re:1})}catch(e){}}
-  if(Date.now()-lastSeen>12000&&CONN){const c=CONN;lastSeen=Date.now();if(ON.seat===1){autoReconnect(ON.code,0)}else{toast('Arkadaşının bağlantısı koptu, geri gelmesini bekliyorsun');try{c.close()}catch(e){}}}},4000)}
+  if(Date.now()-lastSeen>12000&&CONN){const c=CONN;lastSeen=Date.now();if(ON.seat===1){autoReconnect(ON.code,0)}else{toast('Arkadaşının bağlantısı koptu, geri gelmesini bekliyorsun');try{c.close()}catch(e){}}}},2000)}
 function autoReconnect(code,n){if(!ON||ON.code!==code)return;
   if(n>=8){open(`<h2>Bağlantı koptu</h2><p>Masaya ulaşılamıyor. Arkadaşın sayfayı kapatmadıysa yeniden dene; oyun kaldığı yerden devam eder.</p><div class="rowb"><button class="btn" id="rc">Yeniden bağlan</button><button class="btn ghost" id="cl">Menü</button></div>`);$('rc').onclick=()=>joinOnline(code);$('cl').onclick=()=>{leaveOnline();showMenu()};return}
   toast('Bağlantı tazeleniyor…');const saveVer=ON.ver;joinOnline(code,true);setTimeout(()=>{if(ON&&ON.code===code&&!(CONN&&CONN.open))autoReconnect(code,n+1)},4000)}
