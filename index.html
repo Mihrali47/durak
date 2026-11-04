@@ -859,7 +859,7 @@ function render(){
   // rol ve düğmeler
   const [rc]=roleOf(me);$('meBox').className='me '+rc;
   $('bTake').hidden=o.mode!=='defend';
-  $('bCatch').hidden=!(D.opts.cheat&&!D.ended&&D.table.length&&!D.accused.has(me));
+  $('bCatch').hidden=true; // hileli mod yeniden tasarlanacak: 'Hile!' butonu şimdilik kapalı
   U.multi=(U.multi||[]).filter(id=>D.hands[me].some(c=>c.id===id));if(o.mode!=='attack')U.multi=[];
   $('bMulti').hidden=!(U.multi.length>0);
   $('bUndo').hidden=!(!U.busy&&!D.ended&&undoable(me)!=null);if(ON)$('bUndo').style.setProperty('--t','100%');$('bMulti').textContent=`At (${U.multi.length})`;
