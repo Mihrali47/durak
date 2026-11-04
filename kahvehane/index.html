@@ -1,0 +1,453 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Kahvehane Okey</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap">
+<style>
+/* Layout: one okey table seen from above — status rail, tılsım shelf, score board, wooden ıstaka with tiles, actions. Deliberately single-theme (green baize). */
+:root{
+  --felt:#1d4636; --felt-deep:#122d23; --felt-line:#2b5c48;
+  --wood:#6a3c1f; --wood-hi:#9a5f33; --wood-lo:#3f2210;
+  --ivory:#f4ead3; --ivory-lo:#d9cba8;
+  --brass:#e0ae4a; --ink:#f2ead6; --muted:#a8c0b0;
+  --chip:#57a7e0; --mult:#ea5a43; --good:#7fd08a;
+  --t-r:#c7262c; --t-y:#d98400; --t-b:#1d5bb0; --t-k:#1a1a1a;
+  --f-display:"Alfa Slab One", "Rockwell", Georgia, serif;
+  --f-body:"Bricolage Grotesque", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{
+  background:var(--felt-deep);
+  background-image:radial-gradient(ellipse at 50% 30%, var(--felt) 0%, var(--felt-deep) 75%);
+  background-attachment:fixed;
+  color:var(--ink); font-family:var(--f-body); font-size:15px; line-height:1.45;
+  min-height:100vh;
+}
+.wrap{max-width:760px;margin:0 auto;padding-block:14px 32px;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));
+  display:flex;flex-direction:column;gap:14px}
+header{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+h1{font-family:var(--f-display);font-weight:400;font-size:clamp(26px,6vw,38px);margin:0;letter-spacing:.5px;color:var(--brass);line-height:1}
+h1 small{display:block;font-family:var(--f-body);font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-top:6px;font-weight:600}
+.place{text-align:right;font-weight:600}
+.place b{display:block;font-family:var(--f-display);font-weight:400;font-size:18px;color:var(--ink)}
+.place span{font-size:13px;color:var(--muted)}
+.boss{margin-top:4px;display:inline-block;font-size:12px;font-weight:800;color:var(--felt-deep);background:var(--mult);padding:2px 8px;border-radius:4px}
+
+.rail{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+.stat{background:rgba(0,0,0,.22);border:1px solid var(--felt-line);border-radius:8px;padding:8px 10px;min-width:0}
+.stat label{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.stat output{display:block;font-family:var(--f-display);font-size:clamp(16px,4.2vw,22px);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stat.score output{color:var(--brass)}
+.bar{height:5px;background:rgba(0,0,0,.35);border-radius:3px;margin-top:5px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--brass);transition:width .4s}
+@media (max-width:520px){.rail{grid-template-columns:repeat(3,minmax(0,1fr))}.rail .wide{grid-column:span 3}}
+
+.shelf-h{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.shelf{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-top:6px}
+.charm{position:relative;min-width:0;border:1px solid var(--wood-hi);border-radius:10px;padding:8px 6px;
+  background:linear-gradient(180deg,#3d2312,#2a170b);color:var(--ink);font:inherit;text-align:center;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px}
+.charm .med{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-family:var(--f-display);font-size:16px;color:#2a170b;
+  background:radial-gradient(circle at 35% 30%,#ffe3a0,var(--brass) 55%,#9a6a1c)}
+.charm .nm{font-size:11.5px;font-weight:600;line-height:1.15;overflow-wrap:anywhere}
+.charm.empty{border-style:dashed;border-color:var(--felt-line);background:transparent;cursor:default;color:var(--muted)}
+.charm.empty .med{background:none;border:1px dashed var(--felt-line);color:var(--felt-line)}
+.charm.fire{animation:fire .45s}
+@keyframes fire{40%{transform:translateY(-5px) scale(1.06);box-shadow:0 0 0 3px var(--brass)}}
+.info{min-height:20px;font-size:13.5px;color:var(--muted)}
+.info b{color:var(--ink)}
+
+.board{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;background:rgba(0,0,0,.28);border:1px solid var(--felt-line);border-radius:12px;padding:12px}
+.combo{grid-column:1/-1;text-align:center;font-family:var(--f-display);font-size:20px;min-height:26px}
+.combo small{font-family:var(--f-body);font-size:13px;color:var(--muted);font-weight:400;margin-left:6px}
+.num{font-family:var(--f-display);font-size:clamp(24px,7vw,36px);text-align:center;border-radius:8px;padding:4px 8px;font-variant-numeric:tabular-nums;min-width:0}
+.num.c{background:var(--chip);color:#08223a}
+.num.m{background:var(--mult);color:#3a0b04}
+.times{font-family:var(--f-display);font-size:24px;color:var(--muted)}
+.total{grid-column:1/-1;text-align:center;font-family:var(--f-display);font-size:28px;color:var(--brass);min-height:34px;font-variant-numeric:tabular-nums}
+.bump{animation:bump .25s}
+@keyframes bump{50%{transform:scale(1.12)}}
+
+.istaka{position:relative;padding:12px 10px 14px;border-radius:10px;
+  background:linear-gradient(180deg,var(--wood-hi) 0%,var(--wood) 30%,var(--wood-lo) 100%);
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.18),0 10px 24px rgba(0,0,0,.45)}
+.istaka::after{content:"";position:absolute;left:10px;right:10px;bottom:8px;height:4px;border-radius:2px;background:rgba(0,0,0,.35)}
+.rack{display:grid;grid-template-columns:repeat(var(--n,8),minmax(0,1fr));gap:6px;align-items:end;min-height:90px}
+.tile{position:relative;aspect-ratio:3/4.3;max-width:100%;width:100%;border:0;border-radius:7px;cursor:pointer;padding:0;
+  background:linear-gradient(180deg,#fffaf0 0%,var(--ivory) 55%,var(--ivory-lo) 100%);
+  box-shadow:0 3px 0 #b8a67f,0 5px 8px rgba(0,0,0,.4);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4%;
+  transition:transform .15s}
+.tile .n{font-family:var(--f-display);font-size:clamp(17px,5.6vw,34px);line-height:1}
+.tile .dot{width:22%;aspect-ratio:1;border-radius:50%;border:2px solid currentColor;opacity:.85}
+.tile.r{color:var(--t-r)}.tile.y{color:var(--t-y)}.tile.b{color:var(--t-b)}.tile.k{color:var(--t-k)}
+.tile.sel{transform:translateY(-14px)}
+.tile.debuff{filter:grayscale(1) brightness(.75)}
+.tile.debuff::after{content:"";position:absolute;inset:44% 8%;border-top:3px solid var(--mult);transform:rotate(-20deg)}
+.tile.hit{animation:hit .3s}
+@keyframes hit{50%{transform:translateY(-22px) scale(1.08)}}
+.tile:focus-visible,.charm:focus-visible,button:focus-visible{outline:3px solid var(--brass);outline-offset:2px}
+.float{position:absolute;left:50%;top:-6px;transform:translate(-50%,-100%);font-family:var(--f-display);font-size:14px;white-space:nowrap;
+  padding:1px 6px;border-radius:4px;pointer-events:none;animation:up .7s forwards;z-index:3}
+.float.c{background:var(--chip);color:#08223a}.float.m{background:var(--mult);color:#3a0b04}.float.g{background:var(--brass);color:#2a170b}
+@keyframes up{to{transform:translate(-50%,-160%);opacity:0}}
+
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn{font:inherit;font-weight:800;border:0;border-radius:9px;padding:12px 16px;cursor:pointer;color:var(--felt-deep);background:var(--ink);letter-spacing:.02em}
+.btn.play{background:var(--brass);flex:1 1 140px;font-size:16px}
+.btn.disc{background:var(--mult);color:#2b0904;flex:1 1 110px;font-size:16px}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--felt-line);padding:10px 12px;font-weight:600}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.bag{margin-left:auto;align-self:center;font-size:13px;color:var(--muted)}
+
+.overlay{position:fixed;inset:0;background:rgba(6,18,13,.72);display:flex;align-items:flex-start;justify-content:center;overflow:auto;z-index:20;
+  padding-block:max(24px, env(safe-area-inset-top, 0px)) max(24px, env(safe-area-inset-bottom, 0px));
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+.sheet{width:100%;max-width:560px;margin:auto 0;background:#20160d;border:1px solid var(--wood-hi);border-radius:14px;padding:20px;
+  box-shadow:0 20px 50px rgba(0,0,0,.6);display:flex;flex-direction:column;gap:14px}
+.sheet h2{font-family:var(--f-display);font-weight:400;color:var(--brass);margin:0;font-size:26px;text-wrap:balance}
+.sheet p{margin:0;max-width:62ch}
+.sheet .muted{color:var(--muted);font-size:14px}
+table.combos{width:100%;border-collapse:collapse;font-size:14px}
+table.combos td{padding:5px 4px;border-bottom:1px solid rgba(255,255,255,.08)}
+table.combos td:last-child{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.cv{font-family:var(--f-display);font-size:13px;padding:1px 5px;border-radius:3px}
+.cv.c{background:var(--chip);color:#08223a}.cv.m{background:var(--mult);color:#3a0b04}
+.ledger{display:flex;flex-direction:column;gap:4px;font-variant-numeric:tabular-nums}
+.ledger div{display:flex;justify-content:space-between;border-bottom:1px dashed rgba(255,255,255,.12);padding-bottom:3px}
+.ledger .sum{font-weight:800;color:var(--brass);border:0}
+.offers{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+@media (max-width:480px){.offers{grid-template-columns:1fr}}
+.offer{border:1px solid var(--wood-hi);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:8px;background:linear-gradient(180deg,#3d2312,#2a170b);min-width:0}
+.offer h3{margin:0;font-size:15px;display:flex;align-items:center;gap:8px}
+.offer .med{width:28px;height:28px;flex:none;border-radius:50%;display:grid;place-items:center;font-family:var(--f-display);font-size:13px;color:#2a170b;background:radial-gradient(circle at 35% 30%,#ffe3a0,var(--brass) 55%,#9a6a1c)}
+.offer p{font-size:13.5px;color:var(--ink);flex:1}
+.offer .btn{padding:9px 10px}
+.owned{display:flex;flex-wrap:wrap;gap:6px}
+.owned button{font:inherit;font-size:13px;border:1px solid var(--felt-line);background:transparent;color:var(--ink);border-radius:20px;padding:5px 10px;cursor:pointer}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.money{font-family:var(--f-display);color:var(--brass);font-size:20px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Kahvehane<small>Okey taşlarıyla rogue-lite</small></h1>
+    <div class="place"><b id="pName">Mahalle Kahvesi</b><span id="pTable">Masa 1 / 3</span><div id="pBoss"></div></div>
+  </header>
+
+  <section class="rail" aria-label="Durum">
+    <div class="stat"><label>Hedef</label><output id="sTarget">0</output></div>
+    <div class="stat score"><label>Puan</label><output id="sScore">0</output><div class="bar"><i id="sBar"></i></div></div>
+    <div class="stat"><label>El</label><output id="sPlays">4</output></div>
+    <div class="stat"><label>Atma</label><output id="sDisc">3</output></div>
+    <div class="stat wide"><label>Kasa</label><output id="sMoney">4₺</output></div>
+  </section>
+
+  <section>
+    <div class="shelf-h"><span>Tılsımlar</span><span id="charmCount">0 / 5</span></div>
+    <div class="shelf" id="shelf"></div>
+  </section>
+  <div class="info" id="info">Bir tılsıma dokun, ne yaptığını burada gör.</div>
+
+  <section class="board" aria-live="polite">
+    <div class="combo" id="combo">Taş seç</div>
+    <div class="num c" id="chips">0</div><div class="times">×</div><div class="num m" id="mult">0</div>
+    <div class="total" id="total"></div>
+  </section>
+
+  <section class="istaka"><div class="rack" id="rack"></div></section>
+
+  <div class="actions">
+    <button class="btn play" id="bPlay">Oyna</button>
+    <button class="btn disc" id="bDisc">At</button>
+    <button class="btn ghost" id="bSortN">Sayıya göre</button>
+    <button class="btn ghost" id="bSortC">Renge göre</button>
+    <button class="btn ghost" id="bHelp">Kurallar</button>
+    <span class="bag" id="bag">Torba: 0</span>
+  </div>
+</div>
+
+<div class="overlay" id="ov" hidden><div class="sheet" id="sheet"></div></div>
+
+<script>
+const $=id=>document.getElementById(id);
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const wait=ms=>new Promise(r=>setTimeout(r,reduce?0:ms));
+const fmt=n=>Math.floor(n).toLocaleString('tr-TR');
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+const pick=a=>a[Math.random()*a.length|0];
+const CL=['r','y','b','k'];
+const CNAME={r:'kırmızı',y:'sarı',b:'mavi',k:'siyah'};
+
+const COMBOS={
+  tek:{name:'Tek Taş',chips:5,mult:1,how:'En yüksek tek taş'},
+  cift:{name:'Çift',chips:10,mult:2,how:'Aynı sayıdan 2 taş'},
+  ikicift:{name:'İki Çift',chips:20,mult:2,how:'İki ayrı çift'},
+  seri3:{name:'Seri (3)',chips:30,mult:3,how:'Aynı renk, art arda 3 sayı'},
+  uclu:{name:'Üçlü Per',chips:35,mult:3,how:'Aynı sayı, 3 farklı renk'},
+  seri4:{name:'Seri (4)',chips:50,mult:4,how:'Aynı renk, art arda 4 sayı'},
+  renk:{name:'Renk',chips:40,mult:4,how:'Aynı renkten 5 taş'},
+  dortlu:{name:'Dörtlü Per',chips:60,mult:6,how:'Aynı sayı, 4 farklı renk'},
+  seri5:{name:'Okey Serisi',chips:80,mult:7,how:'Aynı renk, art arda 5 sayı'},
+};
+const KAHVE=['Mahalle Kahvesi','Çarşı Kahvesi','Liman Kahvesi','Saray Kahvesi'];
+const RAKIP=['Çaycı Rıza','Emekli Hamdi','Patron'];
+const BOSSES=[
+  {name:'Kırmızı yasak',desc:'Kırmızı taşlar puan vermez',debuff:t=>t.c==='r'},
+  {name:'Mavi yasak',desc:'Mavi taşlar puan vermez',debuff:t=>t.c==='b'},
+  {name:'Sıkı Patron',desc:'Bu masada 1 el eksik',plays:-1},
+  {name:'Dar Istaka',desc:'Istakada 1 taş eksik',hand:-1},
+  {name:'Atma yok',desc:'Bu masada taş atamazsın',noDiscard:true},
+  {name:'Büyük taşa ceza',desc:'10 ve üstü taşlar puan vermez',debuff:t=>t.n>=10},
+];
+
+const CHARMS=[
+  {id:'nazar',name:'Nazar Boncuğu',desc:'Her elde +4 çarpan',price:4,hand:c=>{c.mult+=4;return['m','+4']}},
+  {id:'cay',name:'Demli Çay',desc:'Her elde +30 puan',price:4,hand:c=>{c.chips+=30;return['c','+30']}},
+  {id:'kirmizi',name:'Kırmızı Biber',desc:'Sayılan her kırmızı taş +3 çarpan',price:5,tile:(t,c)=>{if(t.c==='r'){c.mult+=3;return['m','+3']}}},
+  {id:'mavi',name:'Boğaz Mavisi',desc:'Sayılan her mavi taş +20 puan',price:5,tile:(t,c)=>{if(t.c==='b'){c.chips+=20;return['c','+20']}}},
+  {id:'kara',name:'Kara Kahve',desc:'Sayılan her siyah taş ×1,25 çarpan',price:6,tile:(t,c)=>{if(t.c==='k'){c.mult*=1.25;return['m','×1,25']}}},
+  {id:'sari',name:'Sarı Lira',desc:'Sayılan her sarı taş +1₺ kazandırır',price:5,tile:(t,c)=>{if(t.c==='y'){c.money+=1;return['g','+1₺']}}},
+  {id:'cift',name:'Çifte Kavrulmuş',desc:'Çift veya İki Çift oynarsan +8 çarpan',price:4,hand:c=>{if(c.type==='cift'||c.type==='ikicift'){c.mult+=8;return['m','+8']}}},
+  {id:'seri',name:'Seri Kahveci',desc:'Seri oynarsan ×2 çarpan',price:6,hand:c=>{if(c.type.startsWith('seri')){c.mult*=2;return['m','×2']}}},
+  {id:'per',name:'Per Ustası',desc:'Üçlü veya Dörtlü Per oynarsan ×2 çarpan',price:6,hand:c=>{if(c.type==='uclu'||c.type==='dortlu'){c.mult*=2;return['m','×2']}}},
+  {id:'az',name:'Az Olsun Öz Olsun',desc:'3 veya daha az taş oynarsan +10 çarpan',price:5,hand:c=>{if(c.played.length<=3){c.mult+=10;return['m','+10']}}},
+  {id:'son',name:'Son Hamle',desc:'Masadaki son elin ×3 çarpan',price:6,hand:c=>{if(c.isLast){c.mult*=3;return['m','×3']}}},
+  {id:'atma',name:'Atma Ustası',desc:'Her masada +1 atma hakkı',price:4,mods:{discards:1}},
+  {id:'mesai',name:'Fazla Mesai',desc:'Her masada +1 el',price:7,mods:{plays:1}},
+  {id:'istaka',name:'Geniş Istaka',desc:'Istakada +1 taş',price:6,mods:{hand:1}},
+  {id:'kumbara',name:'Kumbara',desc:'Her masa sonunda +3₺',price:5,endMoney:3},
+  {id:'buyuk',name:'Büyük Taş',desc:'Sayılan 10 ve üstü her taş +15 puan',price:4,tile:(t,c)=>{if(t.n>=10){c.chips+=15;return['c','+15']}}},
+  {id:'kucuk',name:'Küçük Hesap',desc:'Sayılan 1–4 arası her taş +3 çarpan',price:5,tile:(t,c)=>{if(t.n<=4){c.mult+=3;return['m','+3']}}},
+  {id:'tespih',name:'Tespih',desc:'Her Seri oynayışında kalıcı +2 çarpan büyür',price:6,hand:(c,o)=>{if(c.type.startsWith('seri'))o.n=(o.n||0)+1;if(o.n){c.mult+=o.n*2;return['m','+'+o.n*2]}},dyn:o=>`Her Seri oynayışında kalıcı +2 büyür (şu an +${(o.n||0)*2} çarpan)`},
+  {id:'okey',name:'Altın Okey',desc:'Her elde ×1,5 çarpan',price:8,hand:c=>{c.mult*=1.5;return['m','×1,5']}},
+  {id:'dede',name:'Dede Tavsiyesi',desc:'Kalan her atma hakkı için +2 çarpan',price:5,hand:c=>{if(c.discardsLeft>0){c.mult+=c.discardsLeft*2;return['m','+'+c.discardsLeft*2]}}},
+];
+const DEF=Object.fromEntries(CHARMS.map(c=>[c.id,c]));
+const charmDesc=o=>{const d=DEF[o.id];return d.dyn?d.dyn(o):d.desc};
+
+let S, busy=false, best=0;
+try{best=+localStorage.getItem('kahve_best')||0}catch(e){}
+
+function newGame(){
+  S={round:0,money:4,charms:[],sel:new Set(),sort:'num',reroll:2,offers:[],endless:false};
+  startRound();
+}
+function targetFor(r){
+  const a=Math.floor(r/3),b=r%3;
+  const base=a<4?[100,300,800,2000][a]:2000*Math.pow(2.6,a-3);
+  return Math.round(base*[1,1.5,2][b]/10)*10;
+}
+function mod(k){return S.charms.reduce((s,o)=>s+((DEF[o.id].mods||{})[k]||0),0)+((S.boss&&S.boss[k])||0)}
+function startRound(){
+  const r=S.round; S.ante=Math.floor(r/3); S.blind=r%3;
+  S.boss=S.blind===2?pick(BOSSES):null;
+  S.target=targetFor(r); S.score=0;
+  S.plays=Math.max(1,4+mod('plays'));
+  S.discards=S.boss&&S.boss.noDiscard?0:3+mod('discards');
+  S.handSize=8+mod('hand');
+  S.bag=[];let id=0;for(const c of CL)for(let n=1;n<=13;n++)for(let k=0;k<2;k++)S.bag.push({id:id++,n,c});
+  shuffle(S.bag); S.hand=[]; S.sel.clear(); draw();
+  resetBoard(); render();
+}
+function draw(){while(S.hand.length<S.handSize&&S.bag.length)S.hand.push(S.bag.pop());sortHand()}
+function sortHand(){
+  const ci=c=>CL.indexOf(c);
+  S.hand.sort(S.sort==='num'?(a,b)=>a.n-b.n||ci(a.c)-ci(b.c):(a,b)=>ci(a.c)-ci(b.c)||a.n-b.n);
+}
+const isDebuff=t=>!!(S.boss&&S.boss.debuff&&S.boss.debuff(t));
+
+function evaluate(ts){
+  if(!ts.length)return null;
+  const s=[...ts].sort((a,b)=>a.n-b.n),cands=[];
+  const same=s.every(t=>t.c===s[0].c), consec=s.every((t,i)=>!i||t.n===s[i-1].n+1);
+  if(s.length>=3&&same&&consec)cands.push({k:'seri'+s.length,t:s});
+  if(s.length===5&&same)cands.push({k:'renk',t:s});
+  const g={};s.forEach(t=>(g[t.n]=g[t.n]||[]).push(t));
+  const groups=Object.values(g);
+  for(const gr of groups){const byC={};gr.forEach(t=>{byC[t.c]=byC[t.c]||t});const d=Object.values(byC);
+    if(d.length>=4)cands.push({k:'dortlu',t:d.slice(0,4)});
+    if(d.length>=3)cands.push({k:'uclu',t:d.slice(0,3)});}
+  const pairs=groups.filter(x=>x.length>=2).sort((a,b)=>b[0].n-a[0].n);
+  if(pairs.length>=2)cands.push({k:'ikicift',t:[...pairs[0].slice(0,2),...pairs[1].slice(0,2)]});
+  if(pairs.length)cands.push({k:'cift',t:pairs[0].slice(0,2)});
+  cands.push({k:'tek',t:[s[s.length-1]]});
+  let best=null,bv=-1;
+  for(const c of cands){const d=COMBOS[c.k];const v=(d.chips+c.t.reduce((a,t)=>a+t.n,0))*d.mult;if(v>bv){bv=v;best=c}}
+  return best;
+}
+
+/* ---------- render ---------- */
+function render(){
+  $('pName').textContent=(KAHVE[S.ante]||('Sonsuz Kahve '+(S.ante-3)));
+  $('pTable').textContent=`Masa ${S.blind+1} / 3 · ${RAKIP[S.blind]}`;
+  $('pBoss').innerHTML=S.boss?`<span class="boss">${S.boss.name}: ${S.boss.desc}</span>`:'';
+  $('sTarget').textContent=fmt(S.target);
+  $('sScore').textContent=fmt(S.score);
+  $('sBar').style.width=Math.min(100,S.score/S.target*100)+'%';
+  $('sPlays').textContent=S.plays; $('sDisc').textContent=S.discards;
+  $('sMoney').textContent=S.money+'₺';
+  $('bag').textContent='Torba: '+S.bag.length;
+  renderShelf(); renderRack(); renderPreview();
+}
+function renderShelf(){
+  const sh=$('shelf');sh.innerHTML='';
+  $('charmCount').textContent=S.charms.length+' / 5';
+  for(let i=0;i<5;i++){
+    const o=S.charms[i],b=document.createElement('button');
+    if(o){const d=DEF[o.id];b.className='charm';b.innerHTML=`<span class="med">${d.name[0]}</span><span class="nm">${d.name}</span>`;
+      b.onclick=()=>{$('info').innerHTML=`<b>${d.name}:</b> ${charmDesc(o)}`};}
+    else{b.className='charm empty';b.disabled=true;b.innerHTML='<span class="med">+</span><span class="nm">Boş</span>';}
+    b.dataset.i=i; sh.appendChild(b);
+  }
+}
+function renderRack(){
+  const r=$('rack');r.innerHTML='';r.style.setProperty('--n',Math.max(S.handSize,S.hand.length));
+  for(const t of S.hand){
+    const b=document.createElement('button');
+    b.className=`tile ${t.c}${S.sel.has(t.id)?' sel':''}${isDebuff(t)?' debuff':''}`;
+    b.dataset.id=t.id; b.setAttribute('aria-pressed',S.sel.has(t.id));
+    b.setAttribute('aria-label',`${CNAME[t.c]} ${t.n}`);
+    b.innerHTML=`<span class="n">${t.n}</span><span class="dot"></span>`;
+    b.onclick=()=>toggle(t.id); r.appendChild(b);
+  }
+  $('bPlay').disabled=busy||!S.sel.size||S.plays<1;
+  $('bDisc').disabled=busy||!S.sel.size||S.discards<1;
+}
+function renderPreview(){
+  const ts=S.hand.filter(t=>S.sel.has(t.id)),e=evaluate(ts);
+  if(!e){$('combo').innerHTML='Taş seç <small>en fazla 5</small>';$('chips').textContent=0;$('mult').textContent=0;return}
+  const d=COMBOS[e.k];$('combo').innerHTML=`${d.name}<small>${e.t.length} taş sayılır</small>`;
+  $('chips').textContent=d.chips;$('mult').textContent=d.mult;
+}
+function resetBoard(){$('total').textContent='';}
+function toggle(id){
+  if(busy)return;
+  if(S.sel.has(id))S.sel.delete(id);else{if(S.sel.size>=5){$('info').textContent='En fazla 5 taş seçebilirsin.';return}S.sel.add(id)}
+  resetBoard();renderRack();renderPreview();
+}
+function floatOn(el,kind,text){
+  if(!el)return;const f=document.createElement('span');f.className='float '+kind;f.textContent=text;el.appendChild(f);setTimeout(()=>f.remove(),750);
+}
+function bump(el){el.classList.remove('bump');void el.offsetWidth;el.classList.add('bump')}
+
+/* ---------- play ---------- */
+async function play(){
+  if(busy||!S.sel.size||S.plays<1)return;
+  busy=true;
+  const played=S.hand.filter(t=>S.sel.has(t.id)),e=evaluate(played),d=COMBOS[e.k];
+  S.plays--;
+  const c={type:e.k,played,chips:d.chips,mult:d.mult,money:0,isLast:S.plays===0,discardsLeft:S.discards};
+  renderRack();
+  $('combo').innerHTML=d.name;$('chips').textContent=c.chips;$('mult').textContent=c.mult;
+  await wait(300);
+  const tileEl=id=>document.querySelector(`.tile[data-id="${id}"]`);
+  for(const t of [...e.t].sort((a,b)=>S.hand.indexOf(a)-S.hand.indexOf(b))){
+    const el=tileEl(t.id);
+    if(isDebuff(t)){floatOn(el,'m','yasak');await wait(260);continue}
+    el&&el.classList.add('hit');
+    c.chips+=t.n;floatOn(el,'c','+'+t.n);$('chips').textContent=fmt(c.chips);bump($('chips'));
+    await wait(260);
+    for(let i=0;i<S.charms.length;i++){const o=S.charms[i],df=DEF[o.id];if(!df.tile)continue;
+      const r=df.tile(t,c,o);if(r){fireCharm(i,r);floatOn(el,r[0],r[1]);updNums(c);await wait(240)}}
+  }
+  for(let i=0;i<S.charms.length;i++){const o=S.charms[i],df=DEF[o.id];if(!df.hand)continue;
+    const r=df.hand(c,o);if(r){fireCharm(i,r);updNums(c);await wait(300)}}
+  const gain=Math.floor(c.chips*Math.floor(c.mult*100)/100);
+  $('total').textContent='+'+fmt(gain);bump($('total'));
+  if(c.money){S.money+=c.money}
+  await wait(500);
+  S.score+=gain;
+  S.hand=S.hand.filter(t=>!S.sel.has(t.id));S.sel.clear();draw();
+  busy=false;render();$('total').textContent='+'+fmt(gain);
+  if(S.score>=S.target){await wait(400);roundWon()}
+  else if(S.plays<1){await wait(400);gameOver()}
+}
+function updNums(c){$('chips').textContent=fmt(c.chips);$('mult').textContent=+(c.mult.toFixed(2));bump($('mult'))}
+function fireCharm(i,r){
+  const el=document.querySelector(`.charm[data-i="${i}"]`);if(!el)return;
+  el.classList.remove('fire');void el.offsetWidth;el.classList.add('fire');floatOn(el,r[0],r[1]);
+}
+function discard(){
+  if(busy||!S.sel.size||S.discards<1)return;
+  S.discards--;S.hand=S.hand.filter(t=>!S.sel.has(t.id));S.sel.clear();draw();resetBoard();render();
+}
+
+/* ---------- overlays ---------- */
+function open(html){$('sheet').innerHTML=html;$('ov').hidden=false;const f=$('sheet').querySelector('.btn');f&&f.focus()}
+function close(){$('ov').hidden=true}
+function rulesHTML(){
+  return `<table class="combos">${Object.values(COMBOS).map(d=>`<tr><td><b>${d.name}</b><br><span class="muted">${d.how}</span></td><td><span class="cv c">${d.chips}</span> × <span class="cv m">${d.mult}</span></td></tr>`).join('')}</table>`;
+}
+function showIntro(first){
+  open(`<h2>Kahvehaneye hoş geldin</h2>
+  <p>Istakandan en fazla 5 taş seç ve <b>Oyna</b>. Taşların oluşturduğu kombinasyon puan ve çarpan verir; sayılan her taşın değeri puana eklenir. <b>Puan × Çarpan</b> masanın hedefini geçerse masayı kazanırsın.</p>
+  <p class="muted">Her masada 4 el ve 3 atma hakkın var. Masa aralarında kazandığın lirayla tılsım al. Her kahvehanenin üçüncü masasında Patron bir kural koyar. 4 kahvehaneyi bitir, şampiyon ol.</p>
+  ${rulesHTML()}
+  <div class="row"><button class="btn play" id="go">${first?'Masaya otur':'Devam et'}</button>${best?`<span class="muted">En iyi: ${best}. masa</span>`:''}</div>`);
+  $('go').onclick=close;
+}
+function roundWon(){
+  const reward=[3,4,5][S.blind],left=S.plays,interest=Math.min(5,Math.floor(S.money/5));
+  const kum=S.charms.reduce((s,o)=>s+(DEF[o.id].endMoney||0),0);
+  const total=reward+left+interest+kum;
+  S.money+=total; S.round++;
+  if(S.round>best){best=S.round;try{localStorage.setItem('kahve_best',best)}catch(e){}}
+  if(S.round===12&&!S.endless){
+    open(`<h2>Kahvehanelerin şampiyonu!</h2><p>Dört kahvehanenin de patronunu yendin. Mahallede adın dilden dile dolaşıyor.</p>
+    <div class="row"><button class="btn play" id="cont">Sonsuz moda devam</button><button class="btn ghost" id="again">Yeni oyun</button></div>`);
+    $('cont').onclick=()=>{S.endless=true;gotoShop()};$('again').onclick=()=>{close();newGame()};return;
+  }
+  open(`<h2>Masa kazanıldı</h2>
+  <p class="muted">${fmt(S.score)} puan, hedef ${fmt(S.target)}.</p>
+  <div class="ledger">
+    <div><span>Masa ödülü</span><span>+${reward}₺</span></div>
+    <div><span>Kalan el (${left})</span><span>+${left}₺</span></div>
+    <div><span>Faiz (her 5₺ için 1₺, en fazla 5)</span><span>+${interest}₺</span></div>
+    ${kum?`<div><span>Kumbara</span><span>+${kum}₺</span></div>`:''}
+    <div class="sum"><span>Kasa</span><span>${S.money}₺</span></div>
+  </div>
+  <button class="btn play" id="shop">Çay ocağına geç</button>`);
+  $('shop').onclick=gotoShop;
+}
+function gotoShop(){S.reroll=2;rollOffers();showShop()}
+function rollOffers(){
+  const owned=new Set(S.charms.map(o=>o.id));
+  S.offers=shuffle(CHARMS.filter(c=>!owned.has(c.id))).slice(0,3).map(c=>c.id);
+}
+function showShop(){
+  const nr=S.round,nb=nr%3,nt=targetFor(nr);
+  open(`<div class="row" style="justify-content:space-between"><h2>Çay Ocağı</h2><span class="money">${S.money}₺</span></div>
+  <p class="muted">Tılsım al, istersen yarı fiyatına sat. En fazla 5 tılsım taşıyabilirsin.</p>
+  <div class="offers">${S.offers.map(id=>{const d=DEF[id];return `<div class="offer"><h3><span class="med">${d.name[0]}</span>${d.name}</h3><p>${d.desc}</p>
+    <button class="btn play" data-buy="${id}" ${S.money<d.price||S.charms.length>=5?'disabled':''}>Al · ${d.price}₺</button></div>`}).join('')||'<p class="muted">Tezgâh boş.</p>'}</div>
+  <div class="row"><button class="btn ghost" id="rr" ${S.money<S.reroll?'disabled':''}>Yenile · ${S.reroll}₺</button></div>
+  ${S.charms.length?`<div><div class="shelf-h"><span>Senin tılsımların (satmak için dokun)</span></div><div class="owned" style="margin-top:6px">${S.charms.map((o,i)=>`<button data-sell="${i}">${DEF[o.id].name} · sat ${Math.floor(DEF[o.id].price/2)}₺</button>`).join('')}</div></div>`:''}
+  <p class="muted">Sıradaki: ${KAHVE[Math.floor(nr/3)]||'Sonsuz Kahve'}, ${RAKIP[nb]} masası. Hedef ${fmt(nt)}${nb===2?'. Patron bir kural koyacak.':'.'}</p>
+  <button class="btn play" id="next">Masaya otur</button>`);
+  $('sheet').querySelectorAll('[data-buy]').forEach(b=>b.onclick=()=>{const d=DEF[b.dataset.buy];if(S.money<d.price||S.charms.length>=5)return;
+    S.money-=d.price;S.charms.push({id:d.id});S.offers=S.offers.filter(x=>x!==d.id);showShop()});
+  $('sheet').querySelectorAll('[data-sell]').forEach(b=>b.onclick=()=>{const o=S.charms.splice(+b.dataset.sell,1)[0];S.money+=Math.floor(DEF[o.id].price/2);showShop()});
+  $('rr').onclick=()=>{if(S.money<S.reroll)return;S.money-=S.reroll;S.reroll++;rollOffers();showShop()};
+  $('next').onclick=()=>{close();startRound();$('info').textContent=S.boss?`Patron masası: ${S.boss.desc}.`:'Bir tılsıma dokun, ne yaptığını burada gör.'};
+}
+function gameOver(){
+  open(`<h2>Masadan kalktın</h2>
+  <p>${KAHVE[S.ante]||'Sonsuz Kahve'}, ${RAKIP[S.blind]} masasında ${fmt(S.score)} puanda kaldın. Hedef ${fmt(S.target)} idi.</p>
+  <p class="muted">Ulaştığın masa: ${S.round+1}. En iyi: ${Math.max(best,S.round+1)}. masa.</p>
+  <button class="btn play" id="again">Yeniden oyna</button>`);
+  if(S.round+1>best){best=S.round+1;try{localStorage.setItem('kahve_best',best)}catch(e){}}
+  $('again').onclick=()=>{close();newGame()};
+}
+
+$('bPlay').onclick=play; $('bDisc').onclick=discard;
+$('bSortN').onclick=()=>{S.sort='num';sortHand();renderRack()};
+$('bSortC').onclick=()=>{S.sort='color';sortHand();renderRack()};
+$('bHelp').onclick=()=>showIntro(false);
+document.addEventListener('keydown',e=>{if(!$('ov').hidden||busy)return;if(e.key==='Enter')play();if(e.key==='Backspace'||e.key==='Delete')discard()});
+
+newGame(); showIntro(true);
+</script>
+
+</body></html>
