@@ -469,11 +469,15 @@ function accuse(p){
 }
 function drawUp(order){for(const p of order){while(D.hands[p].length<6&&D.talon.length)D.hands[p].push(D.talon.shift())}}
 function endAfter(kind,cheater){
-  const def=D.defender,order=throwers();
-  drawUp([...order.filter(p=>p!==def),def]);
+  const def=D.defender,order=[];
+  // kart çekme: önce saldıran, sonra saat yönünde diğerleri, en son savunan (kartını bitirenler dahil)
+  for(let k=0;k<D.n;k++){const q=(D.attacker+k)%D.n;if(q!==def)order.push(q)}
+  drawUp([...order,def]);
   D.firstBout=false;
   for(let p=0;p<D.n;p++)if(!D.hands[p].length&&!D.talon.length&&!D.outOrder.includes(p))D.outOrder.push(p);
   const left=[...Array(D.n).keys()].filter(p=>D.hands[p].length>0);
+  // güvenlik: oyun sonsuz döngüye girerse (çok nadir) en çok kartı olan durak olur
+  if(D.bout>400&&!D.talon.length&&left.length>1){D.ended=true;D.durak=left.reduce((b,p)=>D.hands[p].length>D.hands[b].length?p:b,left[0]);return {ended:true}}
   if(!D.talon.length&&left.length<=1){D.ended=true;D.durak=left.length?left[0]:null;
     // beraberlik kapalıysa: son kartlarını aynı anda bitirdiklerinde savunan durak olur
     if(D.durak==null&&!D.opts.draw&&D.n>1){D.durak=def;D.outOrder=D.outOrder.filter(p=>p!==def)}
@@ -1010,13 +1014,13 @@ async function doTransfer(id,fr0){
   snd.card();U.sel=null;PF.xfers=(PF.xfers||0)+1;qInc('aktar');log(`Saldırıyı ${cname(c)} ile ${NAMES[r.to]}'e aktardın`,true);banner('AKTARDIN');
   U.busy=true;render();await flyTo(c,fr,destOf(c),240);U.busy=false;render();RUNSOON();
 }
-$('bTake').onclick=()=>{const r=take();if(!r.ok)return toast(r.msg);U.tookCards=true;U.sel=null;log('Almaya karar verdin',true);tag(me,'Alıyorum','t');render();run()};
-$('bPass').onclick=()=>{const was=D.attacker===me;pass(me);tag(me,'Pas');U.sel=null;render();run()};
+$('bTake').onclick=()=>{const r=take();if(!r.ok)return toast(r.msg);U.tookCards=true;U.sel=null;log('Almaya karar verdin',true);tag(me,'Alıyorum','t');render();if(ON&&typeof push==='function')push();run()};
+$('bPass').onclick=()=>{const was=D.attacker===me;pass(me);tag(me,'Pas');U.sel=null;render();if(ON&&typeof push==='function')push();run()};
 $('bCatch').onclick=()=>{const r=accuse(me);if(!r.ok)return toast(r.msg);
   if(r.hit){PF.caught=(PF.caught||0)+1;qInc('yakala');snd.take();log(`Hileyi yakaladın: ${NAMES[r.cheater]} ${r.n} kartı aldı`,true);banner(`Yakaladın, ${NAMES[r.cheater]} aldı`);react(r.cheater,'😳');
     if(D.ended){render();return gameEnd()}}
   else{log('Suçladın ama hile yoktu');banner('Hile yoktu');}
-  U.sel=null;render();run()};
+  U.sel=null;render();if(ON&&typeof push==='function')push();run()};
 /* süre */
 let tmr=null,tKey='';
 function armTimer(o){
@@ -1088,7 +1092,7 @@ $('bMem').onclick=showMem;
 /* akış */
 const isBot=p=>!ON&&p!==me;
 /* hamlemden sonra rakip hemen cevap vermez: bu arada kart ekleyebilir ya da geri alabilirsin */
-function RUNSOON(){clearTimeout(U.rt);if(ON||!D||D.ended)return run();const o=myOptions();if(o.mode==='none'&&undoable(me)==null)return run();const T=2600,t0=Date.now();if(!U.undoHint&&undoable(me)!=null){U.undoHint=1;toast('Yanlış attıysan sağ alttaki sarı “Geri al” butonuna bas (1 gold).')}U.rt=setTimeout(()=>{U.rt=null;clearInterval(U.rti);run()},T);render();
+function RUNSOON(){clearTimeout(U.rt);if(ON&&typeof push==='function')push();if(ON||!D||D.ended)return run();const o=myOptions();if(o.mode==='none'&&undoable(me)==null)return run();const T=2600,t0=Date.now();if(!U.undoHint&&undoable(me)!=null){U.undoHint=1;toast('Yanlış attıysan sağ alttaki sarı “Geri al” butonuna bas (1 gold).')}U.rt=setTimeout(()=>{U.rt=null;clearInterval(U.rti);run()},T);render();
   const bu=$('bUndo');if(!bu.querySelector('i'))bu.insertAdjacentHTML('beforeend','<i></i>');clearInterval(U.rti);
   U.rti=setInterval(()=>{const l=Math.max(0,1-(Date.now()-t0)/T);bu.style.setProperty('--t',(l*100)+'%');if(!l)clearInterval(U.rti)},100)}
 $('bUndo').onclick=async()=>{if(U.busy)return;if(goldHave()<1){clearTimeout(U.rt);clearInterval(U.rti);toast('Geri almak için 1 gold lazım. Mağazadan günlük hediyeni alabilirsin.');return showShop()}
@@ -1221,7 +1225,7 @@ function joinOnline(code,silent){
   PEER.on('error',e=>{if(e.type==='peer-unavailable'){open(`<h2>Masa bulunamadı</h2><p>Arkadaşın masayı kapatmış olabilir. Ondan yeni link iste ya da sen masa kur.</p><div class="rowb"><button class="btn" id="hostHere">Ben masa kurayım</button><button class="btn ghost" id="cl">Menü</button></div>`);$('hostHere').onclick=()=>hostOnline();$('cl').onclick=()=>{leaveOnline();showMenu()}}else toast('Bağlantı sorunu: '+e.type)});
 }
 let HB=null,lastSeen=0;
-function heartbeat(){clearInterval(HB);lastSeen=Date.now();HB=setInterval(()=>{if(!ON){clearInterval(HB);return}send({t:'ping'});
+function heartbeat(){clearInterval(HB);lastSeen=Date.now();HB=setInterval(()=>{if(!ON){clearInterval(HB);return}send({t:'ping'});if(D&&ON.started&&CONN&&CONN.open&&!U.busy){try{send({t:'state',state:mapState(ser(),-ON.seat),ver:ON.ver,from:ON.seat,re:1})}catch(e){}}
   if(Date.now()-lastSeen>12000&&CONN){const c=CONN;lastSeen=Date.now();if(ON.seat===1){autoReconnect(ON.code,0)}else{toast('Arkadaşının bağlantısı koptu, geri gelmesini bekliyorsun');try{c.close()}catch(e){}}}},4000)}
 function autoReconnect(code,n){if(!ON||ON.code!==code)return;
   if(n>=8){open(`<h2>Bağlantı koptu</h2><p>Masaya ulaşılamıyor. Arkadaşın sayfayı kapatmadıysa yeniden dene; oyun kaldığı yerden devam eder.</p><div class="rowb"><button class="btn" id="rc">Yeniden bağlan</button><button class="btn ghost" id="cl">Menü</button></div>`);$('rc').onclick=()=>joinOnline(code);$('cl').onclick=()=>{leaveOnline();showMenu()};return}
@@ -1244,7 +1248,8 @@ function wire(c,onOpen){
     if(d.t==='chat'){if(typeof addChat==='function')addChat(1,String(d.x||'').slice(0,140),true);return}
     if(d.t==='rematch'){if(ON.seat===0&&D&&D.ended){close();onlineRematch()}return}
     if(d.t!=='state')return;
-    if(ON.got&&D&&!(d.ver>ON.ver||(d.ver===ON.ver&&ON.seat===1&&d.from===0)))return;ON.got=true;ON.ver=Math.max(ON.ver,d.ver);
+    if(ON.got&&D&&!(d.ver>ON.ver||(d.ver===ON.ver&&ON.seat===1&&d.from===0)))return;
+    if(ON.got&&D&&JSON.stringify(d.state)===JSON.stringify(mapState(ser(),-ON.seat))){ON.ver=Math.max(ON.ver,d.ver);return}ON.got=true;ON.ver=Math.max(ON.ver,d.ver);
     const prev=D&&D.n===2&&ON.started?{table:snapTable(),tableIds:new Set(D.table.flatMap(x=>[x.a.id,...(x.d?[x.d.id]:[])])),hands:D.hands.map(h=>h.map(c=>c.id)),def:D.defender,ended:D.ended}:null;
     ON.started=true;lastPushed=JSON.stringify(d.state);load(mapState(d.state,ON.seat));if(!G||G.n!==2)G={n:2,duraks:[0,0],games:0,lastDurak:null};
     saveOn();applyRemote(prev)});
