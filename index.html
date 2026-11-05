@@ -1,6 +1,6 @@
 <!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Kahvehane · Online Oyun Salonu</title>
-<meta name="description" content="Durak, Okey, 101 Okey, King, Batak, Pişti, Tavla, Kızma Birader ve Satranç. Ücretsiz, kayıt şart değil. Arkadaşına link at ya da hızlı oyunla rakip bul.">
+<meta name="description" content="Durak, Okey, 101 Okey, King, Batak, Pişti, Tavla, Kızma Birader, Dama ve Satranç. Ücretsiz, kayıt şart değil. Arkadaşına link at ya da hızlı oyunla rakip bul.">
 <link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="icon-192.png">
 <meta name="theme-color" content="#16100b"><meta property="og:title" content="Kahvehane · Online Oyun Salonu"><meta property="og:description" content="Durak, Okey, King, Batak, Pişti, Tavla ve daha fazlası. Ücretsiz, kayıt şart değil.">
 <meta property="og:image" content="icon-512.png"><meta name="apple-mobile-web-app-capable" content="yes">
@@ -140,7 +140,7 @@ footer .links{display:flex;gap:14px;flex-wrap:wrap}
     </div>
   </section>
   <div class="bar" id="oyunlar"><h2>Oyunlar</h2>
-    <div class="chips" id="chips"><button data-c="" class="on">Hepsi</button><button data-c="kart">Kart</button><button data-c="tas">Okey</button><button data-c="zar">Zar</button><button data-c="tahta">Satranç</button><button data-c="tek">Tek kişilik</button></div>
+    <div class="chips" id="chips"><button data-c="" class="on">Hepsi</button><button data-c="kart">Kart</button><button data-c="tas">Okey</button><button data-c="zar">Zar</button><button data-c="tahta">Dama · Satranç</button><button data-c="tek">Tek kişilik</button></div>
   </div>
   <div class="grid" id="grid">
       <a class="game" href="durak/" data-cat="kart">
@@ -199,6 +199,14 @@ footer .links{display:flex;gap:14px;flex-wrap:wrap}
           <div class="tags"><span class="tag">Takım</span></div>
           <span class="play">Oyna →</span></div>
       </a>
+      <a class="game" href="dama/" data-cat="tahta">
+        <div class="art durak" style="background:repeating-conic-gradient(#d9b98a 0 25%,#7a4a2a 0 50%) 0 0/40px 40px"><div class="tiles"><span style="color:#f4ead8;border-radius:50%;background:#2a211b">●</span><span style="color:#b8862b">♛</span><span style="color:#2a211b;border-radius:50%">●</span></div></div>
+        <div class="body"><div class="badges"><span class="new">Yeni</span></div><h3>Dama</h3>
+          <p>Türk daması ya da Rus daması. Taşını ilerlet, rakibin taşlarını al, dama ol.</p>
+          <div class="meta"><span>👥 2 kişi</span><span>🌐 Online</span><span>⚡ Hızlı oyun</span></div>
+          <div class="tags"><span class="tag">Türk / Rus</span></div>
+          <span class="play">Oyna →</span></div>
+      </a>
       <a class="game" href="tavla/" data-cat="zar">
         <div class="art durak" style="background:radial-gradient(ellipse at 50% 40%,#6b4423,#3a2414)"><div class="tiles"><span style="color:#2a211b;border-radius:50%">●</span><span style="color:#8c2f24">⚀</span><span style="color:#2a211b">⚄</span></div></div>
         <div class="body"><div class="badges"><span class="new">Yeni</span></div><h3>Tavla</h3>
@@ -253,15 +261,15 @@ addEventListener('load',()=>{const t=setInterval(()=>{const b=document.querySele
 /* kategori süzgeci */
 document.querySelectorAll('#chips button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#chips button').forEach(x=>x.classList.toggle('on',x===b));const c=b.dataset.c;document.querySelectorAll('#grid .game').forEach(g=>g.hidden=!!c&&g.dataset.cat!==c)});
 /* hızlı oyun: oyunu seç, o oyunda masa ara */
-document.getElementById('qBtn').onclick=()=>{const o=document.createElement('div');o.className='qp';o.innerHTML='<div class="s"><h3>⚡ Hızlı oyun</h3><p>Hangi oyunu oynamak istersin? Bekleyen bir masa varsa oturtuyoruz, yoksa sana masa açıyoruz.</p><div class="g"><button data-q="durak/">Durak</button><button data-q="okey101/?klasik=1">Okey</button><button data-q="okey101/">101 Okey</button><button data-q="king/">King</button><button data-q="batak/">Batak</button><button data-q="pisti/">Pişti</button><button data-q="pisti4/">Eşli Pişti</button><button data-q="tavla/">Tavla</button><button data-q="kizma/">Kızma Birader</button></div><button class="x">Vazgeç</button></div>';
+document.getElementById('qBtn').onclick=()=>{const o=document.createElement('div');o.className='qp';o.innerHTML='<div class="s"><h3>⚡ Hızlı oyun</h3><p>Hangi oyunu oynamak istersin? Bekleyen bir masa varsa oturtuyoruz, yoksa sana masa açıyoruz.</p><div class="g"><button data-q="durak/">Durak</button><button data-q="okey101/?klasik=1">Okey</button><button data-q="okey101/">101 Okey</button><button data-q="king/">King</button><button data-q="batak/">Batak</button><button data-q="pisti/">Pişti</button><button data-q="pisti4/">Eşli Pişti</button><button data-q="tavla/">Tavla</button><button data-q="kizma/">Kızma Birader</button><button data-q="dama/">Dama</button></div><button class="x">Vazgeç</button></div>';
   document.body.appendChild(o);o.onclick=e=>{if(e.target===o||e.target.classList.contains('x'))o.remove()};o.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>{const h=b.dataset.q;location.href=h+(h.includes('?')?'&':'?')+'hizli=1'})};
 document.getElementById('fBtn').onclick=()=>{if(window.KH)KH.openProfile()};
 /* yarım kalan oyunlar */
-(()=>{const S={'king/':'king_save','batak/':'batak_save','kizma/':'kb_save','tavla/':'tv_save','pisti4/':'pisti4_save'};
+(()=>{const S={'king/':'king_save','batak/':'batak_save','kizma/':'kb_save','tavla/':'tv_save','dama/':'dm_save','pisti4/':'pisti4_save'};
   for(const href in S){let v=null;try{v=localStorage.getItem(S[href])}catch(e){}if(!v||v==='null')continue;const a=document.querySelector(`a.game[href="${href}"] .badges`);if(!a)continue;
     const b=document.createElement('span');b.className='resume';b.textContent='▶ Yarım kalan oyunun var';a.prepend(b)}})();
 /* canlı: hızlı oyunda oyuncu bekleyen masalar */
-addEventListener('load',()=>setTimeout(()=>{const go=()=>{if(!window.KQuick)return;const map={durak:'durak/',king:'king/',batak:'batak/',kizma:'kizma/',tavla:'tavla/',pisti:'pisti/',okey101:'okey101/',okey:'okey101/?klasik=1',pisti4:'pisti4/'};
+addEventListener('load',()=>setTimeout(()=>{const go=()=>{if(!window.KQuick)return;const map={durak:'durak/',king:'king/',batak:'batak/',kizma:'kizma/',tavla:'tavla/',pisti:'pisti/',okey101:'okey101/',okey:'okey101/?klasik=1',pisti4:'pisti4/',dama:'dama/',damaru:'dama/?v=ru'};
   KQuick.watch(cnt=>{document.querySelectorAll('.live').forEach(x=>x.remove());for(const g in cnt){const a=document.querySelector(`a.game[href="${map[g]}"] .badges`);if(!a)continue;
     const b=document.createElement('span');b.className='live';b.textContent=cnt[g]===1?'● 1 masa oyuncu bekliyor':`● ${cnt[g]} masa oyuncu bekliyor`;a.prepend(b)}})};
   if(window.mqtt)go();else{const s=document.createElement('script');s.src='mqtt.min.js';s.onload=go;document.head.appendChild(s)}},1200));

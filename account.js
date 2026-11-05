@@ -231,7 +231,7 @@ async function share(url){const text='Kahvehane\'de benimle oyna! Linke tıkla, 
   try{if(navigator.share&&matchMedia('(pointer:coarse)').matches){await navigator.share({title:'Kahvehane',text,url});return}}catch(e){return}
   copy(url,'Davet linki kopyalandı')}
 /* profilden arkadaşı bir oyuna davet et: oyun sayfası masayı kurar, davet kendiliğinden gider */
-const GAMES=[['Durak','durak/'],['King','king/'],['Batak','batak/'],['Okey','okey101/?klasik=1'],['101 Okey','okey101/'],['Pişti','pisti/'],['Eşli Pişti','pisti4/'],['Tavla','tavla/'],['Kızma Birader','kizma/']];
+const GAMES=[['Durak','durak/'],['King','king/'],['Batak','batak/'],['Okey','okey101/?klasik=1'],['101 Okey','okey101/'],['Pişti','pisti/'],['Eşli Pişti','pisti4/'],['Tavla','tavla/'],['Kızma Birader','kizma/'],['Dama','dama/']];
 function pickGame(uid){const f=F[uid];if(!f)return;
   const s=sheet('pick',`<h2>${esc(f.name)} <span>ile oyna</span></h2><p>Oyunu seç. Masa kurulur ve arkadaşına davet gider; o gelince başlatırsın.${online(uid)?'':' <b>Arkadaşın şu an çevrimdışı</b>, davet yine de 15 dakika bekler; istersen linki WhatsApp\'tan da gönder.'}</p>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">${GAMES.map(([n,p])=>`<button class="kh-b" data-p="${esc(p)}">${esc(n)}</button>`).join('')}</div>
