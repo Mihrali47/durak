@@ -161,7 +161,8 @@ const T=[
 ["Dört kişilik kahvehane okeyi. 101 ya da 5 çiftle aç, masaya işle, Nuri, Rıza ve Hamdi Abi'den önce bitir.",'Турецкий окей на четверых. Открывайтесь на 101 или пятью парами и закончите раньше соперников.','Four-player Turkish Okey. Open with 101 or five pairs and finish before your rivals.'],
 ['4 kişi','4 игрока','4 players'],['3 / 5 / 9 el','3 / 5 / 9 партий','3 / 5 / 9 hands'],['Kahvehane Okey','Окей-рогалик','Kahvehane Okey'],
 ['Okey taşlarıyla tek kişilik rogue-lite. Seri ve per kur, tılsım topla, dört kahvehanenin patronunu yen.','Одиночный рогалик с фишками окей: собирайте комбинации, амулеты и обыграйте хозяев четырёх кофеен.','Single-player roguelite with Okey tiles: build runs and sets, collect charms, beat four café bosses.'],
-['Tek kişi','Один игрок','Single player'],['Rogue-lite','Рогалик','Roguelite'],['Kızma Birader','Не сердись','Ludo'],['Zar at, piyonu eve götür, rakibi kır','Бросайте кубик и ведите фишки домой','Roll, race your pawns home, knock out rivals'],
+['Tek kişi','Один игрок','Single player'],['Rogue-lite','Рогалик','Roguelite'],['Dört kişilik klasik kahvehane oyunu. El almaz, kupa almaz, kız almaz, rıfkı… cezalardan kaç, kozda el topla. Linkle arkadaşlarınla oyna.','Классическая игра на четверых. Без взяток, без червей, без девочек, Рифки… избегайте штрафов, в козырях берите взятки. Играйте с друзьями по ссылке.','A classic four-player café game. No tricks, no hearts, no queens, Rifki… dodge penalties, take tricks in trumps. Play with friends by link.'],['20 / 12 el','20 / 12 раздач','20 / 12 hands'],['4 kişi','4 игрока','4 players'],
+['Kızma Birader','Не сердись','Ludo'],['Zar at, piyonu eve götür, rakibi kır','Бросайте кубик и ведите фишки домой','Roll, race your pawns home, knock out rivals'],
 ['Tavla','Нарды','Backgammon'],['Zar at, kapı kur, mars et','Бросайте кости, стройте блоки','Roll, build points, gammon'],['Batak','Батак','Batak'],['İhale ve koz ile 4 kişi','Торговля и козыри, 4 игрока','Bidding and trumps, 4 players'],['King','Кинг','King'],['Ceza ve koz elleri','Штрафные и козырные партии','Penalty and trump hands'],
 ['Ücretsiz · Kayıt yok · Reklamsız','Бесплатно · Без регистрации · Без рекламы','Free · No sign-up · No ads'],['Telefonunda uygulama gibi kullanmak için tarayıcı menüsünden','Чтобы установить как приложение, в меню браузера выберите','To use it like an app, choose'],['Ana ekrana ekle','«На главный экран»','Add to Home Screen'],["'yi seç.",'.',' in your browser menu.'],['📲 Telefona kur','📲 Установить','📲 Install'],
 ['Kartı oynamak için masaya sürükle.','Перетащите карту на стол, чтобы сыграть.','Drag the card onto the table to play it.'],['Hileli masa: kurala uymayan kart oynayabilirsin. Hile gördüğün karta iki kez dokun.','Стол с шулерами: можно играть не по правилам. Заметили жульничество — дважды нажмите на карту.','Cheat table: you may break the rules. Spotted a cheat? Double-tap that card.'],
@@ -172,6 +173,7 @@ const T=[
 ];
 if(L==='ru')T.push(['Nuri','Нури',''],['Rıza','Рыза',''],['Hamdi','Хамди',''],['Cemil','Джемиль',''],['Kâzım','Казым','']);
 T.push(['@mavi','Синий','Blue'],['@yesil','Зелёный','Green'],['@bordo','Бордо','Burgundy'],['@gece','Ночь','Night']);
+T.push(...(window.I18N_EXTRA||[]));
 const I=L==='ru'?1:2,D0={},A0={};for(const r of T){if(r[0][0]==='@')A0[r[0].slice(1)]=r[I];else D0[r[0]]=r[I]}
 const SU={maça:['пики','spades'],kupa:['червы','hearts'],karo:['бубны','diamonds'],sinek:['трефы','clubs']},RK={vale:['валет','jack'],'kız':['дама','queen'],papaz:['король','king'],as:['туз','ace']};
 const J=I-1;
@@ -203,6 +205,7 @@ const R=L==='ru'?[
 [/^(.+) hepsini kesti, kartlar çıktı$/,'$1 beat everything, discarded'],[/^Hepsini kestin, kartlar çıktı$/,'You beat everything, discarded'],[/^Yeni el\. Koz (.+)\. (.*)$/,(m,a)=>'New hand. Trumps: '+(SU[a]?SU[a][1]:a)+'.'],
 [/^(.+) hileyi yakaladı$/,'$1 caught a cheat'],[/^(.+) hileyi yakaladı: (.+)$/,'$1 caught a cheat'],[/^Saldırı sende$/,'Your attack'],[/^Aktardın$/,'Transferred'],[/^Sana aktardı$/,'Transferred to you'],[/^Kurtuldun$/,'You escaped'],[/^Berabere$/,'Draw'],[/^(.+) aktardı$/,'$1 transferred'],
 ];
+R.unshift(...(((window.I18N_RULES||{})[L])||[]));
 function tr(s){const k=s.trim();if(!k)return null;let o=D0[k];
   if(o==null){for(const [re,to] of R){if(re.test(k)){o=k.replace(re,to);break}}}
   if(o==null&&/\b(maça|kupa|karo|sinek)\b/.test(k))o=card(k);
@@ -1233,18 +1236,18 @@ function botReact(p,mood){if(p===me||Math.random()>.45)return;const pick={bad:['
 const EMOJI=['👍','👏','😂','🤣','😮','😱','😤','😡','😢','🙏','😎','🤔','😏','🥳','😴','🤝','🔥','💪','☕','🍀','🃏','👀','🙈','❤️'];
 const QUICK=['Merhaba!','Hadi!','İyi oyundu','Şanslısın','Çok hızlı','Bekle biraz','Bir el daha?','Teşekkürler'];
 const CHAT={log:[],tab:'emo',unread:0};
-const myLang=(navigator.language||'tr').slice(0,2).toLowerCase();
-async function translate(text){
-  try{const r=await fetch('https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl='+myLang+'&dt=t&q='+encodeURIComponent(text));const j=await r.json();
-    const out=(j[0]||[]).map(x=>x[0]).join(''),src=j[2];if(src&&src!==myLang&&out&&out.trim().toLowerCase()!==text.trim().toLowerCase())return {t:out,src};return null}
-  catch(e){try{const r=await fetch('https://api.mymemory.translated.net/get?q='+encodeURIComponent(text)+'&langpair=autodetect|'+myLang);const j=await r.json();const out=j&&j.responseData&&j.responseData.translatedText;
+const myLang0=()=>String(window.LANG||navigator.language||'tr').slice(0,2).toLowerCase();
+async function translate(text,sl){const myLang=myLang0();sl=/^(tr|ru|en)$/.test(sl||'')?sl:'auto';if(sl===myLang)return null;
+  try{const r=await fetch('https://translate.googleapis.com/translate_a/single?client=gtx&sl='+sl+'&tl='+myLang+'&dt=t&q='+encodeURIComponent(text));const j=await r.json();
+    const out=(j[0]||[]).map(x=>x[0]).join(''),src=j[2];if((sl!=='auto'||(src&&src!==myLang))&&out&&out.trim().toLowerCase()!==text.trim().toLowerCase())return {t:out,src};return null}
+  catch(e){try{const r=await fetch('https://api.mymemory.translated.net/get?q='+encodeURIComponent(text)+'&langpair='+(sl==='auto'?'autodetect':sl)+'|'+myLang);const j=await r.json();const out=j&&j.responseData&&j.responseData.translatedText;
     if(out&&out.trim().toLowerCase()!==text.trim().toLowerCase()&&!/INVALID|MYMEMORY/i.test(out))return {t:out,src:'?'}}catch(x){}return null}}
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 function sayBubble(p,text){const host=p===me?$('meAv'):$('av'+p);if(!host)return;host.querySelector('.bub')?.remove();const b=document.createElement('span');b.className='bub txt';b.textContent=text.length>60?text.slice(0,58)+'…':text;host.appendChild(b);setTimeout(()=>b.remove(),3200)}
-async function addChat(p,text,fromNet){const it={p,text,tr:null};CHAT.log.push(it);if(CHAT.log.length>60)CHAT.log.shift();
+async function addChat(p,text,fromNet,sl){const it={p,text,tr:null};CHAT.log.push(it);if(CHAT.log.length>60)CHAT.log.shift();
   sayBubble(p,text);if(p!==me){if(!document.querySelector('.chatp'))CHAT.unread++;markChat()}
-  renderChat();if(p!==me){const tr=await translate(text);if(tr){it.tr=tr;renderChat();sayBubble(p,tr.t)}}}
-function sendChat(text){text=String(text||'').trim().slice(0,140);if(!text)return;if(ON&&typeof send==='function')send({t:'chat',x:text});addChat(me,text);
+  renderChat();if(p!==me){const tr=await translate(text,sl);if(tr){it.tr=tr;renderChat();sayBubble(p,tr.t)}}}
+function sendChat(text){text=String(text||'').trim().slice(0,140);if(!text)return;if(ON&&typeof send==='function')send({t:'chat',x:text,l:myLang0()});addChat(me,text);
   if(!ON&&D&&Math.random()<.6){const bots=[...Array(D.n).keys()].filter(q=>q!==me);const q=bots[Math.random()*bots.length|0];const ans=['😂','Bakalım!','Hadi hadi','👍','Sıra kimde?','Şansın bol olsun','☕'];setTimeout(()=>addChat(q,ans[Math.random()*ans.length|0]),900+Math.random()*900)}}
 function markChat(){$('chatBtn')?.classList.toggle('new',CHAT.unread>0)}
 function renderChat(){const pnl=document.querySelector('.chatp');if(!pnl||CHAT.tab!=='msg')return;const box=pnl.querySelector('.msgs');if(!box)return;
@@ -1475,7 +1478,7 @@ function wire(c,onOpen){
       const s=c._seat;if(s==null||ON.conns[s]!==c)return;ON.seen[s]=Date.now();c._warned=0;
       if(d.t==='ping')return;
       if(d.t==='tag'||d.t==='emo'||d.t==='chat'){const m={...d,from:s};send(m,s);
-        if(d.t==='tag')showTag(s,d.x,d.cls);else if(d.t==='emo')showEmo(s,d.e);else if(typeof addChat==='function')addChat(local(s),String(d.x||'').slice(0,140),true);return}
+        if(d.t==='tag')showTag(s,d.x,d.cls);else if(d.t==='emo')showEmo(s,d.e);else if(typeof addChat==='function')addChat(local(s),String(d.x||'').slice(0,140),true,String(d.l||'').slice(0,2));return}
       if(d.t==='rematch'){if(D&&D.ended){close();onlineRematch()}return}
       if(d.t!=='state')return;
       if(!(d.ver>ON.ver))return;                       // ev sahibi beraberlikte kazanır
@@ -1490,7 +1493,7 @@ function wire(c,onOpen){
     if(d.t==='lobby'){ON.players=(d.players||[]).map(x=>({name:x}));ON.meta.n=d.n||ON.meta.n;applyNames();if(!ON.started&&!d.started)showWaiting();else render();return}
     if(d.t==='tag')return showTag(d.from==null?0:d.from,d.x,d.cls);
     if(d.t==='emo')return showEmo(d.from==null?0:d.from,d.e);
-    if(d.t==='chat'){if(typeof addChat==='function')addChat(local(d.from==null?0:d.from),String(d.x||'').slice(0,140),true);return}
+    if(d.t==='chat'){if(typeof addChat==='function')addChat(local(d.from==null?0:d.from),String(d.x||'').slice(0,140),true,String(d.l||'').slice(0,2));return}
     if(d.t!=='state'||ON.seat<0)return;
     if(ON.got&&D&&ON.started&&d.ver<ON.ver)return;     // eski durum
     if(ON.got&&D&&ON.started&&JSON.stringify(d.state)===JSON.stringify(canon())){ON.ver=Math.max(ON.ver,d.ver);return}
