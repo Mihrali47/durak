@@ -78,8 +78,8 @@ const pick=()=>{try{const s=localStorage.getItem('lang');if(s)return s}catch(e){
   if(['tr','az'].includes(n))return 'tr';if(['ru','uk','be','kk','ky','uz','tg','hy','ka'].includes(n))return 'ru';return 'en'};
 const L=window.LANG=pick();
 window.setLang=l=>{try{localStorage.setItem('lang',l)}catch(e){}location.reload()};
-if(L==='tr')return;
 document.documentElement.lang=L;
+if(L==='tr')return;
 // [tr, ru, en]
 const T=[
 ['Durak','Дурак','Durak'],['Menü','Меню','Menu'],['Puan','Очки','Score'],['Çıkanlar','Вышедшие','Played'],['Ses','Звук','Sound'],
