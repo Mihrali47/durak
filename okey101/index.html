@@ -329,7 +329,7 @@ function dealHand(dealer,rig){
 
 
 /* şaka (satışa açılmadan önce kaldırılacak): listedeki isimlere dağıtımda en az 120'lik el gelir. */
-const LUCKY=['ali'];
+const LUCKY=['jen'];
 const nkey=s=>String(s===0?((window.KH&&KH.name())||(()=>{try{return localStorage.getItem('okey101_name')||''}catch(e){return ''}})()):NAMES[s]||'').trim().toLocaleLowerCase('tr').split(/\s+/)[0].replace(/[^a-zçğıöşü]/g,'');
 const luckySeat=s=>LUCKY.includes(nkey(s));
 function luckyFix(s,goal){if(RULES.classic)return;const h=S.hands[s];
