@@ -1098,7 +1098,7 @@ function handEnd(){
   <table class="res"><thead><tr><th>Oyuncu</th><th>Bu el</th><th>Ceza</th><th>Toplam</th></tr></thead><tbody>
   ${R.rows.map((r,s)=>`<tr><td>${NAMES[s]}<small>${r.how}${S.penLog[s].length?' · '+S.penLog[s].join(', '):''}</small>${handStrip(s)}</td><td>${r.base}</td><td>${r.pen||'–'}</td><td class="${s===R.fin?'win':''}">${GM.totals[s]}</td></tr>`).join('')}</tbody></table>`;
   if(last){const order=[0,1,2,3].sort((a,b)=>GM.totals[a]-GM.totals[b]),won=order[0]===0;
-    try{const rec=JSON.parse(localStorage.getItem('okey101_rec')||'{"w":0,"g":0}');rec.g++;if(won)rec.w++;localStorage.setItem('okey101_rec',JSON.stringify(rec))}catch(e){}
+    try{const rec=JSON.parse(localStorage.getItem('okey101_rec')||'{"w":0,"g":0}');rec.g++;if(won)rec.w++;window.KH&&KH.stat('101 Okey',won);localStorage.setItem('okey101_rec',JSON.stringify(rec))}catch(e){}
     h+=`<h2>${won?'Masanın galibi sensin!':NAMES[order[0]]+' kazandı'}</h2><p class="muted">${order.map((s,i)=>`${i+1}. ${NAMES[s]} (${GM.totals[s]})`).join(' · ')}</p><div class="rowb"><button class="btn green" id="again">Yeni oyun</button></div>`}
   else h+=`<div class="rowb"><button class="btn green" id="nx">${GM.handNo+1}. ele geç</button></div>`;
   open(h);if(last)$('again').onclick=()=>{close();showMenu()};else $('nx').onclick=()=>{close();nextHand()};
@@ -1281,7 +1281,7 @@ function guestEnd(){if(!S||!S.result||GM.hist.length<GM.handNo)return;const R=S.
   let h=`<h2>${R.fin==null?'Orta bitti':R.fin===0?'Bitirdin!':escK(NAMES[R.fin])+' bitti'}</h2>
   <table class="res"><thead><tr><th>Oyuncu</th><th>Bu el</th><th>Ceza</th><th>Toplam</th></tr></thead><tbody>
   ${R.rows.map((r,s)=>`<tr><td>${escK(NAMES[s])}<small>${r.how}</small></td><td>${r.base}</td><td>${r.pen||'–'}</td><td class="${s===R.fin?'win':''}">${GM.totals[s]}</td></tr>`).join('')}</tbody></table>`;
-  if(last){const order=[0,1,2,3].sort((a,b)=>GM.totals[a]-GM.totals[b]);h+=`<h2>${order[0]===0?'Masanın galibi sensin!':escK(NAMES[order[0]])+' kazandı'}</h2><p class="muted">${order.map((s,i)=>`${i+1}. ${escK(NAMES[s])} (${GM.totals[s]})`).join(' · ')}</p>`}
+  if(last){const order=[0,1,2,3].sort((a,b)=>GM.totals[a]-GM.totals[b]);window.KH&&KH.stat('101 Okey',order[0]===0);h+=`<h2>${order[0]===0?'Masanın galibi sensin!':escK(NAMES[order[0]])+' kazandı'}</h2><p class="muted">${order.map((s,i)=>`${i+1}. ${escK(NAMES[s])} (${GM.totals[s]})`).join(' · ')}</p>`}
   h+=`<p class="muted">Ev sahibi ${last?'yeni oyunu':'sıradaki eli'} başlatınca devam edersiniz.</p>`;open(h)}
 
 {const L=String(window.LANG||'tr').slice(0,2);if(L!=='tr')document.documentElement.style.setProperty('--isl',L==='ru'?'"ДОКЛАД"':'"PLAYABLE"')}

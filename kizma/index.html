@@ -190,7 +190,7 @@ function newGame(){const n=mode==='off'?nPlayers:null;
 function ov(k,h){$('ov').style.alignItems='';const s=$('sheet');s.dataset.k=k;s.innerHTML=h;$('ov').hidden=false;return s}
 function hideOv(){$('ov').hidden=true;$('sheet').dataset.k=''}
 function showOver(){if($('sheet').dataset.k==='over'&&!$('ov').hidden)return;ST.del('save');
-  if(!showOver.done){showOver.done=true;const r=ST.get('rec',[0,0]);r[G.winner===me?0:1]++;ST.set('rec',r)}
+  if(!showOver.done){showOver.done=true;const r=ST.get('rec',[0,0]);r[G.winner===me?0:1]++;window.KH&&KH.stat('Kızma Birader',G.winner===me);ST.set('rec',r)}
   const ord=G.act.slice().sort((a,b)=>G.pawns[b].filter(d=>d>=40).length-G.pawns[a].filter(d=>d>=40).length||G.pawns[b].reduce((x,y)=>x+y,0)-G.pawns[a].reduce((x,y)=>x+y,0));
   ov('over',`<h2>${G.winner===me?'Tebrikler, kazandın!':`${names[G.winner]} kazandı`}</h2>
     <ul class="rank">${ord.map(p=>`<li><b style="color:${CV[p]}">●</b><b style="flex:1">${pn(p)}</b><span>Evde: ${G.pawns[p].filter(d=>d>=40).length}/4</span></li>`).join('')}</ul>

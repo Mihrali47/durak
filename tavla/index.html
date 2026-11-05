@@ -193,7 +193,7 @@ function newMatch(){if(mode==='off'){me=0;names=[myName(),'Nuri']}G=TV.newMatch(
 function ov(k,h){const s=$('sheet');s.dataset.k=k;s.innerHTML=h;$('ov').hidden=false;return s}
 function hideOv(){$('ov').hidden=true;$('sheet').dataset.k=''}
 function showEnd(){const k=G.phase+G.games;if(showEnd.k===k&&!$('ov').hidden)return;const first=showEnd.k!==k;showEnd.k=k;const w=G.winner,over=G.phase==='over';
-  if(over&&first){const r=ST.get('rec',[0,0]);r[G.matchWinner===me?0:1]++;ST.set('rec',r);ST.del('save')}
+  if(over&&first){const r=ST.get('rec',[0,0]);r[G.matchWinner===me?0:1]++;window.KH&&KH.stat('Tavla',G.matchWinner===me);ST.set('rec',r);ST.del('save')}
   ov('end',`<h2>${over?(G.matchWinner===me?'Maçı kazandın!':`${esc(names[G.matchWinner])} maçı kazandı`):(w===me?'Oyunu kazandın!':`${esc(names[w])} oyunu kazandı`)}</h2>
     <p>${G.pts===2?'<b>Mars!</b> +2 puan':'+1 puan'} · <span>Maç ${G.target} puana</span></p>
     <ul class="rank">${[me,1-me].map(p=>`<li><b>${esc(pn(p))}</b><b>${G.score[p]}</b></li>`).join('')}</ul>

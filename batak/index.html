@@ -286,7 +286,7 @@ function showTrump(){if($('sheet').dataset.k==='trump'&&!$('ov').hidden)return;
 function showDealEnd(){const k=M.phase==='over'?'over':'dealEnd';if($('sheet').dataset.k===k&&!$('ov').hidden)return;
   const l=M.log[M.log.length-1];
   if(M.phase==='over'){const ord=[0,1,2,3].sort((a,b)=>M.score[b]-M.score[a]);ST.del('save');
-    const wins=ST.get('rec',[0,0]);if(!showDealEnd.counted){showDealEnd.counted=true;wins[ord[0]===me?0:1]++;ST.set('rec',wins)}
+    const wins=ST.get('rec',[0,0]);if(!showDealEnd.counted){showDealEnd.counted=true;wins[ord[0]===me?0:1]++;window.KH&&KH.stat('Batak',ord[0]===me);ST.set('rec',wins)}
     ov('over',`<h2>${ord[0]===me?'Tebrikler, kazandın!':`${esc(names[ord[0]])} kazandı`}</h2>
       <ul class="rank">${ord.map(p=>`<li><span>${esc(pn(p))}</span><b>${M.score[p]}</b></li>`).join('')}</ul>
       <div class="row">${mode==='guest'?'<p>Ev sahibi yeni maçı başlatabilir.</p>':`<button class="btn" id="eTab">Puan tablosu</button><button class="btn pri" id="eNew">${mode==='host'?'Rövanş':'Yeni maç'}</button>`}</div>`);

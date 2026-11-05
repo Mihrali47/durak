@@ -389,7 +389,7 @@ async function endHand(){
   let head,sub;
   if(done){
     const won=G.total.p>G.total.c;
-    if(won)record.w++;else record.l++;try{localStorage.setItem('pisti_record',JSON.stringify(record))}catch(e){}
+    if(won)record.w++;else record.l++;window.KH&&KH.stat('Pişti',won);try{localStorage.setItem('pisti_record',JSON.stringify(record))}catch(e){}
     head=won?'Oyunu kazandın!':`${NAME.c} kazandı`;
     sub=won?`${G.total.p}–${G.total.c}. Kahvede adın konuşulacak.`:`${G.total.c}–${G.total.p}. Bir el daha mı?`;
   }else{head=`${G.handNo}. el bitti`;sub=`Hedef ${target}. Sıradaki el başlıyor.`}
@@ -509,7 +509,7 @@ async function apply(d){const ev=d.ev,S=d.S;if(!$('ov').hidden&&!['end'].include
   if(ev.k==='hand'){if($('sheet').dataset.k==='end')close();if(S.handNo===1)$('log').innerHTML='';load(S);log(`${S.handNo}. el başladı. Yerdeki açık kart: ${cname(S.pile[S.pile.length-1])}.`);render(true);return}
   if(ev.k==='end'){load(S);render();await wait(500);const p=ev.c,c=ev.p,sp=ev.sc,sc=ev.sp;
     const row=(l,a,b)=>`<tr><td>${l}</td><td>${a}</td><td>${b}</td></tr>`;let head,sub;
-    if(ev.done){const won=G.total.p>G.total.c;if(won)record.w++;else record.l++;try{localStorage.setItem('pisti_record',JSON.stringify(record))}catch(e){}
+    if(ev.done){const won=G.total.p>G.total.c;if(won)record.w++;else record.l++;window.KH&&KH.stat('Pişti',won);try{localStorage.setItem('pisti_record',JSON.stringify(record))}catch(e){}
       head=won?'Oyunu kazandın!':`${NAME.c} kazandı`;sub=`${Math.max(G.total.p,G.total.c)}–${Math.min(G.total.p,G.total.c)}`}
     else{head=`${G.handNo}. el bitti`;sub=`Hedef ${target}. Sıradaki el başlıyor.`}
     open(`<h2>${head}</h2><p class="muted">${sub}</p>

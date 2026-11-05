@@ -288,7 +288,7 @@ function showChoose(step){const o=K.options(M,me),pk=M.picks[me];
 function showDealEnd(){const k=M.phase==='over'?'over':'dealEnd';if($('sheet').dataset.k===k&&!$('ov').hidden)return;$('ov').style.alignItems='';
   const l=M.log[M.log.length-1];
   if(M.phase==='over'){const ord=[0,1,2,3].sort((a,b)=>M.score[b]-M.score[a]);ST.del('save');
-    const wins=ST.get('rec',[0,0]);if(!showDealEnd.counted){showDealEnd.counted=true;wins[ord[0]===me?0:1]++;ST.set('rec',wins)}
+    const wins=ST.get('rec',[0,0]);if(!showDealEnd.counted){showDealEnd.counted=true;wins[ord[0]===me?0:1]++;window.KH&&KH.stat('King',ord[0]===me);ST.set('rec',wins)}
     const s=ov('over',`<h2>${M.king!=null?(M.king===me?'KING! Oyunu sen kazandın':`KING! ${names[M.king]} kazandı`):(ord[0]===me?'Tebrikler, kazandın!':`${names[ord[0]]} kazandı`)}</h2>
       ${M.king!=null?`<p>Koz elinde 11 el alan oyunu anında kazanır.</p>`:''}
       <ul class="rank">${ord.map(p=>`<li><span>${pn(p)}</span><b>${M.score[p]}</b></li>`).join('')}</ul>

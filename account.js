@@ -11,7 +11,7 @@ const LS={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.par
 const rid=n=>Array.from(crypto.getRandomValues(new Uint8Array(n||8)),b=>(b%36).toString(36)).join('');
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const AV=['😀','😎','🦊','🐺','🦁','🐯','🐻','🐼','🦅','🐉','⚽','🎲','♠️','☕','🌙','🔥'];
-let P=LS.get('kh_profile',null),F=LS.get('kh_friends',{}),REQ=LS.get('kh_reqs',{}),OUT=LS.get('kh_out',{});
+let P=LS.get('kh_profile',null),SS=LS.get('kh_stats',{}),F=LS.get('kh_friends',{}),REQ=LS.get('kh_reqs',{}),OUT=LS.get('kh_out',{});
 const pres={},seenInv=new Set(LS.get('kh_seeninv',[]));let clients=[],presInfo={game:null},listeners=[];
 const save=()=>{LS.set('kh_friends',F);LS.set('kh_reqs',REQ);LS.set('kh_out',OUT);uploadSoon()};
 /* ---------- şifre ve giriş: profil, şifreden türetilen anahtarla şifrelenip saklanır; başka cihazdan Ad#1234 + şifre ile açılır ---------- */
@@ -24,7 +24,7 @@ async function keepKey(k,salt){KEY=k;SALT=salt;LS.set('kh_key',{raw:b64(await cr
 async function setPassword(pw){if(String(pw||'').length<6)return 'Şifre en az 6 karakter olmalı';const salt=crypto.getRandomValues(new Uint8Array(16));
   await keepKey(await deriveKey(pw,salt),b64(salt));P.pw=1;LS.set('kh_profile',P);await upload();return null}
 async function upload(){if(!P||!KEY)return;const iv=crypto.getRandomValues(new Uint8Array(12));
-  const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},KEY,new TextEncoder().encode(JSON.stringify({P,F,at:Date.now()})));
+  const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},KEY,new TextEncoder().encode(JSON.stringify({P,F,S:SS,at:Date.now()})));
   pub('acct/'+P.uid,{v:1,salt:SALT,iv:b64(iv),ct:b64(ct),at:Date.now()},true)}
 function uploadSoon(){clearTimeout(upT);upT=setTimeout(upload,1500)}
 async function openBlob(a,k){const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:ub64(a.iv)},k,ub64(a.ct));return JSON.parse(new TextDecoder().decode(pt))}
@@ -32,13 +32,13 @@ async function login(txt,pw){txt=String(txt||'').trim().replace(/^@/,'');const m
   const d=await lookup('name/'+key(m[1],m[2]));if(!d||!d.uid)return 'Bu kodla kimse bulunamadı';
   const a=await lookup('acct/'+d.uid,4500);if(!a||!a.ct)return 'Bu hesap için şifre belirlenmemiş';
   let k,o;try{k=await deriveKey(String(pw||''),ub64(a.salt));o=await openBlob(a,k)}catch(e){return 'Şifre yanlış'}
-  P=o.P;F=o.F||{};REQ={};OUT={};LS.set('kh_profile',P);LS.set('kh_friends',F);LS.set('kh_reqs',REQ);LS.set('kh_out',OUT);await keepKey(k,a.salt);
+  P=o.P;F=o.F||{};SS=mergeStats(LS.get('kh_stats',{}),o.S||{});LS.set('kh_stats',SS);REQ={};OUT={};LS.set('kh_profile',P);LS.set('kh_friends',F);LS.set('kh_reqs',REQ);LS.set('kh_out',OUT);await keepKey(k,a.salt);
   try{localStorage.setItem('durak_name',P.name);localStorage.setItem('king_name',JSON.stringify(P.name));localStorage.setItem('kb_name',JSON.stringify(P.name))}catch(e){}
   clients.forEach(c=>{if(c.connected)initProfile(c)});connect();changed();return null}
 // diğer cihazda eklenen arkadaşları birleştir
 async function mergeRemote(){if(!P||!KEY)return;const a=await lookup('acct/'+P.uid,4000);if(!a||!a.ct)return upload();
-  try{const o=await openBlob(a,KEY);let add=0;for(const u in (o.F||{}))if(!F[u]){F[u]=o.F[u];add++;sub('pres/'+u)}if(add){LS.set('kh_friends',F);changed()}}catch(e){}upload()}
-function logout(){if(P)pub('pres/'+P.uid,{on:false,at:Date.now()},true);['kh_profile','kh_friends','kh_reqs','kh_out','kh_key'].forEach(k=>{try{localStorage.removeItem(k)}catch(e){}});
+  try{const o=await openBlob(a,KEY);let add=0;if(o.S){SS=mergeStats(SS,o.S);LS.set('kh_stats',SS)}for(const u in (o.F||{}))if(!F[u]){F[u]=o.F[u];add++;sub('pres/'+u)}if(add){LS.set('kh_friends',F);changed()}}catch(e){}upload()}
+function logout(){if(P)pub('pres/'+P.uid,{on:false,at:Date.now()},true);['kh_profile','kh_friends','kh_reqs','kh_out','kh_key','kh_stats'].forEach(k=>{try{localStorage.removeItem(k)}catch(e){}});
   setTimeout(()=>location.reload(),300)}
 const me=()=>P&&{uid:P.uid,name:P.name,tag:P.tag,av:P.av};
 const code=x=>x?x.name+'#'+x.tag:'';
@@ -115,6 +115,9 @@ function afterRegister(){const r=LS.get('kh_pendingref',null);if(!r||!P)return;L
   try{const u=new URL(location.href);u.searchParams.delete('arkadas');history.replaceState(null,'',u.pathname+u.search+u.hash)}catch(e){}
   if(P){afterRegister()}else setTimeout(()=>openRegister('invited'),400)})();
 
+/* ---------- istatistik: her oyunun sonunda KH.stat(oyun, kazandı mı) ---------- */
+function mergeStats(a,b){const o={...a};for(const k in b){const x=o[k]||{g:0,w:0},y=b[k];o[k]={g:Math.max(x.g,y.g||0),w:Math.max(x.w,y.w||0),s:Math.max(x.s||0,y.s||0)}}return o}
+function stat(game,won){if(!game)return;const x=SS[game]||{g:0,w:0,s:0,c:0};x.g++;if(won){x.w++;x.c=(x.c||0)+1;x.s=Math.max(x.s||0,x.c)}else x.c=0;SS[game]=x;LS.set('kh_stats',SS);uploadSoon()}
 /* ---------- arayüz ---------- */
 const css=`.kh-ov{position:fixed;inset:0;z-index:9000;background:rgba(10,7,4,.6);display:flex;align-items:center;justify-content:center;padding:14px;font-family:"Rubik",system-ui,-apple-system,sans-serif}
 .kh-sheet{background:#f7f3ea;color:#22201b;border-radius:16px;width:min(420px,100%);max-height:calc(100% - 10px);overflow:auto;padding:18px 16px 16px;box-shadow:0 12px 40px rgba(0,0,0,.45);font-size:14.5px;line-height:1.4}
@@ -186,6 +189,7 @@ function openProfile(refresh){if(!P)return openRegister();
   const s=sheet('prof',`<h2>Profilim</h2>
     <div class="kh-me"><span class="a">${esc(P.av)}</span><div style="flex:1;min-width:0"><b>${esc(P.name)}</b><small>#${esc(P.tag)}</small><br><small>Arkadaş kodun: ${esc(code(P))}</small></div><button class="kh-b s" id="khCp">Kopyala</button></div>
     <div class="kh-row"><button class="kh-b p" id="khInv">Arkadaş davet et</button></div>
+    ${Object.keys(SS).length?`<div class="kh-l">İstatistiklerim</div><table style="width:100%;border-collapse:collapse;font-size:13.5px">${Object.entries(SS).sort((a,b)=>b[1].g-a[1].g).map(([k,v])=>`<tr style="border-bottom:1px solid #e6dfcf"><td style="padding:5px 2px">${esc(k)}</td><td style="text-align:right">${v.g} <span>oyun</span></td><td style="text-align:right">${v.w} <span>galibiyet</span></td><td style="text-align:right;color:#2f6b4f">%${v.g?Math.round(v.w*100/v.g):0}</td></tr>`).join('')}</table>`:''}
     <div class="kh-l">Kodla arkadaş ekle</div>
     <div class="kh-row" style="margin-top:0"><input class="kh-in" id="khCode" placeholder="Ad#1234" value="${esc(keep)}"><button class="kh-b p s" id="khAdd">Ekle</button></div><div class="kh-err" id="khErr"></div>
     ${rq.length?`<div class="kh-l">Arkadaşlık istekleri</div>${rq.map(f=>`<div class="kh-li"><span class="a">${esc(f.av||'🙂')}</span><div class="t"><b>${esc(code(f))}</b></div><button class="kh-b s p" data-ok="${esc(f.uid)}">Kabul et</button><button class="kh-b s" data-no="${esc(f.uid)}">Reddet</button></div>`).join('')}`:''}
@@ -221,7 +225,7 @@ function badge(){const b=document.querySelector('.kh-btn');if(!b)return;const n=
   b.innerHTML=P?`<span class="a">${esc(P.av)}</span><span>${esc(P.name)}</span>${n?`<span class="n">${n}</span>`:''}${on?`<span style="color:#86d49a;font-size:12px">● ${on}</span>`:''}`:'<span class="a">👤</span><span>Giriş / Kayıt</span>'}
 function mountButton(){style();if(document.querySelector('.kh-btn'))return;const b=document.createElement('button');b.className='kh-btn';b.onclick=()=>P?openProfile():openRegister();document.body.appendChild(b);badge()}
 
-window.KH={get profile(){return P?{...P}:null},name:()=>P?P.name:null,code:()=>code(P),openProfile,openRegister,openLogin,invitePicker,mountButton,
+window.KH={stat,get stats(){return {...SS}},get profile(){return P?{...P}:null},name:()=>P?P.name:null,code:()=>code(P),openProfile,openRegister,openLogin,invitePicker,mountButton,
   setPresence(game){presInfo.game=game||null;if(P)pub('pres/'+P.uid,presBody(),true)},onChange(f){listeners.push(f)},friends:()=>Object.values(F),online,_dbg:()=>({c:clients.map(c=>c.connected),started,P:!!P,req:REQ,out:OUT})};
 const boot=()=>{if(window.KH_HUB)mountButton();if(P||LS.get('kh_pendingref',null))connect()};
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
