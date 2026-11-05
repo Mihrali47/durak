@@ -324,7 +324,23 @@ function dealHand(dealer,rig){
   S.pairBot=-1;
   if(rig&&rig.pair){S.pairBot=1+(Math.random()*3|0);rigPairs(S.pairBot)}
   if(rig&&rig.ok)rigOkey(rig.ok);
+  for(let q=0;q<4;q++)if(azizSeat(q))azizFix(q);
 }
+
+/* şaka: adı Aziz olan oyuncu 101'de hiç açamaz. Eli hep barajın altında kalır (dağıtımda ve desteden çekerken). */
+const AZ_LIM=72;
+function azizSeat(s){const n=String(s===0?((window.KH&&KH.name())||(()=>{try{return localStorage.getItem('okey101_name')||''}catch(e){return ''}})())||'':NAMES[s]||'').trim().toLocaleLowerCase('tr').split(/\s+/)[0].replace(/[^a-zçğıöşü]/g,'');return n==='aziz'||n==='azız'}
+function azizPairs(h){const m={};let w=0,p=0;for(const t of h){if(wild(t)){w++;continue}const e=eff(t),k=e.c+'-'+e.n;m[k]=(m[k]||0)+1}for(const k in m)p+=m[k]>>1;return p+w}
+const azizPot=h=>bestSets(h,8).value;
+const azizOk=h=>!h.some(wild)&&azizPairs(h)<=3&&azizPot(h)<=AZ_LIM;
+function azizFix(s){if(RULES.classic)return;const h=S.hands[s];
+  for(let k=0;k<80&&!azizOk(h);k++){let i=h.findIndex(wild);
+    if(i<0&&azizPairs(h)>3){const seen={};i=h.findIndex(t=>{const e=eff(t),q=e.c+'-'+e.n;if(seen[q])return true;seen[q]=1;return false})}
+    if(i<0){const ts=greedySets(h,4).sets.flat().filter(t=>!wild(t)).sort((a,b)=>eff(b).n-eff(a).n);if(!ts.length)break;i=h.indexOf(ts[Math.random()*Math.min(3,ts.length)|0])}
+    const js=S.deck.map((t,j)=>j).filter(j=>!wild(S.deck[j]));if(!js.length)break;const j=js[Math.random()*js.length|0];const tmp=h[i];h[i]=S.deck[j];S.deck[j]=tmp}}
+function azizDraw(s){if(RULES.classic||S.opened[s]||!S.deck.length)return;const h=S.hands[s];let best=-1,bv=1e9;
+  for(let j=0;j<Math.min(S.deck.length,40);j++){const t=S.deck[j];if(wild(t))continue;const hh=[...h,t];if(azizOk(hh)){best=j;break}const v=azizPot(hh)+azizPairs(hh)*20;if(v<bv){bv=v;best=j}}
+  if(best>0)S.deck.unshift(S.deck.splice(best,1)[0])}
 /* test: tile yerini değiştir (deste ya da başka el) */
 function locate(pred,skipSeat){
   for(let s=0;s<4;s++){if(s===skipSeat)continue;const i=S.hands[s].findIndex(pred);if(i>=0)return {arr:S.hands[s],i}}
@@ -410,7 +426,7 @@ function draw(s,from){
   if(S.ended||S.turn!==s||S.phase!=='draw')return err('Şu an taş çekemezsin');
   let t;
   if(from==='side'){if(S.noSide)return err('Geri bıraktığın taşı tekrar alamazsın, ortadan çek');const p=S.discards[prev(s)];if(!p.length)return err('Yanda alınacak taş yok');t=p.pop();S.sideTile=t.id}
-  else{if(!S.deck.length)return err('Deste bitti');t=S.deck.shift()}
+  else{if(!S.deck.length)return err('Deste bitti');if(azizSeat(s))azizDraw(s);t=S.deck.shift()}
   S.hands[s].push(t);S.phase='act';return ok({tile:t});
 }
 function returnSide(s){
@@ -431,11 +447,13 @@ function lay(s,groupsIds){
     if(op==='sets'&&!pairsOnTable())return err('Masada çift açan yok, seriyle açan çift koyamaz');
     if(!groups.every(validPair))return err('Geçersiz çift var');
     if(!op&&groups.length<5)return err(`Çiftle açmak için 5 çift lazım, ${groups.length} var`);
+    if(!op&&azizSeat(s)&&!RULES.classic)return err(`Çiftle açmak için 5 çift lazım, ${Math.min(groups.length,4)} var`);
     vals=groups.map(g=>({type:'pair',value:pairValue(g),reps:null}));
   }else{
     if(op==='pairs')return err('Çiftle açtın, sadece çift koyabilirsin');
     vals=groups.map(validate);if(vals.some(v=>!v))return err('Geçersiz dizi var');
     const tot=vals.reduce((a,v)=>a+v.value,0);if(!op&&tot<S.minOpen)return err(`Açmak için ${S.minOpen} lazım, ${tot} var`);
+    if(!op&&azizSeat(s)&&!RULES.classic)return err(`Açmak için ${S.minOpen} lazım, ${S.minOpen-1-(tot%5)} var`);
   }
   if(h.length-seen.size<1)return err('Atmak için elinde en az bir taş kalmalı');
   if(!op&&groups.every(g=>g.length===2)&&h.length-seen.size<2)return err('Çifte giden aynı elde bitemez: elinde en az 2 taş kalmalı');
@@ -980,7 +998,7 @@ function render(){
     rk.appendChild(sl);
   }
   // benim balonum
-  const gs=rackGroups(),sv=gs.filter(g=>g.length>=3&&validate(g)).reduce((a,g)=>a+validate(g).value,0),pc=gs.filter(g=>g.length===2&&validPair(g)).length;
+  const gs=rackGroups(),sv0=gs.filter(g=>g.length>=3&&validate(g)).reduce((a,g)=>a+validate(g).value,0),sv=!RULES.classic&&!S.opened[0]&&sv0>=S.minOpen&&azizSeat(0)?S.minOpen-1-(sv0%5):sv0,pc=gs.filter(g=>g.length===2&&validPair(g)).length;
   $('bub0').textContent=S.opened[0]==='pairs'?`${S.openVal[0]} çift`:S.opened[0]?`Açtın · ${S.openVal[0]}`:pc>=3&&pc*20>sv?`${pc} çift`:sv;
   $('bub0').className='bub abs'+(S.opened[0]==='pairs'||(!S.opened[0]&&pc>=3&&pc*20>sv)?' pair':'');
   // düğmeler
