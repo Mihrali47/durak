@@ -60,7 +60,7 @@ window.I18N_EXTRA=[
 ['Nuri','Нури','Nuri'],['Rıza','Рыза','Rıza'],['Hamdi','Хамди','Hamdi'],
 ];
 const mk=j=>[
-[/^ (\d+)\. Kaç el alırsın\? Aldığın el sayısını tutturamazsan söylediğin kadar puan silinir\.$/,(m,n)=>j?` ${n}. How many tricks will you take? Miss your bid and that many points are taken off.`:` ${n}. Сколько взяток возьмёте? Если не наберёте заявленное, столько очков и снимут.`],
+[/^ ?(\d+)\. Kaç el alırsın\? Aldığın el sayısını tutturamazsan söylediğin kadar puan silinir\.$/,(m,n)=>j?`${n}. How many tricks will you take? Miss your bid and that many points are taken off.`:`${n}. Сколько взяток возьмёте? Если не наберёте заявленное, столько очков и снимут.`],
 [/^(.+?) ihale düşünüyor…$/,(m,n)=>j?`${nm(n,1)} is thinking about the bid…`:`${nm(n,0)} думает над заявкой…`],[/^(.+?) koz seçiyor…$/,(m,n)=>j?`${nm(n,1)} is choosing trumps…`:`${nm(n,0)} выбирает козырь…`],
 [/^İhaleyi (\d+) ile aldın\. En güçlü rengini koz yap; ilk eli sen açarsın\.$/,(m,n)=>j?`You won the bid with ${n}. Make your strongest suit trumps; you lead first.`:`Вы выиграли торговлю с заявкой ${n}. Сделайте сильнейшую масть козырем, вы ходите первым.`],
 [/^(\d+)\/(\d+)$/,'$1/$2'],

@@ -171,7 +171,7 @@ const T=[
 if(L==='ru')T.push(['Nuri','Нури',''],['Rıza','Рыза',''],['Hamdi','Хамди',''],['Cemil','Джемиль',''],['Kâzım','Казым','']);
 T.push(['@mavi','Синий','Blue'],['@yesil','Зелёный','Green'],['@bordo','Бордо','Burgundy'],['@gece','Ночь','Night']);
 T.push(...(window.I18N_EXTRA||[]));
-const I=L==='ru'?1:2,D0={},A0={};for(const r of T){if(r[0][0]==='@')A0[r[0].slice(1)]=r[I];else D0[r[0]]=r[I]}
+const I=L==='ru'?1:2,D0={},A0={};for(const r of T){if(r[0][0]==='@')A0[r[0].slice(1)]=r[I];else{D0[r[0]]=r[I];const t=r[0].trim();if(t!==r[0]&&D0[t]==null)D0[t]=String(r[I]).trim()}}
 const SU={maça:['пики','spades'],kupa:['червы','hearts'],karo:['бубны','diamonds'],sinek:['трефы','clubs']},RK={vale:['валет','jack'],'kız':['дама','queen'],papaz:['король','king'],as:['туз','ace']};
 const J=I-1;
 const card=s=>s.replace(/\b(maça|kupa|karo|sinek)\s+(vale|kız|papaz|as|\d+)\b/g,(m,a,b)=>(RK[b]?RK[b][J]:b)+' '+SU[a][J]).replace(/\((koz)\)/g,J?'(trump)':'(козырь)');
