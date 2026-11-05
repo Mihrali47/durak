@@ -1,172 +1,269 @@
-<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="description" content="Kahvehane oyun salonu: Durak, Okey, Pişti, Satranç. Ücretsiz, kayıt yok."><style>body{margin:0}.new{display:inline-block;align-self:flex-start;font:700 11px/1 var(--body,system-ui);letter-spacing:.04em;background:#e8b84a;color:#2a1d05;padding:5px 8px;border-radius:999px;margin-bottom:8px}
-.foot{margin:40px 0 24px;text-align:center;font-size:13px;opacity:.7;line-height:1.7}.foot a{color:inherit}
-.inst{display:none;margin:18px auto 0;padding:12px 18px;border-radius:12px;border:1px solid #e8b84a;background:transparent;color:#e8b84a;font:700 15px/1 var(--body,system-ui);cursor:pointer}
-.lg{border:1px solid #e8b84a55;background:transparent;color:inherit;border-radius:8px;padding:6px 10px;font:600 13px/1 system-ui;cursor:pointer}
-</style><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="icon-192.png"><meta name="theme-color" content="#2a1d14"><meta property="og:title" content="Kahvehane Oyun Salonu"><meta property="og:description" content="Durak, Okey, Pişti, Satranç. Ücretsiz, kayıt yok. Arkadaşına link at, birlikte oynayın."><meta name="apple-mobile-web-app-capable" content="yes"><script src="i18n.js"></script><script>window.KH_HUB=1</script><script src="account.js"></script><script src="quick.js"></script></head><body>
+<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Kahvehane · Online Oyun Salonu</title>
+<meta name="description" content="Durak, Okey, 101 Okey, King, Batak, Pişti, Tavla, Kızma Birader ve Satranç. Ücretsiz, kayıt şart değil. Arkadaşına link at ya da hızlı oyunla rakip bul.">
+<link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="icon-192.png">
+<meta name="theme-color" content="#16100b"><meta property="og:title" content="Kahvehane · Online Oyun Salonu"><meta property="og:description" content="Durak, Okey, King, Batak, Pişti, Tavla ve daha fazlası. Ücretsiz, kayıt şart değil.">
+<meta property="og:image" content="icon-512.png"><meta name="apple-mobile-web-app-capable" content="yes">
 <script>(function(){var h=(location.hash||"").slice(1);if(/^[A-Za-z0-9]{5}$/.test(h))location.replace("durak/#"+h)})();</script>
-<title>Kahvehane Oyun Salonu</title>
-<meta name="claude:viewport-fit-sides" content="cover">
+<script src="i18n.js"></script><script>window.KH_HUB=1</script><script src="account.js"></script><script src="quick.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Rubik:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Rubik:wght@400;500;600;700&display=swap">
 <style>
-/* Layout: bir kahvehane tabelası gibi başlık, altında masa masa oyun kartları; açık olanlar üstte, yakında gelenler altta. Tek tema: koyu ahşap. */
-:root{
-  --wall:#1c120c; --wood:#2b1b11; --wood-hi:#3a2617; --line:#4d3320;
-  --ink:#f4ead8; --muted:#bfa88c; --brass:#e7b54c;
-  --chess:#d8432f; --okey:#2f8a5e; --pisti:#8d2434;
-  --display:"Bungee","Arial Black",Impact,sans-serif;
-  --body:"Rubik",system-ui,-apple-system,"Segoe UI",sans-serif;
-  color-scheme:dark;
-}
+/* Profesyonel oyun salonu: üstte sabit menü, ortada karşılama ve hızlı oyun, kategori süzgeci, tutarlı oyun kartları, nasıl çalışır, alt bilgi. Tek tema: koyu ceviz + pirinç. */
+:root{--bg:#16100b;--bg2:#1d150f;--card:#221911;--card2:#2a1f15;--line:#3a2a1c;--ink:#f6eddd;--muted:#bba78d;--brass:#e7b54c;--brass2:#f3cd73;--green:#3fae6e;
+  --display:"Bungee","Arial Black",Impact,sans-serif;--body:"Rubik",system-ui,-apple-system,"Segoe UI",sans-serif;color-scheme:dark}
 *{box-sizing:border-box}
-body{background:var(--wall);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5}
-.wrap{max-width:980px;margin:0 auto;padding-block:28px 48px;
-  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:28px}
-header{display:flex;flex-direction:column;gap:10px}
-.sign{display:inline-block;align-self:flex-start;border:3px solid var(--brass);border-radius:14px;padding:12px 18px;background:var(--wood);box-shadow:0 6px 0 #0d0805}
-h1{font-family:var(--display);font-weight:400;font-size:clamp(28px,7vw,52px);line-height:1;margin:0;color:var(--brass);text-wrap:balance}
-h1 small{display:block;font-size:.42em;color:var(--ink);letter-spacing:.06em;margin-top:6px}
-.lead{max-width:60ch;color:var(--muted);margin:0}
-h2{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:500;margin:0 0 12px}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
-.game{display:flex;flex-direction:column;border-radius:16px;overflow:hidden;background:var(--wood);border:1px solid var(--line);color:inherit;text-decoration:none;transition:transform .15s,border-color .15s;min-width:0}
-.game:hover{transform:translateY(-4px);border-color:var(--brass)}
+html{scroll-behavior:smooth}
+body{margin:0;background:radial-gradient(1200px 500px at 50% -120px,#3a2617 0%,transparent 70%),var(--bg);color:var(--ink);font:15px/1.5 var(--body);-webkit-tap-highlight-color:transparent}
+a{color:inherit}
+.top{position:sticky;top:0;z-index:50;background:rgba(22,16,11,.86);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.top .in{max-width:1120px;margin:0 auto;display:flex;align-items:center;gap:14px;padding:10px max(16px,env(safe-area-inset-right)) 10px max(16px,env(safe-area-inset-left))}
+.logo{display:flex;align-items:center;gap:9px;text-decoration:none}
+.logo .cup{width:34px;height:34px;border-radius:10px;background:linear-gradient(160deg,var(--brass2),#b8862c);display:grid;place-items:center;font-size:19px;box-shadow:0 3px 0 #6b4a14}
+.logo b{font:400 19px/1 var(--display);color:var(--brass);letter-spacing:.02em;text-transform:uppercase}
+.nav{display:flex;gap:4px;margin-left:8px}
+.nav a,.nav button{border:0;background:none;color:var(--muted);font:500 14px/1 var(--body);padding:9px 11px;border-radius:9px;text-decoration:none;cursor:pointer}
+.nav a:hover,.nav button:hover{color:var(--ink);background:rgba(255,255,255,.05)}
+.sp{flex:1}
+.lang{display:flex;border:1px solid var(--line);border-radius:9px;overflow:hidden}
+.lang button{border:0;background:none;color:var(--muted);font:600 12px/1 var(--body);padding:8px 9px;cursor:pointer}
+.lang button.on{background:var(--card2);color:var(--ink)}
+#acct .kh-btn{position:static;box-shadow:none;padding:7px 12px 7px 9px;font-size:13.5px}
+@media (max-width:760px){.nav{display:none}.logo b{font-size:16px}}
+@media (max-width:420px){.lang button{padding:8px 6px}.logo b{display:none}}
+.wrap{max-width:1120px;margin:0 auto;padding:0 max(16px,env(safe-area-inset-right)) 40px max(16px,env(safe-area-inset-left))}
+.hero{display:grid;grid-template-columns:1.3fr 1fr;gap:28px;align-items:center;padding:42px 0 26px}
+.hero h1{font:700 clamp(30px,5.4vw,52px)/1.08 var(--body);margin:0 0 12px;letter-spacing:-.01em;text-wrap:balance}
+.hero h1 em{font-style:normal;color:var(--brass)}
+.hero p{color:var(--muted);font-size:17px;margin:0 0 20px;max-width:52ch}
+.cta{display:flex;gap:10px;flex-wrap:wrap}
+.btn{border:0;border-radius:12px;padding:14px 20px;font:700 16px/1 var(--body);cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:8px}
+.btn.pri{background:linear-gradient(180deg,var(--brass2),var(--brass));color:#2b1d07;box-shadow:0 4px 0 #8a6420,0 10px 24px rgba(231,181,76,.18)}
+.btn.pri:active{transform:translateY(2px);box-shadow:0 2px 0 #8a6420}
+.btn.gh{background:rgba(255,255,255,.04);color:var(--ink);border:1px solid var(--line)}
+.facts{display:flex;gap:16px;flex-wrap:wrap;margin-top:22px;color:var(--muted);font-size:13.5px}
+.facts span{display:flex;align-items:center;gap:6px}
+.facts b{color:var(--ink)}
+.show{position:relative;height:260px}
+.show .c{position:absolute;width:118px;height:166px;border-radius:12px;background:#fcf9f2;border:1px solid #d9cfbd;box-shadow:0 14px 30px rgba(0,0,0,.45);display:grid;place-items:center;font:700 54px/1 "DejaVu Sans","Segoe UI Symbol",serif}
+.show .t{position:absolute;width:62px;height:86px;border-radius:9px;background:linear-gradient(180deg,#fffaf0,#e3d6b8);box-shadow:0 5px 0 #b8a67f,0 12px 22px rgba(0,0,0,.4);display:grid;place-items:center;font:400 30px/1 var(--display)}
+.show .d{position:absolute;width:56px;height:56px;border-radius:12px;background:#fffaf0;box-shadow:0 10px 20px rgba(0,0,0,.45);display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr);padding:9px}
+.show .d i{width:9px;height:9px;border-radius:50%;background:#2a211b;place-self:center}
+@media (max-width:760px){.hero{grid-template-columns:1fr;padding-top:26px}.show{display:none}}
+.bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:10px 0 16px}
+.bar h2{font:700 22px/1.2 var(--body);margin:0 12px 0 0}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chips button{border:1px solid var(--line);background:var(--bg2);color:var(--muted);font:600 13.5px/1 var(--body);padding:9px 13px;border-radius:999px;cursor:pointer}
+.chips button.on{background:var(--brass);border-color:var(--brass);color:#2b1d07}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px}
+.game{display:flex;flex-direction:column;border-radius:16px;overflow:hidden;background:var(--card);border:1px solid var(--line);text-decoration:none;transition:transform .15s,border-color .15s,box-shadow .15s;min-width:0}
+.game:hover{transform:translateY(-3px);border-color:#6b4f2c;box-shadow:0 14px 30px rgba(0,0,0,.35)}
 .game:focus-visible{outline:3px solid var(--brass);outline-offset:3px}
-.art{height:130px;display:grid;place-items:center;position:relative}
-.art.chess{background:repeating-conic-gradient(#f4f3f0 0 25%,#2e2e30 0 50%) 0 0/44px 44px}
+.game[hidden]{display:none}
+.art{height:118px;display:grid;place-items:center;position:relative}
+.art.chess{background:repeating-conic-gradient(#f4f3f0 0 25%,#2e2e30 0 50%) 0 0/40px 40px}
 .art.okey{background:radial-gradient(ellipse at 50% 40%,#2c6a4f,#123124)}
 .art.durak{background:radial-gradient(ellipse at 50% 40%,#155247,#0b2e29)}
 .art.pisti{background:radial-gradient(ellipse at 50% 40%,#6b1d29,#3d0d16)}
-.badge{font-family:var(--display);font-size:clamp(30px,8vw,44px);line-height:1;padding:10px 14px;border-radius:12px;background:var(--wood);border:2px solid var(--brass);box-shadow:0 4px 0 #0d0805}
+.badge{font-family:var(--display);font-size:40px;line-height:1;padding:8px 13px;border-radius:12px;background:var(--card);border:2px solid var(--brass);box-shadow:0 4px 0 #0d0805}
 .tiles{display:flex;gap:6px}
-.tiles span{width:38px;height:54px;border-radius:6px;background:linear-gradient(180deg,#fffaf0,#e3d6b8);display:grid;place-items:center;font-family:var(--display);font-size:20px;box-shadow:0 3px 0 #b8a67f}
+.tiles span{width:36px;height:50px;border-radius:6px;background:linear-gradient(180deg,#fffaf0,#e3d6b8);display:grid;place-items:center;font-family:var(--display);font-size:19px;box-shadow:0 3px 0 #b8a67f}
 .cards{display:flex}
-.cards span{width:48px;height:68px;border-radius:7px;background:#fcf9f2;border:1px solid #d9cfbd;display:grid;place-items:center;font-size:26px;font-family:"DejaVu Sans","Segoe UI Symbol",serif;margin-left:-14px;box-shadow:0 4px 8px rgba(0,0,0,.35)}
+.cards span{width:46px;height:64px;border-radius:7px;background:#fcf9f2;border:1px solid #d9cfbd;display:grid;place-items:center;font-size:25px;font-family:"DejaVu Sans","Segoe UI Symbol",serif;margin-left:-14px;box-shadow:0 4px 10px rgba(0,0,0,.35)}
 .cards span:first-child{margin-left:0;transform:rotate(-8deg)}.cards span:last-child{transform:rotate(8deg)}
-.body{padding:14px 16px 16px;display:flex;flex-direction:column;gap:6px;flex:1}
-.body h3{font-family:var(--display);font-weight:400;font-size:22px;margin:0;line-height:1.1}
+.body{padding:13px 15px 15px;display:flex;flex-direction:column;gap:6px;flex:1}
+.badges{display:flex;gap:6px;flex-wrap:wrap;min-height:0}
+.badges:empty{display:none}
+.new{font:700 11px/1 var(--body);letter-spacing:.04em;background:var(--brass);color:#2a1d05;padding:5px 8px;border-radius:999px}
+.live{font-size:12px;font-weight:700;color:#86d49a;animation:livep 1.6s ease-in-out infinite}
+@keyframes livep{50%{opacity:.55}}
+.resume{font-size:12px;font-weight:700;color:var(--brass2)}
+.body h3{font:600 20px/1.15 var(--body);margin:0}
 .body p{margin:0;color:var(--muted);font-size:14px;flex:1}
-.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
-.tag{font-size:12px;font-weight:500;padding:3px 8px;border-radius:999px;border:1px solid var(--line);color:var(--ink)}
-.play{margin-top:8px;font-weight:700;color:var(--brass)}
-.soon{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
-.soon div{border:1.5px dashed var(--line);border-radius:12px;padding:12px 14px;min-width:0}
-.soon b{display:block;font-family:var(--display);font-weight:400;font-size:17px}
-.soon span{font-size:13px;color:var(--muted)}
-@media (prefers-reduced-motion:reduce){.game{transition:none}}
-
-/* Bungee küçük i'yi noktasız I çizer; büyük harfe dili bilerek çevir (tr: i→İ) */
-h1,.body h3,.soon b{text-transform:uppercase}
-</style>
-
+.meta{display:flex;gap:10px;flex-wrap:wrap;font-size:12.5px;color:var(--ink);opacity:.9}
+.tags{display:flex;gap:6px;flex-wrap:wrap}
+.tags:empty{display:none}
+.tag{font-size:11.5px;font-weight:500;padding:3px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+.play{margin-top:6px;font-weight:700;color:var(--brass)}
+.how{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:44px 0 10px}
+.how div{background:var(--bg2);border:1px solid var(--line);border-radius:14px;padding:16px}
+.how b{display:flex;align-items:center;gap:8px;font-size:16px;margin-bottom:4px}
+.how b i{font-style:normal;width:26px;height:26px;border-radius:50%;background:var(--brass);color:#2b1d07;display:grid;place-items:center;font-size:14px}
+.how p{margin:0;color:var(--muted);font-size:14px}
+@media (max-width:760px){.how{grid-template-columns:1fr}}
+footer{border-top:1px solid var(--line);margin-top:40px;padding:24px max(16px,env(safe-area-inset-right)) calc(24px + env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));color:var(--muted);font-size:13.5px}
+footer .in{max-width:1120px;margin:0 auto;display:flex;gap:16px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+footer a{text-decoration:none}footer a:hover{color:var(--ink)}
+footer .links{display:flex;gap:14px;flex-wrap:wrap}
+.inst{display:none;border:1px solid var(--brass);background:none;color:var(--brass);font:700 14px/1 var(--body);padding:10px 14px;border-radius:10px;cursor:pointer}
+.qp{position:fixed;inset:0;z-index:80;background:rgba(10,7,4,.62);display:flex;align-items:center;justify-content:center;padding:16px}
+.qp .s{background:#f7f3ea;color:#22201b;border-radius:16px;width:min(420px,100%);padding:18px 16px 16px;box-shadow:0 12px 40px rgba(0,0,0,.45)}
+.qp h3{margin:0 0 4px;font-size:20px}.qp p{margin:0 0 12px;color:#5a5448;font-size:14px}
+.qp .g{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.qp .g button{border:1px solid #d9d1bf;background:#fff;border-radius:11px;padding:12px 8px;font:600 14.5px/1.2 var(--body);cursor:pointer}
+.qp .x{margin-top:10px;width:100%;border:0;background:#e7e0d1;border-radius:11px;padding:12px;font:600 15px/1 var(--body);cursor:pointer}
+@media (max-width:560px){
+  .grid{gap:10px}
+  .game{flex-direction:row}
+  .art{width:92px;height:auto;flex:none;overflow:hidden}
+  .art>*{transform:scale(.56)}
+  .body{padding:11px 12px 12px;gap:4px}
+  .body h3{font-size:18px}
+  .body p{font-size:13.5px}
+  .tags{display:none}
+  .play{display:none}
+}
+@media (prefers-reduced-motion:reduce){.game{transition:none}.live{animation:none}html{scroll-behavior:auto}}
+</style></head><body>
+<div class="top"><div class="in">
+  <a class="logo" href="./"><span class="cup">☕</span><b>Kahvehane</b></a>
+  <nav class="nav"><a href="#oyunlar">Oyunlar</a><button onclick="window.KH&&KH.openLeaders()">🏆 Liderler</button><a href="#nasil">Nasıl oynanır?</a></nav>
+  <span class="sp"></span>
+  <div class="lang"><button data-l="tr">TR</button><button data-l="ru">RU</button><button data-l="en">EN</button></div>
+  <div id="acct"></div>
+</div></div>
 <div class="wrap">
-  <header>
-    <div class="sign"><h1>Kahvehane<small>OYUN SALONU</small></h1></div>
-    <p class="lead">Masaya otur, çayını söyle. Durak, King, okey, pişti, Kızma Birader ve satranç burada. Bilgisayara karşı oyna ya da linki at, arkadaşlarınla girişsiz oynayın.</p>
-    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="lg" onclick="window.KH&&KH.openLeaders()" style="padding:9px 14px">🏆 Liderler</button></div>
-  </header>
-
-  <section>
-    <h2>Açık masalar</h2>
-    <div class="grid">
-      <a class="game" href="durak/">
-        <div class="art durak"><div class="cards"><span style="color:#161616">6</span><span style="color:#c41f2e">♥&#xFE0E;</span><span style="color:#161616">A</span></div></div>
-        <div class="body"><span class="new">Yeni · Arkadaşınla online</span><h3>Durak</h3>
-          <p>Rus kahvehanelerinin kart oyunu. Saldır, kozla kes, kesemezsen al. Deste bitince elinde kart kalan durak olur. Arkadaşına link at, girişsiz oynayın.</p>
-          <div class="tags"><span class="tag">2-6 kişi</span><span class="tag">Linkle online 2-4 kişi</span><span class="tag">Atmalı / Aktarmalı</span></div>
-          <span class="play">Masaya otur →</span></div>
-      </a>
-      <a class="game" href="king/">
-        <div class="art pisti"><div class="cards"><span style="color:#c41f2e">K</span><span style="color:#c41f2e">♥&#xFE0E;</span><span style="color:#161616">Q</span></div></div>
-        <div class="body"><span class="new">Yeni · Arkadaşınla online</span><h3 lang="en">King</h3>
-          <p>Dört kişilik klasik kahvehane oyunu. El almaz, kupa almaz, kız almaz, rıfkı… cezalardan kaç, kozda el topla. Linkle arkadaşlarınla oyna.</p>
-          <div class="tags"><span class="tag">4 kişi</span><span class="tag">Linkle online 2-4 kişi</span><span class="tag">20 / 12 el</span></div>
-          <span class="play">Masaya otur →</span></div>
-      </a>
-      <a class="game" href="kizma/">
-        <div class="art okey"><div class="tiles"><span style="color:#d64541">●</span><span style="color:#2f80d1">●</span><span style="color:#2e9e5b">●</span></div></div>
-        <div class="body"><span class="new">Yeni · Arkadaşınla online</span><h3>Kızma Birader</h3>
-          <p>Zar at, piyonlarını eve götür, rakibini kır. Bilgisayara karşı ya da linkle 2-4 kişi.</p>
-          <div class="tags"><span class="tag">2-4 kişi</span><span class="tag">Linkle online</span></div>
-          <span class="play">Masaya otur →</span></div>
-      </a>
-      <a class="game" href="tavla/">
-        <div class="art durak" style="background:radial-gradient(ellipse at 50% 40%,#6b4423,#3a2414)"><div class="tiles"><span style="color:#2a211b;border-radius:50%">●</span><span style="color:#8c2f24">⚀</span><span style="color:#2a211b">⚄</span></div></div>
-        <div class="body"><span class="new">Yeni · Arkadaşınla online</span><h3>Tavla</h3>
-          <p>Zar at, kapı kur, rakibini kır, pullarını ilk sen topla. Mars 2 puan. Bilgisayara karşı ya da linkle arkadaşınla.</p>
-          <div class="tags"><span class="tag">2 kişi</span><span class="tag">Linkle online</span><span class="tag">3 / 5 / 7 puan</span></div>
-          <span class="play">Masaya otur →</span></div>
-      </a>
-      <a class="game" href="batak/">
-        <div class="art pisti" style="background:radial-gradient(ellipse at 50% 40%,#1f4f6b,#0d2a3d)"><div class="cards"><span style="color:#161616">A</span><span style="color:#161616">♠&#xFE0E;</span><span style="color:#c41f2e">K</span></div></div>
-        <div class="body"><span class="new">Yeni · Arkadaşınla online</span><h3>Batak</h3>
-          <p>İhaleli, kozlu dört kişilik batak. Kaç el alacağını söyle, kozu seç, batmadan tuttur. Bilgisayara karşı ya da linkle arkadaşlarınla.</p>
-          <div class="tags"><span class="tag">4 kişi</span><span class="tag">Linkle online 2-4 kişi</span><span class="tag">5 / 11 / 21 el</span></div>
-          <span class="play">Masaya otur →</span></div>
-      </a>
-      <a class="game" href="satranc/">
-        <div class="art chess"><span class="badge">♞</span></div>
-        <div class="body"><h3>Kavgacı Satranç</h3>
-          <p>Taşlar yürür, çifte atar, yumruk sallar. Bilgisayara karşı, aynı ekranda ya da linkle online.</p>
-          <div class="tags"><span class="tag">2 kişi</span><span class="tag">Linkle online</span><span class="tag">Sesli</span></div>
-          <span class="play">Masaya otur →</span></div>
-      </a>
-      <a class="game" href="pisti4/">
-        <div class="art pisti"><div class="cards"><span style="color:#161616">J</span><span style="color:#c41f2e">♥&#xFE0E;</span><span style="color:#161616">J</span></div></div>
-        <div class="body"><span class="new">Yeni · Arkadaşınla online</span><h3>Eşli Pişti</h3>
-          <p>Dört kişilik pişti, karşındaki ortağın. Ortağınla topla, pişti yap, takım olarak kazanın.</p>
-          <div class="tags"><span class="tag">4 kişi</span><span class="tag">Linkle online 2-4 kişi</span><span class="tag">51 / 101 / 151</span></div>
-          <span class="play">Masaya otur →</span></div>
-      </a>
-      <a class="game" href="pisti/">
-        <div class="art pisti"><div class="cards"><span style="color:#161616">♠&#xFE0E;</span><span style="color:#c41f2e">♦&#xFE0E;</span><span style="color:#161616">♣&#xFE0E;</span></div></div>
-        <div class="body"><h3>Pişti</h3>
-          <p>Klasik kahvehane piştisi. Vale ile topla, tek karta pişti yap, 51 ya da 101'e kadar oyna. Bilgisayara karşı ya da linkle arkadaşınla.</p>
-          <div class="tags"><span class="tag">Bilgisayara karşı</span><span class="tag">Linkle online</span><span class="tag">51 / 101</span></div>
-          <span class="play">Masaya otur →</span></div>
-      </a>
-      <a class="game" href="okey101/?klasik=1">
-        <div class="art okey"><div class="tiles"><span style="color:#1d5bb0">5</span><span style="color:#1d5bb0">6</span><span style="color:#1d5bb0">7</span></div></div>
-        <div class="body"><span class="new">Yeni · Arkadaşınla online</span><h3>Okey</h3>
-          <p>Klasik dört kişilik okey. Taşlarını per ve seri yap ya da 7 çift diz, 15. taşı ortaya at, bit. Okeyle ya da çiftle biten 2 kat yazar.</p>
-          <div class="tags"><span class="tag">4 kişi</span><span class="tag">Linkle online 2-4 kişi</span><span class="tag">Hızlı oyun</span></div>
-          <span class="play">Masaya otur →</span></div>
-      </a>
-      <a class="game" href="okey101/">
-        <div class="art okey"><div class="tiles"><span style="color:#1d5bb0">10</span><span style="color:#1d5bb0">11</span><span style="color:#1d5bb0">12</span></div></div>
-        <div class="body"><h3>101 Okey</h3>
-          <p>Dört kişilik kahvehane okeyi. 101 ya da 5 çiftle aç, masaya işle, Nuri, Rıza ve Hamdi Abi'den önce bitir.</p>
-          <div class="tags"><span class="tag">4 kişi</span><span class="tag">Linkle online 2-4 kişi</span><span class="tag">3 / 5 / 9 el</span></div>
-          <span class="play">Masaya otur →</span></div>
-      </a>
-      <a class="game" href="kahvehane/">
-        <div class="art okey"><div class="tiles"><span style="color:#c7262c">7</span><span style="color:#c7262c">8</span><span style="color:#c7262c">9</span></div></div>
-        <div class="body"><h3>Kahvehane Okey</h3>
-          <p>Okey taşlarıyla tek kişilik rogue-lite. Seri ve per kur, tılsım topla, dört kahvehanenin patronunu yen.</p>
-          <div class="tags"><span class="tag">Tek kişi</span><span class="tag">Rogue-lite</span></div>
-          <span class="play">Masaya otur →</span></div>
-      </a>
+  <section class="hero">
+    <div>
+      <h1>Kahvehane oyunları <em>cebinde</em></h1>
+      <p>Durak, Okey, King, Batak, Pişti, Tavla ve daha fazlası. Bilgisayara karşı oyna, hızlı oyunla rakip bul ya da linki at, arkadaşlarınla aynı masaya otur.</p>
+      <div class="cta"><button class="btn pri" id="qBtn">⚡ Hızlı oyun</button><a class="btn gh" href="#oyunlar">Oyunlara göz at</a><button class="btn gh" id="fBtn">👥 Arkadaşını davet et</button></div>
+      <div class="facts"><span>🎮 <b>11</b> oyun</span><span>💸 Ücretsiz</span><span>🔓 Kayıt şart değil</span><span>🌍 Türkçe · Русский · English</span></div>
+    </div>
+    <div class="show" aria-hidden="true">
+      <div class="c" style="left:8%;top:40px;transform:rotate(-12deg);color:#161616">A</div>
+      <div class="c" style="left:30%;top:18px;transform:rotate(-2deg);color:#c41f2e">♥&#xFE0E;</div>
+      <div class="c" style="left:52%;top:40px;transform:rotate(10deg);color:#161616">K</div>
+      <div class="t" style="left:10%;top:190px;color:#1d5bb0">7</div><div class="t" style="left:24%;top:194px;color:#1d5bb0">8</div><div class="t" style="left:38%;top:190px;color:#1d5bb0">9</div>
+      <div class="d" style="left:72%;top:170px;transform:rotate(14deg)"><i style="grid-area:1/1"></i><i style="grid-area:2/2"></i><i style="grid-area:3/3"></i></div>
+      <div class="d" style="left:82%;top:110px;transform:rotate(-10deg)"><i style="grid-area:1/1"></i><i style="grid-area:1/3"></i><i style="grid-area:3/1"></i><i style="grid-area:3/3"></i></div>
     </div>
   </section>
-
+  <div class="bar" id="oyunlar"><h2>Oyunlar</h2>
+    <div class="chips" id="chips"><button data-c="" class="on">Hepsi</button><button data-c="kart">Kart</button><button data-c="tas">Okey</button><button data-c="zar">Zar</button><button data-c="tahta">Satranç</button><button data-c="tek">Tek kişilik</button></div>
+  </div>
+  <div class="grid" id="grid">
+      <a class="game" href="durak/" data-cat="kart">
+        <div class="art durak"><div class="cards"><span style="color:#161616">6</span><span style="color:#c41f2e">♥&#xFE0E;</span><span style="color:#161616">A</span></div></div>
+        <div class="body"><div class="badges"><span class="new">Yeni</span></div><h3>Durak</h3>
+          <p>Rusların efsane kart oyunu. Saldır, kozla kes, kesemezsen al; elinde kart kalan durak olur.</p>
+          <div class="meta"><span>👥 2–6 kişi</span><span>🌐 Online</span><span>⚡ Hızlı oyun</span></div>
+          <div class="tags"><span class="tag">Atmalı / Aktarmalı</span><span class="tag">Hileli mod</span></div>
+          <span class="play">Oyna →</span></div>
+      </a>
+      <a class="game" href="okey101/?klasik=1" data-cat="tas">
+        <div class="art okey"><div class="tiles"><span style="color:#1d5bb0">5</span><span style="color:#1d5bb0">6</span><span style="color:#1d5bb0">7</span></div></div>
+        <div class="body"><div class="badges"><span class="new">Yeni</span></div><h3>Okey</h3>
+          <p>Per ve seri kur ya da 7 çift diz, 15. taşı ortaya at, bit. Eşli de oynanır.</p>
+          <div class="meta"><span>👥 4 kişi</span><span>🌐 Online</span><span>⚡ Hızlı oyun</span></div>
+          <div class="tags"><span class="tag">Klasik</span><span class="tag">Eşli</span></div>
+          <span class="play">Oyna →</span></div>
+      </a>
+      <a class="game" href="okey101/" data-cat="tas">
+        <div class="art okey"><div class="tiles"><span style="color:#1d5bb0">10</span><span style="color:#1d5bb0">11</span><span style="color:#1d5bb0">12</span></div></div>
+        <div class="body"><div class="badges"></div><h3>101 Okey</h3>
+          <p>101 ya da 5 çiftle aç, masaya işle, rakiplerden önce bitir. Katlamalı ve eşli seçenekleri.</p>
+          <div class="meta"><span>👥 4 kişi</span><span>🌐 Online</span><span>⚡ Hızlı oyun</span></div>
+          <div class="tags"><span class="tag">Katlamalı</span><span class="tag">Eşli</span></div>
+          <span class="play">Oyna →</span></div>
+      </a>
+      <a class="game" href="king/" data-cat="kart">
+        <div class="art pisti"><div class="cards"><span style="color:#c41f2e">K</span><span style="color:#c41f2e">♥&#xFE0E;</span><span style="color:#161616">Q</span></div></div>
+        <div class="body"><div class="badges"><span class="new">Yeni</span></div><h3 lang="en">King</h3>
+          <p>Cezalardan kaç, kozda el topla. El almaz, kız almaz, rıfkı ve diğerleri.</p>
+          <div class="meta"><span>👥 4 kişi</span><span>🌐 Online</span><span>⚡ Hızlı oyun</span></div>
+          <div class="tags"><span class="tag">20 / 12 el</span></div>
+          <span class="play">Oyna →</span></div>
+      </a>
+      <a class="game" href="batak/" data-cat="kart">
+        <div class="art pisti" style="background:radial-gradient(ellipse at 50% 40%,#1f4f6b,#0d2a3d)"><div class="cards"><span style="color:#161616">A</span><span style="color:#161616">♠&#xFE0E;</span><span style="color:#c41f2e">K</span></div></div>
+        <div class="body"><div class="badges"><span class="new">Yeni</span></div><h3>Batak</h3>
+          <p>İhale ver, kozu seç, söylediğin kadar el al. Tekli, eşli ve koz maça.</p>
+          <div class="meta"><span>👥 4 kişi</span><span>🌐 Online</span><span>⚡ Hızlı oyun</span></div>
+          <div class="tags"><span class="tag">İhaleli</span><span class="tag">Eşli</span><span class="tag">Koz Maça</span></div>
+          <span class="play">Oyna →</span></div>
+      </a>
+      <a class="game" href="pisti/" data-cat="kart">
+        <div class="art pisti"><div class="cards"><span style="color:#161616">♠&#xFE0E;</span><span style="color:#c41f2e">♦&#xFE0E;</span><span style="color:#161616">♣&#xFE0E;</span></div></div>
+        <div class="body"><div class="badges"></div><h3>Pişti</h3>
+          <p>Valeyle topla, tek karta pişti yap, 51 ya da 101 puana oyna.</p>
+          <div class="meta"><span>👥 2 kişi</span><span>🌐 Online</span><span>⚡ Hızlı oyun</span></div>
+          <div class="tags"><span class="tag">51 / 101</span></div>
+          <span class="play">Oyna →</span></div>
+      </a>
+      <a class="game" href="pisti4/" data-cat="kart">
+        <div class="art pisti"><div class="cards"><span style="color:#161616">J</span><span style="color:#c41f2e">♥&#xFE0E;</span><span style="color:#161616">J</span></div></div>
+        <div class="body"><div class="badges"><span class="new">Yeni</span></div><h3>Eşli Pişti</h3>
+          <p>Karşındaki ortağın; birlikte toplayın, pişti yapın, takım olarak kazanın.</p>
+          <div class="meta"><span>👥 4 kişi</span><span>🌐 Online</span><span>⚡ Hızlı oyun</span></div>
+          <div class="tags"><span class="tag">Takım</span></div>
+          <span class="play">Oyna →</span></div>
+      </a>
+      <a class="game" href="tavla/" data-cat="zar">
+        <div class="art durak" style="background:radial-gradient(ellipse at 50% 40%,#6b4423,#3a2414)"><div class="tiles"><span style="color:#2a211b;border-radius:50%">●</span><span style="color:#8c2f24">⚀</span><span style="color:#2a211b">⚄</span></div></div>
+        <div class="body"><div class="badges"><span class="new">Yeni</span></div><h3>Tavla</h3>
+          <p>Zar at, kapı kur, rakibini kır, pullarını ilk sen topla. Mars 2 puan.</p>
+          <div class="meta"><span>👥 2 kişi</span><span>🌐 Online</span><span>⚡ Hızlı oyun</span></div>
+          <div class="tags"><span class="tag">3 / 5 / 7 puan</span></div>
+          <span class="play">Oyna →</span></div>
+      </a>
+      <a class="game" href="kizma/" data-cat="zar">
+        <div class="art okey"><div class="tiles"><span style="color:#d64541">●</span><span style="color:#2f80d1">●</span><span style="color:#2e9e5b">●</span></div></div>
+        <div class="body"><div class="badges"><span class="new">Yeni</span></div><h3>Kızma Birader</h3>
+          <p>Zar at, piyonlarını eve götür, rakibini kır. 4 kişide eşli de oynanır.</p>
+          <div class="meta"><span>👥 2–4 kişi</span><span>🌐 Online</span><span>⚡ Hızlı oyun</span></div>
+          <div class="tags"><span class="tag">Eşli</span></div>
+          <span class="play">Oyna →</span></div>
+      </a>
+      <a class="game" href="satranc/" data-cat="tahta">
+        <div class="art chess"><span class="badge">♞</span></div>
+        <div class="body"><div class="badges"></div><h3>Kavgacı Satranç</h3>
+          <p>Taşlar yürür, çifte atar, yumruk sallar. Sesli, animasyonlu satranç.</p>
+          <div class="meta"><span>👥 2 kişi</span></div>
+          <div class="tags"><span class="tag">Sesli</span></div>
+          <span class="play">Oyna →</span></div>
+      </a>
+      <a class="game" href="kahvehane/" data-cat="tek">
+        <div class="art okey"><div class="tiles"><span style="color:#c7262c">7</span><span style="color:#c7262c">8</span><span style="color:#c7262c">9</span></div></div>
+        <div class="body"><div class="badges"></div><h3>Kahvehane Okey</h3>
+          <p>Okey taşlarıyla rogue-lite. Tılsım topla, dört kahvehanenin patronunu yen.</p>
+          <div class="meta"><span>👥 Tek kişi</span></div>
+          <div class="tags"><span class="tag">Rogue-lite</span></div>
+          <span class="play">Oyna →</span></div>
+      </a>
+  </div>
+  <section class="how" id="nasil">
+    <div><b><i>1</i>Oyunu seç</b><p>Kayıt olmadan hemen oyna. Kuralları her oyunun menüsünde bulabilirsin.</p></div>
+    <div><b><i>2</i>Rakibini bul</b><p>Bilgisayara karşı oyna, hızlı oyunla bekleyen birine katıl ya da masanın linkini arkadaşına gönder.</p></div>
+    <div><b><i>3</i>Birlikte oynayın</b><p>Kayıt olursan arkadaş ekler, tek dokunuşla masana çağırır, istatistiklerini ve liderlik tablosunu görürsün.</p></div>
+  </section>
 </div>
-<p class="foot"><span style="display:inline-flex;gap:6px;margin-bottom:10px"><button onclick="setLang('tr')" class="lg">Türkçe</button><button onclick="setLang('ru')" class="lg">Русский</button><button onclick="setLang('en')" class="lg">English</button></span><br>Ücretsiz · Kayıt şart değil · Reklamsız<br>Telefonunda uygulama gibi kullanmak için tarayıcı menüsünden <b>Ana ekrana ekle</b>'yi seç.<br><button class="inst" id="inst">📲 Telefona kur</button></p>
+<footer><div class="in">
+  <div>☕ Kahvehane · Ücretsiz · Reklamsız · Test sürümü</div>
+  <div class="links"><a href="#oyunlar">Oyunlar</a><a href="#nasil">Nasıl oynanır?</a><a href="gizlilik.html">Gizlilik</a><button class="inst" id="inst">📲 Telefona kur</button></div>
+</div></footer>
 <script>
 if('serviceWorker'in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
 let dp=null;addEventListener('beforeinstallprompt',e=>{e.preventDefault();dp=e;document.getElementById('inst').style.display='inline-block'});
 document.getElementById('inst').onclick=async()=>{if(!dp)return;dp.prompt();await dp.userChoice;dp=null;document.getElementById('inst').style.display='none'};
-</script>
-
-<script>
+/* dil */
+document.querySelectorAll('.lang button').forEach(b=>{b.classList.toggle('on',b.dataset.l===(window.LANG||'tr'));b.onclick=()=>setLang(b.dataset.l)});
+/* hesap düğmesi üst menüye */
+addEventListener('load',()=>{const t=setInterval(()=>{const b=document.querySelector('.kh-btn');if(b){document.getElementById('acct').appendChild(b);clearInterval(t)}},100);setTimeout(()=>clearInterval(t),5000)});
+/* kategori süzgeci */
+document.querySelectorAll('#chips button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#chips button').forEach(x=>x.classList.toggle('on',x===b));const c=b.dataset.c;document.querySelectorAll('#grid .game').forEach(g=>g.hidden=!!c&&g.dataset.cat!==c)});
+/* hızlı oyun: oyunu seç, o oyunda masa ara */
+document.getElementById('qBtn').onclick=()=>{const o=document.createElement('div');o.className='qp';o.innerHTML='<div class="s"><h3>⚡ Hızlı oyun</h3><p>Hangi oyunu oynamak istersin? Bekleyen bir masa varsa oturtuyoruz, yoksa sana masa açıyoruz.</p><div class="g"><button data-q="durak/">Durak</button><button data-q="okey101/?klasik=1">Okey</button><button data-q="okey101/">101 Okey</button><button data-q="king/">King</button><button data-q="batak/">Batak</button><button data-q="pisti/">Pişti</button><button data-q="pisti4/">Eşli Pişti</button><button data-q="tavla/">Tavla</button><button data-q="kizma/">Kızma Birader</button></div><button class="x">Vazgeç</button></div>';
+  document.body.appendChild(o);o.onclick=e=>{if(e.target===o||e.target.classList.contains('x'))o.remove()};o.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>{const h=b.dataset.q;location.href=h+(h.includes('?')?'&':'?')+'hizli=1'})};
+document.getElementById('fBtn').onclick=()=>{if(window.KH)KH.openProfile()};
 /* yarım kalan oyunlar */
 (()=>{const S={'king/':'king_save','batak/':'batak_save','kizma/':'kb_save','tavla/':'tv_save','pisti4/':'pisti4_save'};
-  for(const href in S){let v=null;try{v=localStorage.getItem(S[href])}catch(e){}if(!v||v==='null')continue;const a=document.querySelector(`a.game[href="${href}"] .body`);if(!a)continue;
+  for(const href in S){let v=null;try{v=localStorage.getItem(S[href])}catch(e){}if(!v||v==='null')continue;const a=document.querySelector(`a.game[href="${href}"] .badges`);if(!a)continue;
     const b=document.createElement('span');b.className='resume';b.textContent='▶ Yarım kalan oyunun var';a.prepend(b)}})();
 /* canlı: hızlı oyunda oyuncu bekleyen masalar */
 addEventListener('load',()=>setTimeout(()=>{const go=()=>{if(!window.KQuick)return;const map={durak:'durak/',king:'king/',batak:'batak/',kizma:'kizma/',tavla:'tavla/',pisti:'pisti/',okey101:'okey101/',okey:'okey101/?klasik=1',pisti4:'pisti4/'};
-  KQuick.watch(cnt=>{document.querySelectorAll('.live').forEach(x=>x.remove());for(const g in cnt){const a=document.querySelector(`a.game[href="${map[g]}"] .body`);if(!a)continue;
+  KQuick.watch(cnt=>{document.querySelectorAll('.live').forEach(x=>x.remove());for(const g in cnt){const a=document.querySelector(`a.game[href="${map[g]}"] .badges`);if(!a)continue;
     const b=document.createElement('span');b.className='live';b.textContent=cnt[g]===1?'● 1 masa oyuncu bekliyor':`● ${cnt[g]} masa oyuncu bekliyor`;a.prepend(b)}})};
   if(window.mqtt)go();else{const s=document.createElement('script');s.src='mqtt.min.js';s.onload=go;document.head.appendChild(s)}},1200));
 </script>
-<style>.resume{display:inline-block;font-size:12px;font-weight:700;color:#e7b54c;margin-bottom:2px}.live{display:inline-block;font-size:12px;font-weight:700;color:#86d49a;margin-bottom:2px;animation:livep 1.6s ease-in-out infinite}@keyframes livep{50%{opacity:.55}}</style>
 </body></html>

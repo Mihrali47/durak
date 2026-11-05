@@ -337,6 +337,7 @@ KTimer.init({secs:()=>20,key:tkey,actor:()=>G.turn,isHuman:p=>!!human[p],name:p=
 window.KH_HOST=()=>{mode='off';hostRoom();return linkFor(room)};
 const hc=(location.hash||'').slice(1).toUpperCase();
 if(/^[A-Z0-9]{5}$/.test(hc))joinRoom(hc);else showMenu();
+{const q=new URLSearchParams(location.search);if(q.get('hizli')){try{q.delete('hizli');history.replaceState(null,'',location.pathname+(q.toString()?'?'+q:'')+location.hash)}catch(e){}setTimeout(()=>{try{quickPlay()}catch(e){console.error(e)}},400)}}
 addEventListener('load',()=>{fit();window.KH&&KH.setPresence('Kızma Birader')});
 </script>
 </body></html>
