@@ -45,6 +45,7 @@ function legal(M,p){if(M.phase!=='play'||p!==M.turn)return[];const h=M.hands[p],
     return h.slice()}
   const pen=h.filter(c=>isPen(g,c));
   if(pen.length&&(g==='kiz'||g==='erkek'||g==='rifki'))return pen;
+  if(g==='kupa'||g==='rifki'){const hs=h.filter(c=>cs(c)==='H');if(hs.length)return hs}   // renk yoksa kupa atmak zorunlu
   return h.slice()}
 function done(M){const g=M.game,all=M.taken.flat();
   if(M.tricks>=13)return true;

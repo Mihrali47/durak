@@ -506,6 +506,7 @@ function endHand(fin,f){
   for(let s=0;s<4;s++){
     let base,how;
     if(s===fin){base=-101*m;how='Bitirdi'}
+    else if(fin==null){const k=S.hands[s].filter(wild).length;base=k*101;how=k?'Orta bitti · elde okey':'Orta bitti'}   // deste bitince el puansız, sadece elde okey tutan 101 yer
     else if(!S.opened[s]){base=202*m;how='Açamadı'}
     else{const rem=S.hands[s].reduce((a,t)=>a+tval(t),0),k=S.opened[s]==='pairs'?2:1;base=rem*k*m;how=`Elde ${rem}${k>1?' ×2 (çift)':''}`}
     rows.push({base,how,pen:S.pen[s],total:base+S.pen[s]});
@@ -1212,6 +1213,7 @@ function showMenu(){
     <li>Istakandaki işlek taşların üstünde <b>"İŞLEK"</b> yazar. Elinde gerçek taşı varsa masadaki okeyin üstüne sürükleyip <b>okeyi alabilirsin</b>.</li>
     <li><b>Yardımlı</b> masada okey ters döner (sade beyaz), işlek taşlar işaretlenir ve <b>İşlek Diz</b> ile tek tuşla işlersin. <b>Yardımsız</b> masada okey ters dönmez, kendi rengi ve sayısıyla görünür; işlekler işaretlenmez, İşlek Diz olmaz. Gözün açık olsun.</li>
     <li>Yeşil yonca <b>sahte okey</b>, okeyin değerini alır. Okey ya da işlek taş atmak 101 ceza.</li>
+    <li>Ortadaki taşlar biterse el puansız biter; sadece elinde okey kalan her okey için 101 yazar.</li>
   </ul>
   <div><p class="lbl">Kaç el?</p><div class="seg" id="segN">${[3,5,9].map(n=>`<button data-n="${n}" aria-pressed="${n===menuN}">${n} el</button>`).join('')}</div></div>
   <div><p class="lbl">Oyun şekli</p><div class="seg" id="segE" style="grid-template-columns:repeat(2,1fr)"><button data-v="0" aria-pressed="${!U.esli}">Tekli</button><button data-v="1" aria-pressed="${!!U.esli}">Eşli</button></div></div>

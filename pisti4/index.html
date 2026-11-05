@@ -289,7 +289,7 @@ function showScore(){if(!M)return;const a=tm(me),b=1-a;
   $('sOk').onclick=()=>{hideOv();afterRender()}}
 function showRules(){ov('rules',`<h2>Eşli Pişti nasıl oynanır?</h2>
   <p>4 kişi oynanır, karşındaki ortağındır. Herkese 4'er kart dağıtılır, yere 4 kart açılır (en üstteki açık). Eller bitince yeniden 4'er dağıtılır.</p>
-  <p>Yerdeki en üst kartla aynı sayıyı atarsan ya da vale atarsan yerdeki bütün kartları toplarsın. Yerde tek kart varken eşini atarsan <b>pişti</b>: 10 puan; vale üstüne vale 20.</p>
+  <p>Yerdeki en üst kartla aynı sayıyı atarsan ya da vale atarsan yerdeki bütün kartları toplarsın. Yerde tek kart varken eşini atarsan <b>pişti</b>: 10 puan; vale üstüne vale 20. Elin en son kartıyla yapılan pişti sayılmaz.</p>
   <p><b>Puan:</b> her as ve vale 1, sinek 2 = 2, karo 10 = 3, en çok kart toplayan takım 3. Ortakların topladıkları birlikte sayılır. Hedef puana ilk ulaşan takım kazanır.</p>
   <div class="row"><button class="btn pri" id="rOk">Tamam</button></div>`);$('rOk').onclick=()=>M&&M.phase!=='idle'?(hideOv(),afterRender()):showMenu()}
 function showMenu(){const sv=ST.get('save',null),rec=ST.get('rec',[0,0]);

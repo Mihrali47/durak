@@ -13,7 +13,7 @@ function deal(M){for(let k=0;k<4;k++)for(let i=0;i<4;i++){const p=(M.dealer+1+i)
 function play(M,p,c){if(M.phase!=='play')return 'Oyun yok';if(p!==M.turn)return 'Sıra sende değil';const h=M.hands[p],i=h.indexOf(c);if(i<0)return 'Bu kart elinde yok';
   h.splice(i,1);const top=M.pile[M.pile.length-1];M.pile.push(c);M.seen.push(c);M.eid++;
   const take=!!top&&(cr(c)===cr(top)||cr(c)===11);let v=0,n=0;
-  if(take){n=M.pile.length;if(n===2&&cr(c)===cr(top))v=cr(c)===11?20:10;const t=team(p);M.pisti[t]+=v;M.cards[t].push(...M.pile);M.taken[t]+=n;M.pile=[];M.closed=0;M.lastT=p}
+  if(take){n=M.pile.length;if(n===2&&cr(c)===cr(top)&&!(!M.deck.length&&M.hands.every(x=>!x.length)))v=cr(c)===11?20:10;const t=team(p);M.pisti[t]+=v;M.cards[t].push(...M.pile);M.taken[t]+=n;M.pile=[];M.closed=0;M.lastT=p}
   M.ev={id:M.eid,p,c,take,n,v};M.turn=(p+1)%4;
   if(M.hands.every(x=>!x.length)){if(M.deck.length){deal(M);M.ev.deal=true}else endHand(M)}
   return null}
