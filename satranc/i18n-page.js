@@ -5,6 +5,12 @@ const PD={piyona:'piyon',ata:'at',file:'fil',kaleye:'kale',vezire:'vezir','şaha
 const CL={Mavi:['Синие','Blue'],Siyah:['Чёрные','Black'],mavi:['синий','blue'],siyah:['чёрный','black']};
 const VB={'kafa attı':['боднула','headbutted'],'çifte attı':['лягнул','kicked'],'yumruk attı':['ударил','punched'],'tosladı':['протаранила','rammed'],'yıldırım çaktı':['метнул молнию в','zapped'],'tepeden çöktü':['обрушился на','slammed']};
 window.I18N_EXTRA=[
+['Berabere','Ничья','Draw'],['Pat','Пат','Stalemate'],['Şah mat!','Мат!','Checkmate!'],
+['Mat edecek taş kalmadı, kavga bitti.','Матовать нечем, бой окончен.','Not enough pieces left to mate, the fight is over.'],
+['Aynı pozisyon üç kez tekrarlandı.','Позиция повторилась трижды.','The same position occurred three times.'],
+['50 hamledir piyon oynanmadı ve taş alınmadı.','50 ходов без хода пешкой и без взятий.','50 moves without a pawn move or capture.'],
+['İki taraf da yoruldu, maç uzadı.','Обе стороны устали, партия затянулась.','Both sides got tired, the game ran too long.'],
+['Hamle kalmadı, oyun berabere.','Ходов нет, ничья.','No moves left, the game is a draw.'],
 ['Kavgacı','Драчливые','Brawling'],['Satranç','шахматы','Chess'],['Kavgacı Satranç','Драчливые шахматы','Brawling Chess'],['Menü','Меню','Menu'],
 ['Taşlar yürür, çifte atar, yumruk sallar. Nasıl oynamak istersin?','Фигуры ходят, лягаются и дерутся. Как будете играть?','Pieces walk, kick and punch. How do you want to play?'],
 ['Bilgisayara karşı','Против компьютера','Vs computer'],['Mavilerle sen oynarsın','Вы играете синими','You play blue'],['Arkadaşla','С другом','With a friend'],['Aynı ekranda sırayla','По очереди на одном экране','Take turns on one screen'],
@@ -32,7 +38,7 @@ ru:[
 [/^(Mavi|Siyah) rok attı, şah kaleye sığındı\.$/,(m,c)=>`${CL[c][0]}: рокировка.`],
 [/^(.+) — ŞAH!$/,'$1 — ШАХ!'],[/^Bilgisayar \((mavi|siyah)\) oynar$/,(m,c)=>`Компьютер (${CL[c][0].toLowerCase()}) ходит`],[/^Bilgisayar · (Mavi|Siyah)$/,(m,c)=>'Компьютер · '+CL[c][0]],[/^Sen · (Mavi|Siyah)$/,(m,c)=>'Вы · '+CL[c][0]],[/^Rakip · (Mavi|Siyah)$/,(m,c)=>'Соперник · '+CL[c][0]],[/^Rakip bekleniyor · (Mavi|Siyah)$/,(m,c)=>'Ждём соперника · '+CL[c][0]],
 [/^(\w\d) (mavi|siyah) (piyon|at|fil|kale|vezir|şah)$/,(m,s,c,p)=>`${s} ${CL[c][0]} ${PC[p][0]}`],[/^(\w\d) boş$/,'$1 пусто'],[/^(.+) gönder$/,'Отправить $1'],
-[/^(.+) kazandı\. Rövanş\?$/,'$1 побеждает. Реванш?'],[/^Sen kazandın, bilgisayar yere serildi!$/,'Вы победили, компьютер повержен!'],[/^Bilgisayar kazandı\. Rövanş\?$/,'Компьютер победил. Реванш?'],
+[/^(.+) kazandı\. Rövanş\?$/,'$1 побеждает. Реванш?'],[/^(Mavi|Siyah) kazandı(!| Yeni maç birazdan başlıyor\.|\.)(.*)$/,(m,c,x,r)=>CL[c][0]+' побеждает'+(r?'! Новая партия скоро начнётся.':'.')],[/^Sen kazandın, bilgisayar yere serildi!$/,'Вы победили, компьютер повержен!'],[/^Bilgisayar kazandı\. Rövanş\?$/,'Компьютер победил. Реванш?'],
 ],
 en:[
 [/^(Mavi|Siyah) (piyon|at|fil|kale|vezir|şah) (\w\d)→(\w\d) yürüdü(, iki adım birden)?\.(.*)$/,(m,c,p,a,b,d,e)=>`${CL[c][1]} ${PC[p][1]} ${a}→${b}${d?', two squares':''}.${e?' Pawn promoted to queen!':''}`],
@@ -41,6 +47,6 @@ en:[
 [/^(Mavi|Siyah) rok attı, şah kaleye sığındı\.$/,(m,c)=>`${CL[c][1]} castled.`],
 [/^(.+) — ŞAH!$/,'$1 — CHECK!'],[/^Bilgisayar \((mavi|siyah)\) oynar$/,(m,c)=>`Computer (${CL[c][1].toLowerCase()}) to move`],[/^Bilgisayar · (Mavi|Siyah)$/,(m,c)=>'Computer · '+CL[c][1]],[/^Sen · (Mavi|Siyah)$/,(m,c)=>'You · '+CL[c][1]],[/^Rakip · (Mavi|Siyah)$/,(m,c)=>'Opponent · '+CL[c][1]],[/^Rakip bekleniyor · (Mavi|Siyah)$/,(m,c)=>'Waiting for opponent · '+CL[c][1]],
 [/^(\w\d) (mavi|siyah) (piyon|at|fil|kale|vezir|şah)$/,(m,s,c,p)=>`${s} ${CL[c][1].toLowerCase()} ${PC[p][1]}`],[/^(\w\d) boş$/,'$1 empty'],[/^(.+) gönder$/,'Send $1'],
-[/^(.+) kazandı\. Rövanş\?$/,'$1 wins. Rematch?'],[/^Sen kazandın, bilgisayar yere serildi!$/,'You won, the computer is down!'],[/^Bilgisayar kazandı\. Rövanş\?$/,'The computer won. Rematch?'],
+[/^(.+) kazandı\. Rövanş\?$/,'$1 wins. Rematch?'],[/^(Mavi|Siyah) kazandı(!| Yeni maç birazdan başlıyor\.|\.)(.*)$/,(m,c,x,r)=>CL[c][1]+' wins'+(r?'! A new game starts shortly.':'.')],[/^Sen kazandın, bilgisayar yere serildi!$/,'You won, the computer is down!'],[/^Bilgisayar kazandı\. Rövanş\?$/,'The computer won. Rematch?'],
 ]};
 })();

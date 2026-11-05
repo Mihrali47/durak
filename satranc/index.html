@@ -307,7 +307,7 @@ function apply(st,m){const b=st.b.slice();if(m.capSq>=0)b[m.capSq]=null;b[m.from
   if(m.castle){const row=m.p.c==='w'?56:0;if(m.castle==='K'){b[row+5]=b[row+7];b[row+7]=null}else{b[row+3]=b[row];b[row]=null}}
   const cr={...st.cr};if(m.p.t==='K'){cr[m.p.c+'K']=false;cr[m.p.c+'Q']=false}
   for(const s of[m.from,m.to]){if(s===63)cr.wK=false;if(s===56)cr.wQ=false;if(s===7)cr.bK=false;if(s===0)cr.bQ=false}
-  return {b,turn:st.turn==='w'?'b':'w',cr,ep:m.dbl?(m.from+m.to)/2:-1}}
+  return {b,turn:st.turn==='w'?'b':'w',cr,ep:m.dbl?(m.from+m.to)/2:-1,hm:(m.p.t==='P'||m.cap)?0:(st.hm||0)+1}}
 const kingSq=(b,c)=>b.findIndex(p=>p&&p.c===c&&p.t==='K');
 const inCheck=st=>attacked(st.b,kingSq(st.b,st.turn),st.turn==='w'?'b':'w');
 function legal(st){return pseudo(st).filter(m=>{const n=apply(st,m);return !attacked(n.b,kingSq(n.b,st.turn),n.turn)})}
@@ -657,9 +657,13 @@ async function play(m){busy=true;sel=-1;if(mode==='online'&&!m.remote)pushMove(m
   if(!over&&autoTurn())setTimeout(botMove,D(mode==='watch'?650:450))}
 function botMove(){if(mode==='online'||!started||over||busy||!autoTurn())return;
   let best=null,bs=-Infinity;for(const m of moves){const s=score(state,m,mode==='watch');if(s>bs){bs=s;best=m}}if(best)play(best)}
-function endCheck(){const onlyKings=state.b.every(p=>!p||p.t==='K'),tooLong=mode==='watch'&&hist.length>=220;
-  if(!moves.length||onlyKings||tooLong){over=true;let T,S;
-    if(onlyKings){T='Berabere';S='Sahada sadece iki şah kaldı, kavga bitti.'}
+const posKey=st=>st.b.map(p=>p?p.c+p.t:'.').join('')+st.turn+JSON.stringify(st.cr)+st.ep;
+function endCheck(){const rest=state.b.filter(p=>p&&p.t!=='K'),onlyKings=!rest.length||(rest.length===1&&(rest[0].t==='B'||rest[0].t==='N')),tooLong=mode==='watch'&&hist.length>=220;
+  const k=posKey(state),rep=1+hist.filter(h=>h.state&&posKey(h.state)===k).length,fifty=(state.hm||0)>=100;
+  if(!moves.length||onlyKings||tooLong||rep>=3||fifty){over=true;let T,S;
+    if(onlyKings){T='Berabere';S='Mat edecek taş kalmadı, kavga bitti.'}
+    else if(moves.length&&rep>=3){T='Berabere';S='Aynı pozisyon üç kez tekrarlandı.'}
+    else if(moves.length&&fifty){T='Berabere';S='50 hamledir piyon oynanmadı ve taş alınmadı.'}
     else if(tooLong){T='Berabere';S='İki taraf da yoruldu, maç uzadı.'}
     else if(inCheck(state)){const w=state.turn==='w'?'b':'w';T='Şah mat!';say('mat');SFX.win();setTimeout(confetti,300);
       state.b.forEach(p=>{if(!p)return;const e=els.get(p.id);if(p.c===w)setTimeout(()=>react(e,'😎'),400+Math.random()*500);else if(p.t==='K')react(e,'😵')});S=mode==='watch'?`${col(w)} kazandı! Yeni maç birazdan başlıyor.`:mode==='bot'?(w===BOT?'Bilgisayar kazandı. Rövanş?':'Sen kazandın, bilgisayar yere serildi!'):`${col(w)} kazandı.`}
