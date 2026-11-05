@@ -2,6 +2,9 @@
 (()=>{
 const CO={'kırmızı':['красная','red'],mavi:['синяя','blue'],'sarı':['жёлтая','yellow'],siyah:['чёрная','black']};
 window.I18N_EXTRA=[
+['Klasik Okey','Классический окей','Classic Okey'],['Okey türü','Вариант окея','Okey type'],['Bitir','Закончить','Go out'],['Çiftle bitirdi','Закончил парами','Went out with pairs'],['Bitirdi','Закончил','Went out'],['OKEY','ОКЕЙ','OKEY'],
+['Elin bitmeye hazır değil: kalan 14 taş per, seri ya da 7 çift olmalı','Рука не готова: оставшиеся 14 фишек должны быть сериями, наборами или 7 парами','Your hand isn\'t ready: the other 14 tiles must form runs, sets or 7 pairs'],['Şu an bitemezsin','Сейчас нельзя закончить','You can\'t go out now'],
+['Göstergeyi gösterdin: −1','Вы показали индикатор: −1','You showed the indicator: −1'],['Gösterge −1','Индикатор −1','Indicator −1'],
 ['Test ayarları','Тестовые настройки','Test settings'],
 ['Sıra sende: ortadan çek ya da soldan al. Istakaya sürükleyebilirsin.','Ваш ход: возьмите фишку из середины или слева. Можно перетащить на подставку.','Your turn: draw from the middle or take from the left. You can drag onto your rack.'],
 ['👥 Arkadaşlarla online','👥 Онлайн с друзьями','👥 Online with friends'],['Masa kuruldu','Стол создан','Table created'],['Linki arkadaşlarına gönder. En fazla 4 kişi; boş yerlere bilgisayar oturur.','Отправьте ссылку друзьям. До 4 игроков, свободные места займёт компьютер.','Send the link to your friends. Up to 4 players; the computer fills empty seats.'],
@@ -50,6 +53,7 @@ const BNK={Nuri:'Нури','Rıza':'Рыза',Hamdi:'Хамди',Sen:'Вы'};con
 const COK={'kırmızı':['красная','red'],mavi:['синяя','blue'],'sarı':['жёлтая','yellow'],siyah:['чёрная','black']};
 const TN=(x,j)=>{if(x==='okey')return j?'the okey':'окей';if(x==='sahte okey')return j?'the fake okey':'фальшивый окей';if(x==='Taşı')return j?'the tile':'фишку';const m=x.match(/^(kırmızı|mavi|sarı|siyah) (\d+)$/);return m?`${COK[m[1]][j]} ${m[2]}`:x};
 const mk=j=>[
+[/^(.+?) göstergeyi gösterdi\.$/,(m,a)=>j?`${nmK(a,1)} showed the indicator.`:`${nmK(a,0)} показал индикатор.`],
 [/^(\d+)\. el · okey (kırmızı|mavi|sarı|siyah) (\d+)$/,(m,n,c,v)=>j?`Hand ${n} · okey ${COK[c][1]} ${v}`:`Партия ${n} · окей ${COK[c][0]} ${v}`],[/^Baraj (\d+)$/,(m,n)=>j?`Bar ${n}`:`Барьер ${n}`],
 [/^(.+?) oynuyor…$/,(m,a)=>j?`${nmK(a,1)} is playing…`:`Ходит ${nmK(a,0)}…`],
 [/^(.+?) (\d+) taş işledi\.$/,(m,a,n)=>j?`${nmK(a,1)} laid off ${n} tiles.`:`${nmK(a,0)} доложил фишек: ${n}.`],

@@ -1,4 +1,6 @@
-<!doctype html><html><head><script src="i18n-page.js"></script><script src="../i18n.js"></script><script src="../account.js"></script><script src="../quick.js"></script><script src="../mqtt.min.js"></script><script src="../relay.js"></script><script src="../chat.js"></script><script>addEventListener("load",()=>window.KH&&KH.setPresence("101 Okey"))</script><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html><head><script src="i18n-page.js"></script><script src="../i18n.js"></script><script src="../account.js"></script><script src="../quick.js"></script><script src="../mqtt.min.js"></script><script src="../relay.js"></script><script src="../chat.js"></script><script>addEventListener("load",()=>window.KH&&KH.setPresence("101 Okey"))</script><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
+#bFin.glow{animation:finGlow 1s ease-in-out infinite}@keyframes finGlow{50%{box-shadow:0 0 0 5px rgba(80,200,120,.55)}}
+</style></head><body>
 <title>101 Okey</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -275,6 +277,7 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
       <button class="btn ghost" id="bGos" hidden>Göstergeyi Göster</button>
       <button class="btn ghost" id="bRet" hidden>Yandan Aldığını Bırak</button>
       <span style="flex:1"></span>
+      <button class="btn green" id="bFin" hidden>Bitir</button>
       <button class="btn red" id="bDisc">At</button>
     </div>
     <div class="abs status" id="status"></div>
@@ -306,7 +309,7 @@ function dealHand(dealer,rig){
     opened:[null,null,null,null],openVal:[0,0,0,0],pen:[0,0,0,0],penLog:[[],[],[],[]],turn:dealer,phase:'act',dealer,
     firstTurn:[true,true,true,true],minOpen:101,shown:[false,false,false,false],sideTile:null,laidThisTurn:false,openedThisTurn:false,ended:false,result:null};
   if(rig&&rig.all)rigHands(dealer);
-  else for(let s=0;s<4;s++)S.hands[s]=S.deck.splice(0,s===dealer?22:21);
+  else for(let s=0;s<4;s++)S.hands[s]=S.deck.splice(0,RULES.classic?(s===dealer?15:14):(s===dealer?22:21));
   S.pairBot=-1;
   if(rig&&rig.pair){S.pairBot=1+(Math.random()*3|0);rigPairs(S.pairBot)}
   if(rig&&rig.ok)rigOkey(rig.ok);
@@ -404,7 +407,7 @@ function returnSide(s){
   const h=S.hands[s],i=h.findIndex(t=>t.id===S.sideTile);if(i<0)return err('Taş elinde değil');
   S.discards[prev(s)].push(h.splice(i,1)[0]);S.sideTile=null;S.phase='draw';S.noSide=true;return ok();
 }
-function showGosterge(s){if(!canShow(s))return err('Gösterge gösterilemez');S.shown[s]=true;S.pen[s]-=101;S.penLog[s].push('Gösterge −101');return ok()}
+function showGosterge(s){if(!canShow(s))return err('Gösterge gösterilemez');S.shown[s]=true;const v=RULES.classic?1:101;S.pen[s]-=v;S.penLog[s].push('Gösterge −'+v);return ok()}
 function lay(s,groupsIds){
   if(S.ended||S.turn!==s||S.phase!=='act')return err('Sıra sende değil');
   const h=S.hands[s],seen=new Set();
@@ -447,13 +450,13 @@ function discard(s,tileId,force){
   if(S.ended||S.turn!==s||S.phase!=='act')return err('Şu an taş atamazsın');
   const h=S.hands[s],t=h.find(x=>x.id===tileId);if(!t)return err('Taş elinde yok');
   const res={pen:[]};
-  if(S.sideTile!=null&&h.some(x=>x.id===S.sideTile)){
+  if(!RULES.classic&&S.sideTile!=null&&h.some(x=>x.id===S.sideTile)){
     if(!force)return err('Yandan aldığın taşı bu el kullanmalısın ya da geri bırakmalısın');
     S.pen[s]+=101;S.penLog[s].push('Yandan alıp kullanmama +101');res.pen.push('yandan');
   }
   S.hands[s]=h.filter(x=>x!==t);
   const finishing=S.hands[s].length===0;
-  if(!finishing){
+  if(!finishing&&!RULES.classic){
     if(wild(t)){S.pen[s]+=101;S.penLog[s].push('Okey atma +101');res.pen.push('okey')}
     else if(canAttachAny(t)){S.pen[s]+=101;S.penLog[s].push('İşlek taş atma +101');res.pen.push('işlek')}
   }
@@ -466,6 +469,8 @@ function discard(s,tileId,force){
   return ok(res);
 }
 function endHand(fin,f){
+  if(RULES.classic){const m=(f.okey?2:1)*(f.pairs?2:1),rows=[];for(let s=0;s<4;s++){const base=s===fin?-2*m:0;rows.push({base,how:s===fin?(f.pairs?'Çiftle bitirdi':'Bitirdi'):fin==null?'Orta bitti':'—',pen:S.pen[s],total:base+S.pen[s]})}
+    S.ended=true;S.result={fin,m,flags:f,pairsFin:!!f.pairs,rows};return}
   const pairsFin=fin!=null&&S.opened[fin]==='pairs';
   const m=fin==null?1:(pairsFin?2:1)*(f.okey?2:1)*(f.elden?2:1);
   const rows=[];
@@ -605,6 +610,51 @@ function trimKeep(sets,handLen){
 }
 const setsVal=sets=>sets.reduce((a,g)=>a+validate(g).value,0);
 
+
+/* ===== KLASİK OKEY: masaya açma yok; 14 taşın hepsi per/seri ya da 7 çift olunca 15. taşı ortaya atıp biter ===== */
+function runOptions(t,rem,w){const e=eff(t),out=[];const c=e.c;
+  for(let lead=0;lead<=w;lead++){const s0=e.n-lead;if(s0<1)break;
+    for(let L=Math.max(3,lead+1);s0+L-1<=13;L++){const used=[t],pool=rem.slice();let need=lead,ok=true;
+      for(let k=e.n+1;k<s0+L;k++){const i=pool.findIndex(x=>{const f=eff(x);return f.c===c&&f.n===k});if(i>=0){used.push(pool[i]);pool.splice(i,1)}else need++}
+      if(need>w){if(need-w>1)break;continue}out.push({tiles:used,wilds:need})}}
+  return out}
+function groupOptions(t,rem,w){const e=eff(t),others=[],seenC=new Set([e.c]),out=[];
+  for(const x of rem){const f=eff(x);if(f.n===e.n&&!seenC.has(f.c)){seenC.add(f.c);others.push(x)}}
+  const n=others.length;for(let m=0;m<(1<<n);m++){const sub=[t];others.forEach((x,i)=>{if(m&(1<<i))sub.push(x)});for(let j=0;j<=Math.min(w,2);j++){const L=sub.length+j;if(L>=3&&L<=4)out.push({tiles:sub,wilds:j})}}
+  return out}
+function partition(ts){const W=ts.filter(wild),N=ts.filter(t=>!wild(t)).sort((a,b)=>eff(a).c-eff(b).c||eff(a).n-eff(b).n);let nodes=0;
+  function rec(rem,w,acc){if(++nodes>40000)return null;if(!rem.length)return w===0?acc:null;
+    const t=rem[0],rest=rem.slice(1);
+    for(const o of [...runOptions(t,rest,w),...groupOptions(t,rest,w)]){const ids=new Set(o.tiles.map(x=>x.id));const r=rec(rest.filter(x=>!ids.has(x.id)),w-o.wilds,[...acc,{tiles:o.tiles,wilds:o.wilds}]);if(r)return r}
+    return null}
+  const r=rec(N,W.length,[]);if(!r)return null;const wp=W.slice();return r.map(g=>{const out=g.tiles.slice();for(let j=0;j<g.wilds;j++)out.push(wp.pop());return out})}
+function sevenPairs(ts){if(ts.length!==14)return false;const W=ts.filter(wild).length,map={};let singles=0;
+  ts.filter(t=>!wild(t)).forEach(t=>{const e=eff(t),k=e.c+'-'+e.n;map[k]=(map[k]||0)+1});for(const k in map)singles+=map[k]%2;return singles<=W&&(W-singles)%2===0}
+function finishPlan(h){const opts=h.slice().sort((a,b)=>(wild(b)?1:0)-(wild(a)?1:0));
+  for(const t of opts){const rest=h.filter(x=>x!==t);if(partition(rest))return {tile:t,pairs:false};if(sevenPairs(rest))return {tile:t,pairs:true}}return null}
+function finishClassic(s,tileId){if(S.ended||S.turn!==s||S.phase!=='act')return err('Şu an bitemezsin');
+  const h=S.hands[s],t=h.find(x=>x.id===tileId);if(!t)return err('Taş elinde yok');const rest=h.filter(x=>x!==t);
+  const pairs=!partition(rest)&&sevenPairs(rest);if(!pairs&&!partition(rest))return err('Elin bitmeye hazır değil: kalan 14 taş per, seri ya da 7 çift olmalı');
+  S.hands[s]=rest;S.discards[s].push(t);S.finTile=t;endHand(s,{okey:wild(t),pairs});return ok({finished:true,tile:t})}
+function maxCover(ts){const W=ts.filter(wild),N=ts.filter(t=>!wild(t)).sort((a,b)=>eff(a).c-eff(b).c||eff(a).n-eff(b).n);let nodes=0,best=0;
+  function rec(rem,w,cov){if(++nodes>6000)return;if(cov+rem.length+w<=best)return;if(cov>best)best=cov;if(!rem.length){best=Math.max(best,cov+0);return}
+    const t=rem[0],rest=rem.slice(1);
+    for(const o of [...runOptions(t,rest,w),...groupOptions(t,rest,w)]){const ids=new Set(o.tiles.map(x=>x.id));rec(rest.filter(x=>!ids.has(x.id)),w-o.wilds,cov+o.tiles.length+o.wilds)}
+    rec(rest,w,cov)}
+  rec(N,W.length,0);
+  // çift potansiyeli
+  const map={};N.forEach(t=>{const e=eff(t),k=e.c+'-'+e.n;map[k]=(map[k]||0)+1});let pr=0;for(const k in map)pr+=Math.floor(map[k]/2);
+  return Math.max(best,Math.min(14,pr*2+W.length*2)*.8)}
+function nearScore(t,h){if(wild(t))return 99;const e=eff(t);let v=0;for(const x of h){if(x===t||wild(x))continue;const f=eff(x);if(f.c===e.c&&Math.abs(f.n-e.n)<=2&&f.n!==e.n)v+=3-Math.abs(f.n-e.n);if(f.n===e.n&&f.c!==e.c)v+=1.5;if(f.n===e.n&&f.c===e.c)v+=.6}return v}
+function* botTurnClassic(s){const nm=NAMES[s];yield {quiet:true};
+  if(canShow(s)){showGosterge(s);yield {msg:`${nm} göstergeyi gösterdi.`,hit:true}}
+  if(S.phase==='draw'){const p=S.discards[prev(s)],h=S.hands[s];let take=false;
+    if(p.length){const t=p[p.length-1];take=wild(t)||maxCover([...h,t])>maxCover(h)+1.5}
+    if(take){const r=draw(s,'side');yield {msg:`${nm} yandan ${tname(r.tile)} aldı.`}}else{if(!S.deck.length){endHand(null,{});return}draw(s,'deck');yield {quiet:true}}}
+  const h=S.hands[s],plan=finishPlan(h);
+  if(plan){finishClassic(s,plan.tile.id);yield {msg:`${nm} bitti!`,hit:true,discard:true};return}
+  let best=null,bv=-1e9;for(const t of h){if(wild(t))continue;const rest=h.filter(x=>x!==t);const v=maxCover(rest)*3+nearScore(t,h)*-.6+(t.id===S.sideTile?-50:0)-(t.fake?5:0);if(v>bv){bv=v;best=t}}
+  if(!best)best=h[h.length-1];const r=discard(s,best.id,true);yield {msg:`${nm} ${tname(best)} attı.`,discard:true}}
 /* --- bot --- */
 function botTakeSide(s){
   const p=S.discards[prev(s)];if(!p.length)return false;
@@ -635,6 +685,7 @@ function botPickDiscard(s){
   return best;
 }
 function* botTurn(s){
+  if(RULES.classic){yield* botTurnClassic(s);return}
   const nm=NAMES[s];let plan=null;
   yield {quiet:true};
   if(canShow(s)){showGosterge(s);yield {msg:`${nm} göstergeyi gösterdi (−101).`,hit:true}}
@@ -697,6 +748,7 @@ let GM=null,toastT=0;
 let ac=null,soundOn=true;
 try{const v=localStorage.getItem('okey101_snd');if(v==='0')soundOn=false;const sp=localStorage.getItem('okey101_speed');if(sp)U.speed=+sp}catch(e){}
 if(!U.speed)U.speed=1;
+try{const c=localStorage.getItem('okey101_classic');U.classic=c==='1';if(/klasik/.test(location.search))U.classic=true}catch(e){}
 try{const k=localStorage.getItem('okey101_kat');if(k!==null)U.rising=k==='1'}catch(e){}
 try{const r=JSON.parse(localStorage.getItem('okey101_rig'));if(r&&typeof r==='object')U.rig={all:!!r.all,ok:+r.ok||0,pair:!!r.pair}}catch(e){}
 try{if(localStorage.getItem('okey101_help')==='0')U.help=false}catch(e){}
@@ -924,7 +976,9 @@ function render(){
   $('bOpenS').disabled=!act||S.opened[0]==='pairs';$('bOpenP').disabled=!act||S.opened[0]==='sets';
   $('bDisc').disabled=!act||U.sel.size!==1;
   $('deck').classList.toggle('finish',act&&H().length===1);$('bSortI').disabled=!S.table.some(x=>x.type!=='pair');$('bSortI').hidden=!U.help;$('bPairI').hidden=false;$('bPairI').disabled=!act||(S.opened[0]==='sets'&&!pairsOnTable());$('bOpenP').hidden=S.opened[0]==='pairs';
-  $('bGos').hidden=!(my&&canShow(0));$('bRet').hidden=!(my&&S.sideTile!=null&&H().some(t=>t.id===S.sideTile));$('cr3').classList.toggle('drop',my&&S.sideTile!=null&&H().some(t=>t.id===S.sideTile));
+  $('bGos').hidden=!(my&&canShow(0));$('bRet').hidden=!!RULES.classic||!(my&&S.sideTile!=null&&H().some(t=>t.id===S.sideTile));$('cr3').classList.toggle('drop',my&&S.sideTile!=null&&H().some(t=>t.id===S.sideTile));
+  {const c=!!RULES.classic;['bOpenS','bOpenP','bSortI','bPairI'].forEach(id=>{if(c)$(id).hidden=true});$('bFin').hidden=!c;$('bFin').disabled=!act;document.querySelector('.chip.logo').textContent=c?'OKEY':'101 OKEY';$('tagOpen').hidden=c;$('tagKat').hidden=c;
+   if(c&&act){const ok=!!finishPlan(H());$('bFin').classList.toggle('glow',ok)}}
   // durum
   const st=$('status');
   if(S.ended)st.textContent='El bitti';
@@ -932,7 +986,7 @@ function render(){
   else if(drawP)st.textContent=`Sıra sende: ortadan çek ya da soldan al. Istakaya sürükleyebilirsin.`;
   else{
     let m='';
-    if(S.sideTile!=null&&H().some(t=>t.id===S.sideTile))m='<span class="bad">Yandan aldığın taşı bu el kullanmalısın</span> ya da <b>geri bırak</b>. ';
+    if(!RULES.classic&&S.sideTile!=null&&H().some(t=>t.id===S.sideTile))m='<span class="bad">Yandan aldığın taşı bu el kullanmalısın</span> ya da <b>geri bırak</b>. ';
     if(!U.help){}
     else if(sel1&&H().length>1&&wild(sel1))m+='<span class="bad">Bu okey, atarsan 101 ceza!</span>';
     else if(sel1&&H().length>1&&canAttachAny(sel1))m+='<span class="bad">Bu taş işlenir, atarsan 101 ceza!</span> Yeşil diziye dokun ya da sürükle.';
@@ -989,7 +1043,7 @@ addEventListener('pointerup',e=>{
     else if(t.dataset.drop==='side'){if(d.id===S.sideTile)pReturn();else{toast('Buraya sadece yandan aldığın taşı geri bırakabilirsin.');render()}}
     else if(t.dataset.drop==='pairs')dropPair(d.id);
     else if(t.dataset.drop==='board')dropBoard(d.id);
-    else if(t.dataset.drop==='finish'){if(H().length===1&&S.turn===0&&S.phase==='act'){U.dropping=true;pDiscard(d.id)}else{toast('Ortaya sadece son taşını ters koyarak bitebilirsin.');render()}}
+    else if(t.dataset.drop==='finish'){if(RULES.classic){pFinish(d.id)}else if(H().length===1&&S.turn===0&&S.phase==='act'){U.dropping=true;pDiscard(d.id)}else{toast('Ortaya sadece son taşını ters koyarak bitebilirsin.');render()}}
     else if(t.dataset.set!=null){const st=S.table[+t.dataset.set];if(st&&st.type==='pair')dropPair(d.id);else{U.sel=new Set([d.id]);pAttach(+t.dataset.set)}}
     else render();
   }else{if(t.dataset.slot!=null)pDraw(d.kind,+t.dataset.slot);else render()}
@@ -1024,7 +1078,7 @@ function pAttach(i){const id=[...U.sel][0],t=byId(id),st=S.table[i];if(!t||!st)r
 async function pDiscard(id,force){
   if(id==null)id=[...U.sel][0];const t=byId(id);if(!t)return;
   if(!(S.turn===0&&S.phase==='act'&&!S.ended)){toast('Şu an taş atamazsın');render();return}
-  if(!force&&H().length>1&&(wild(t)||(U.help&&canAttachAny(t)))){
+  if(!force&&!RULES.classic&&H().length>1&&(wild(t)||(U.help&&canAttachAny(t)))){
     open(`<h2>${wild(t)?'Bu taş okey!':'Bu taş işlek!'}</h2><p>${wild(t)?'Okeyi atarsan':'Bu taş masadaki bir diziye işlenebiliyor. Atarsan'} <b>101 ceza</b> yazılır.${!wild(t)&&S.opened[0]?' Atmak yerine diziye sürükleyip işleyebilirsin.':''}</p>
     <div class="rowb"><button class="btn green" id="cNo">Vazgeç</button><button class="btn red" id="cYes">Yine de at (+101)</button></div>`);
     $('cNo').onclick=()=>{close();render()};$('cYes').onclick=()=>{close();pDiscard(id,true)};render();return}
@@ -1071,7 +1125,7 @@ async function run(){
   U.busy=false;render();if(S.ended)return setTimeout(handEnd,S.result&&S.result.fin!=null?1700:700*U.speed);
   if(S.turn===0){banner('SIRA SENDE','small');snd('tap')}
 }
-function startGame(n){RULES.rising=!!U.rising;GM={rig:U.rig,total:n,handNo:0,totals:[0,0,0,0],hist:[],dealer:Math.random()*4|0};U.logs=[];nextHand()}
+function startGame(n){RULES.rising=!!U.rising;RULES.classic=!!U.classic;GM={rig:U.rig,total:n,handNo:0,totals:[0,0,0,0],hist:[],dealer:Math.random()*4|0};U.logs=[];nextHand()}
 function nextHand(){
   GM.handNo++;GM.dealer=(GM.dealer+1)%4;dealHand(GM.dealer,GM.rig);
   U.sel.clear();U.slots=Array(COLS*ROWS).fill(null);U.newId=null;sortSeri();
@@ -1128,6 +1182,7 @@ function showMenu(){
     <li>Yeşil yonca <b>sahte okey</b>, okeyin değerini alır. Okey ya da işlek taş atmak 101 ceza.</li>
   </ul>
   <div><p class="lbl">Kaç el?</p><div class="seg" id="segN">${[3,5,9].map(n=>`<button data-n="${n}" aria-pressed="${n===menuN}">${n} el</button>`).join('')}</div></div>
+  <div><p class="lbl">Okey türü</p><div class="seg" id="segC" style="grid-template-columns:repeat(2,1fr)"><button data-v="0" aria-pressed="${!U.classic}">101 Okey</button><button data-v="1" aria-pressed="${!!U.classic}">Klasik Okey</button></div></div>
   <div><p class="lbl">Oyun türü</p><div class="seg" id="segO" style="grid-template-columns:repeat(2,1fr)"><button data-v="1" aria-pressed="${!!U.rising}">Katlamalı</button><button data-v="0" aria-pressed="${!U.rising}">Katlamasız</button></div></div>
   <div><p class="lbl">Yardım</p><div class="seg" id="segH" style="grid-template-columns:repeat(2,1fr)"><button data-v="1" aria-pressed="${U.help}">Yardımlı</button><button data-v="0" aria-pressed="${!U.help}">Yardımsız</button></div></div>
   <details style="margin-top:6px"><summary class="lbl" style="cursor:pointer">Test ayarları</summary>
@@ -1139,6 +1194,7 @@ function showMenu(){
   <div class="rowb"><button class="btn green" id="qk">⚡ Hızlı oyun</button><button class="btn ghost" id="onl">👥 Arkadaşlarla online</button></div>
   <div class="rowb"><button class="btn green" id="go">${inGame?'Yeni oyun':'Masaya otur'}</button>${inGame?'<button class="btn ghost" id="back">Oyuna dön</button>':''}</div>
   <p class="muted">${rec.g?`${rec.g} oyunda ${rec.w} galibiyet.`:'Yardımsızda okey ters dönmez, işlekler işaretlenmez.'}</p>`);
+  $('segC').querySelectorAll('button').forEach(b=>b.onclick=()=>{U.classic=b.dataset.v==='1';try{localStorage.setItem('okey101_classic',U.classic?'1':'0')}catch(e){}$('segC').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b))});
   $('segO').querySelectorAll('button').forEach(b=>b.onclick=()=>{U.rising=b.dataset.v==='1';try{localStorage.setItem('okey101_kat',U.rising?'1':'0')}catch(e){}$('segO').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b))});
   $('segH').querySelectorAll('button').forEach(b=>b.onclick=()=>{U.help=b.dataset.v==='1';try{localStorage.setItem('okey101_help',U.help?'1':'0')}catch(e){}$('segH').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));if(S)render()});
   const segBind=(id,fn)=>$(id).querySelectorAll('button').forEach(b=>b.onclick=()=>{fn(b.dataset.v);$(id).querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));try{localStorage.setItem('okey101_rig',JSON.stringify(U.rig))}catch(e){}});
@@ -1158,7 +1214,12 @@ $('deck').onclick=e=>{if(e.detail===0)pDraw('deck')};
 $('bSortS').onclick=()=>{sortSeri();render()};$('bSortI').onclick=()=>autoIsle();$('bPairI').onclick=()=>autoPairs();$('bSortP').onclick=()=>{sortCift();render()};
 $('bOpenS').onclick=()=>pOpen('s');$('bOpenP').onclick=()=>pOpen('p');
 $('bDisc').onclick=()=>pDiscard();
-$('bGos').onclick=()=>{if(res(showGosterge(0))){log('Göstergeyi gösterdin: −101',true);render()}};
+function pFinish(id){if(!(S.turn===0&&S.phase==='act'&&!S.ended))return toast('Şu an bitemezsin');
+  if(id==null)id=[...U.sel][0];if(id==null){const p=finishPlan(H());if(!p)return toast('Elin bitmeye hazır değil: kalan 14 taş per, seri ya da 7 çift olmalı');id=p.tile.id}
+  const t=byId(id);const r=finishClassic(0,id);if(!res(r)){render();return}
+  snd('win');U.sel.clear();U.newId=null;log('Bitirdin!',true);render();if(t)showFinish(t);setTimeout(handEnd,1600)}
+$('bFin').onclick=()=>pFinish();
+$('bGos').onclick=()=>{if(res(showGosterge(0))){log(RULES.classic?'Göstergeyi gösterdin: −1':'Göstergeyi gösterdin: −101',true);render()}};
 function pReturn(){const id=S.sideTile,el=document.querySelector(`#rack [data-tile="${id}"]`),t=byId(id);if(res(returnSide(0))){U.newId=null;U.sel.clear();snd('tap');log(`${t?tname(t):'Taşı'} geri bıraktın, ortadan çek`);if(el&&t)fly(t,el,$('cr3'),300);render()}else render()}
 $('bRet').onclick=pReturn;
 $('bSnd').onclick=()=>{soundOn=!soundOn;$('bSnd').textContent='Ses: '+(soundOn?'Açık':'Kapalı');$('bSnd').setAttribute('aria-pressed',soundOn);try{localStorage.setItem('okey101_snd',soundOn?'1':'0')}catch(e){}if(soundOn)snd('tap')};
@@ -1176,7 +1237,7 @@ const ORIG_N=NAMES.slice(),ORIG_AV=AV.slice();
 const UIDK=(()=>{try{let u=localStorage.getItem('okey101_uid');if(!u){u=Math.random().toString(36).slice(2,10);localStorage.setItem('okey101_uid',u)}return u}catch(e){return Math.random().toString(36).slice(2,10)}})();
 const myNameK=()=>(window.KH&&KH.name())||(()=>{try{return localStorage.getItem('okey101_name')||''}catch(e){return ''}})();
 const escK=t=>String(t).replace(/[&<>"]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
-const PFXK='kok-',ENG={};['draw','returnSide','showGosterge','lay','attach','discard','swapJoker'].forEach(f=>ENG[f]=window[f]);
+const PFXK='kok-',ENG={};['draw','returnSide','showGosterge','lay','attach','discard','swapJoker','finishClassic'].forEach(f=>ENG[f]=window[f]);
 const rotA=(a,k)=>a.map((_,i)=>a[(i+k)%4]),rs=(x,k)=>x==null||x<0?x:(x-k+4)%4;
 function rotS(S0,k){const o=JSON.parse(JSON.stringify(S0));if(!k)return o;
   for(const f of['hands','discards','opened','openVal','pen','penLog','firstTurn','shown'])o[f]=rotA(o[f],k);
@@ -1193,7 +1254,7 @@ function bcastK(d){for(const u in OK.conns){const c=OK.conns[u];if(c.open)try{c.
 function schedB(){if(!(OK.on&&OK.host&&OK.started))return;clearTimeout(schedB.t);schedB.t=setTimeout(sendAll,70)}
 function sendAll(){if(!(OK.on&&OK.host&&OK.started&&S&&GM))return;OK.ver++;
   for(const l of OK.lob){if(l.seat===0)continue;const c=OK.conns[l.uid];if(!c||!c.open)continue;
-    try{c.send({t:'st',v:OK.ver,S:rotS(S,l.seat),GM:rotGM(GM,l.seat),names:viewNames(l.seat),rising:RULES.rising,total:GM.total})}catch(e){}}}
+    try{c.send({t:'st',v:OK.ver,S:rotS(S,l.seat),GM:rotGM(GM,l.seat),names:viewNames(l.seat),rising:RULES.rising,classic:!!RULES.classic,total:GM.total})}catch(e){}}}
 {const r0=render;render=function(){r0();schedB();const l1=$('lb1'),l2=$('lb2'),l3=$('lb3'),t1=`${NAMES[1]} attı`,t2=`${NAMES[2]} attı`,t3=`${NAMES[3]} attı · al`;
   if(l1&&l1.dataset.v!==t1){l1.dataset.v=t1;l1.textContent=t1}if(l2&&l2.dataset.v!==t2){l2.dataset.v=t2;l2.textContent=t2}if(l3&&l3.dataset.v!==t3){l3.dataset.v=t3;l3.textContent=t3}}}
 {const h0=handEnd;handEnd=function(){if(OK.on&&!OK.host){guestEnd();return}h0();schedB();
@@ -1229,11 +1290,13 @@ function onlineMenu(){
       ${window.KH?'<div class="rowb"><button class="btn ghost" id="khK">👥 Arkadaşlarını çağır</button></div>':''}
       ${OK.quick?'<p class="muted"><b>Oyuncu aranıyor…</b> Masa dolunca ya da 2. kişi geldikten 20 saniye sonra oyun kendiliğinden başlar.</p>':''}<p class="lbl">Masadakiler (${n}/4)</p><ul class="loglist">${[0,1,2,3].map(i=>`<li>${OK.lob[i]?escK(OK.lob[i].name)+(i===0?' · ev sahibi':''):'Bilgisayar oturacak'}</li>`).join('')}</ul>
       <div><p class="lbl">Kaç el?</p><div class="seg" id="segNK">${[3,5,9].map(x=>`<button data-n="${x}" aria-pressed="${x===menuN}">${x} el</button>`).join('')}</div></div>
+      <div><p class="lbl">Okey türü</p><div class="seg" id="segCK" style="grid-template-columns:repeat(2,1fr)"><button data-v="0" aria-pressed="${!U.classic}">101 Okey</button><button data-v="1" aria-pressed="${!!U.classic}">Klasik Okey</button></div></div>
       <div><p class="lbl">Oyun türü</p><div class="seg" id="segOK" style="grid-template-columns:repeat(2,1fr)"><button data-v="1" aria-pressed="${!!U.rising}">Katlamalı</button><button data-v="0" aria-pressed="${!U.rising}">Katlamasız</button></div></div>
       <div class="rowb"><button class="btn ghost" id="cancelK">Vazgeç</button><button class="btn green" id="startK" ${n<2?'disabled style="opacity:.5"':''}>${n<2?'Arkadaşın bekleniyor…':`Oyunu başlat (${n} kişi)`}</button></div>`);
     $('cpK').onclick=async()=>{try{if(navigator.share&&matchMedia('(pointer:coarse)').matches){await navigator.share({title:'101 Okey',url:link});return}await navigator.clipboard.writeText(link);toast('Link kopyalandı')}catch(e){$('lnkK').select()}};
     if($('khK'))$('khK').onclick=()=>KH.invitePicker('101 Okey',link);
     $('segNK').querySelectorAll('button').forEach(b=>b.onclick=()=>{menuN=+b.dataset.n;$('segNK').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b))});
+    $('segCK').querySelectorAll('button').forEach(b=>b.onclick=()=>{U.classic=b.dataset.v==='1';$('segCK').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b))});
     $('segOK').querySelectorAll('button').forEach(b=>b.onclick=()=>{U.rising=b.dataset.v==='1';$('segOK').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b))});
     $('cancelK').onclick=()=>{leaveOnline();showMenu()};if(n>=2)$('startK').onclick=startOnline;return}
   if(!OK.host&&!OK.started){open(`<h2>Masaya oturdun</h2><p class="muted">Ev sahibi oyunu başlatınca taşlar dağıtılacak.</p><ul class="loglist">${(OK.lobNames||[]).map((x,i)=>`<li>${escK(x)}${i===0?' · ev sahibi':''}</li>`).join('')}</ul><div class="rowb"><button class="btn ghost" id="leaveK">Masadan kalk</button></div>`);
@@ -1270,7 +1333,7 @@ function guestRecvK(d){if(!d)return;
   if(d.t==='st')gApply(d)}
 function gApply(d){if(drag||U.busy){clearTimeout(gApply.t);gApply.t=setTimeout(()=>gApply(d),150);return}if(d.v<=OK.gver)return;OK.gver=d.v;
   const first=!OK.started,prevHand=GM&&GM.handNo,prevDisc=S&&!first?S.discards.map(x=>x.length):null,prevTurn=S&&S.turn;
-  OK.started=true;RULES.rising=d.rising;setNames(d.names);S=d.S;GM=d.GM;GM.started=true;
+  OK.started=true;RULES.rising=d.rising;RULES.classic=!!d.classic;setNames(d.names);S=d.S;GM=d.GM;GM.started=true;
   if(first||prevHand!==GM.handNo){U.sel.clear();U.slots=Array(COLS*ROWS).fill(null);U.newId=null;sortSeri();OK.endShown=-1;
     if(!$('ov').hidden)close();log(`${GM.handNo}. el · okey ${CN[S.okC]} ${S.okN}`,true);banner(`${GM.handNo}. EL`,'small')}
   else if(prevDisc)for(let s=1;s<4;s++)if(S.discards[s].length>prevDisc[s]){const t=S.discards[s][S.discards[s].length-1];snd('drop');log(`${NAMES[s]} ${tname(t)} attı`)}
