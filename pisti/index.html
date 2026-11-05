@@ -1,4 +1,4 @@
-<!doctype html><html><head><script src="i18n-page.js"></script><script src="../i18n.js"></script><script src="../account.js"></script><script>addEventListener("load",()=>window.KH&&KH.setPresence("Pişti"))</script><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html><head><script src="i18n-page.js"></script><script src="../i18n.js"></script><script src="../account.js"></script><script src="../mqtt.min.js"></script><script src="../relay.js"></script><script src="../chat.js"></script><script>addEventListener("load",()=>window.KH&&KH.setPresence("Pişti"))</script><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>Pişti</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -133,7 +133,7 @@ aside{display:flex;flex-direction:column;gap:14px;min-width:0}
   <main class="stage">
     <section class="table" id="table">
       <div class="seat opp" id="seatC">
-        <div class="who"><b>Bilgisayar</b><span id="infoC">0 kart · 0 pişti</span><span class="turn">Sırada</span></div>
+        <div class="who"><b id="nmC">Bilgisayar</b><span id="infoC">0 kart · 0 pişti</span><span class="turn">Sırada</span></div>
         <div class="hand" id="handC"></div>
       </div>
 
@@ -156,7 +156,7 @@ aside{display:flex;flex-direction:column;gap:14px;min-width:0}
         <div class="score">
           <div><span class="n me" id="totP">0</span><small>Sen</small></div>
           <span class="vs">—</span>
-          <div><span class="n" id="totC">0</span><small>Bilgisayar</small></div>
+          <div><span class="n" id="totC">0</span><small id="nmC2">Bilgisayar</small></div>
         </div>
         <div class="prog" id="prog">Hedef 101 · 1. el</div>
       </div>
@@ -196,6 +196,7 @@ const cname=c=>`${SNAME[c.s]} ${RNAME[c.r]||c.r}`;
 const pts=c=>(c.r==='A'||c.r==='J'?1:0)+(c.r==='2'&&c.s==='C'?2:0)+(c.r==='10'&&c.s==='D'?3:0);
 const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
 const NAME={p:'Sen',c:'Bilgisayar'};
+let ON=null;const oppTurn=()=>{if(ON&&ON.host)return;botTurn()};
 
 /* ---- ses ---- */
 let ac=null,soundOn=true;
@@ -227,7 +228,8 @@ function newHand(){
   dealRound();
   log(`${G.handNo}. el başladı. Yerdeki açık kart: ${cname(G.pile[3])}.`);
   render(true);
-  if(G.turn==='c'&&!paused)botTurn();
+  hostEv({k:'hand'});
+  if(G.turn==='c'&&!paused)oppTurn();
 }
 function dealRound(){
   const first=G.turn,second=first==='p'?'c':'p';
@@ -274,7 +276,8 @@ function render(dealt){
   const st=$('status');
   if(G.ended)st.textContent='';
   else if(G.turn==='p')st.innerHTML=top?`Sıra sende. Yerdeki <b>${cname(top)}</b>.`:'Sıra sende. Yer boş, bir kart at.';
-  else st.textContent='Bilgisayar düşünüyor…';
+  else st.textContent=ON?`${NAME.c} oynuyor…`:'Bilgisayar düşünüyor…';
+  if(ON&&ON.host){clearTimeout(push.t);push.t=setTimeout(()=>push(null),60)}
 }
 function log(t,hit){const li=document.createElement('li');li.textContent=t;if(hit)li.className='hit';const l=$('log');l.prepend(li);while(l.children.length>7)l.lastChild.remove()}
 function burst(text){const b=document.createElement('div');b.className='burst';b.textContent=text;$('table').appendChild(b);setTimeout(()=>b.remove(),1400)}
@@ -298,6 +301,7 @@ async function playerPlay(i){
   if(G.busy||G.turn!=='p'||G.ended)return;
   G.busy=true;const btn=$('handP').children[i],c=G.hand.p[i];
   btn.style.visibility='hidden';sTap();
+  if(ON&&!ON.host){G.busyAt=Date.now();gsend({t:'play',id:c.id});await fly(c,btn,$('pile'));G.hand.p.splice(i,1);G.pile.push({...c,rot:0,dx:0,dy:0,down:false});G.turn='c';render();return}
   await fly(c,btn,$('pile'));
   G.hand.p.splice(i,1);await resolve('p',c);
 }
@@ -315,9 +319,11 @@ async function resolve(who,c){
   const g=G;G.seen.add(c.id);
   const top=G.pile[G.pile.length-1];
   c.rot=+(Math.random()*20-10).toFixed(1);c.dx=Math.random()*10-5|0;c.dy=Math.random()*8-4|0;c.down=false;
-  G.pile.push(c);render();
-  if(top&&(c.r===top.r||c.r==='J')){
+  const takes=!!(top&&(c.r===top.r||c.r==='J'));
+  G.pile.push(c);render();hostEv({k:'play',who,c,take:takes});
+  if(takes){
     const isPisti=G.pile.length===2&&c.r===top.r;
+    hostEv({k:'take',who,c,v:isPisti?(c.r==='J'?20:10):0,n:G.pile.length});
     await wait(320);
     if(isPisti){const v=c.r==='J'?20:10;G.pisti[who].push(v);burst(c.r==='J'?'VALE PİŞTİ!':'PİŞTİ!');sPisti();
       log(`${NAME[who]} ${cname(c)} ile PİŞTİ yaptı! +${v}`,true);await wait(500)}
@@ -329,11 +335,11 @@ async function resolve(who,c){
   }else log(`${NAME[who]} ${cname(c)} attı.`);
   G.turn=who==='p'?'c':'p';
   if(!G.hand.p.length&&!G.hand.c.length){
-    if(G.deck.length){dealRound();log(`Yeni kartlar dağıtıldı. Destede ${G.deck.length} kart kaldı.`);G.busy=false;render(true);if(G.turn==='c')botTurn();return}
+    if(G.deck.length){dealRound();log(`Yeni kartlar dağıtıldı. Destede ${G.deck.length} kart kaldı.`);G.busy=false;render(true);hostEv({k:'deal'});if(G.turn==='c')oppTurn();return}
     return endHand();
   }
   G.busy=false;render();
-  if(G.turn==='c')botTurn();
+  if(G.turn==='c')oppTurn();
 }
 
 /* ---- bilgisayarın aklı ---- */
@@ -375,16 +381,17 @@ async function endHand(){
   const sp=p.as+p.vale+p.s2+p.k10+majP+p.pisti,sc=c.as+c.vale+c.s2+c.k10+majC+c.pisti;
   G.total.p+=sp;G.total.c+=sc;render();
   const done=(G.total.p>=target||G.total.c>=target)&&G.total.p!==G.total.c;
+  hostEv({k:'end',p,c,sp,sc,done,target});
   const row=(l,a,b)=>`<tr><td>${l}</td><td>${a}</td><td>${b}</td></tr>`;
   let head,sub;
   if(done){
     const won=G.total.p>G.total.c;
     if(won)record.w++;else record.l++;try{localStorage.setItem('pisti_record',JSON.stringify(record))}catch(e){}
-    head=won?'Oyunu kazandın!':'Bilgisayar kazandı';
+    head=won?'Oyunu kazandın!':`${NAME.c} kazandı`;
     sub=won?`${G.total.p}–${G.total.c}. Kahvede adın konuşulacak.`:`${G.total.c}–${G.total.p}. Bir el daha mı?`;
   }else{head=`${G.handNo}. el bitti`;sub=`Hedef ${target}. Sıradaki el başlıyor.`}
   open(`<h2>${head}</h2><p class="muted">${sub}</p>
-  <table class="tbl"><thead><tr><th>Bu el</th><th>Sen</th><th>Bilgisayar</th></tr></thead><tbody>
+  <table class="tbl"><thead><tr><th>Bu el</th><th>Sen</th><th>${esc(NAME.c)}</th></tr></thead><tbody>
   ${row('As',p.as,c.as)}${row('Vale',p.vale,c.vale)}${row('Sinek 2',p.s2,c.s2)}${row('Karo 10',p.k10,c.k10)}
   ${row(`Kart çoğunluğu (${p.n}–${c.n})`,majP,majC)}${row('Pişti',p.pisti,c.pisti)}
   <tr class="sum"><td>El puanı</td><td>${sp}</td><td>${sc}</td></tr>
@@ -395,9 +402,10 @@ async function endHand(){
 }
 
 /* ---- menü ---- */
-function open(h){$('sheet').innerHTML=h;$('ov').hidden=false;const b=$('sheet').querySelector('.btn');b&&b.focus()}
+function open(h){$('sheet').dataset.k='';$('sheet').innerHTML=h;$('ov').hidden=false;const b=$('sheet').querySelector('.btn');b&&b.focus()}
 function close(){$('ov').hidden=true}
 function showMenu(){
+  if(ON)return onlineMenu();
   paused=true;
   const inGame=G&&!G.ended&&G.handNo>0;
   open(`<h2>Pişti</h2>
@@ -405,17 +413,112 @@ function showMenu(){
   <p class="muted">Bilgisayara karşı oynuyorsun. Kartlar 4'er dağıtılır, deste bitince el sayılır. Yerde kalanlar son toplayana gider.</p>
   <div><p class="lbl">Kaç puana oynayalım?</p><div class="seg"><button data-t="51" aria-pressed="${target===51}">51</button><button data-t="101" aria-pressed="${target===101}">101</button></div></div>
   <div class="row"><button class="btn" id="start">${inGame?'Yeni oyuna başla':'Masaya otur'}</button>${inGame?'<button class="btn ghost" id="resume">Oyuna dön</button>':''}</div>
+  <div class="row"><button class="btn ghost" id="onl">Arkadaşınla online oyna</button></div>
   <p class="muted">Rekorun: ${record.w} galibiyet, ${record.l} mağlubiyet.</p>`);
   $('sheet').querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{target=+b.dataset.t;$('sheet').querySelectorAll('[data-t]').forEach(x=>x.setAttribute('aria-pressed',x===b))});
-  $('start').onclick=()=>{close();paused=false;newGame()};
-  if(inGame)$('resume').onclick=()=>{close();paused=false;render();if(G.turn==='c'&&!G.busy)botTurn()};
+  $('start').onclick=()=>{leaveOnline();close();paused=false;newGame()};
+  if(inGame)$('resume').onclick=()=>{close();paused=false;render();if(G.turn==='c'&&!G.busy)oppTurn()};
+  $('onl').onclick=hostOnline;
 }
 $('menuBtn').onclick=showMenu;
 $('snd').onclick=()=>{soundOn=!soundOn;$('snd').textContent='Ses: '+(soundOn?'Açık':'Kapalı');$('snd').setAttribute('aria-pressed',soundOn)};
 
+
+/* ===== linkle online: ev sahibi oyunu yürütür, rakip 'c' koltuğunda oturur ===== */
+const esc=t=>String(t).replace(/[&<>"]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
+const UID=(()=>{try{let u=localStorage.getItem('pisti_uid');if(!u){u=Math.random().toString(36).slice(2,10);localStorage.setItem('pisti_uid',u)}return u}catch(e){return Math.random().toString(36).slice(2,10)}})();
+const myName=()=>(window.KH&&KH.name())||(()=>{try{return localStorage.getItem('pisti_name')||''}catch(e){return ''}})();
+const PFX='kps-';let ver=0,hb=null,Q=[],qBusy=false,gver=-1;
+const sw=w=>w==='p'?'c':w==='c'?'p':w;
+function setOpp(n){NAME.c=n||'Rakip';$('nmC').textContent=NAME.c;$('nmC2').textContent=NAME.c}
+function hostEv(ev){if(ON&&ON.host&&ON.conn){clearTimeout(push.t);push(ev)}}
+function snap(){return {total:G.total,handNo:G.handNo,deckN:(G.deck||[]).length,pile:G.pile,handPn:G.hand.p.length,handC:G.hand.c,takenP:G.taken.p.length,takenC:G.taken.c.length,
+  pisti:G.pisti,last:G.last,turn:G.turn,ended:!!G.ended,target}}
+function push(ev){if(!ON||!ON.host||!ON.conn||!ON.conn.open)return;try{ON.conn.send({t:'st',v:++ver,S:snap(),ev:ev||null,name:myName()||'Ev sahibi'})}catch(e){}}
+function gsend(d){if(ON&&ON.conn&&ON.conn.open)try{ON.conn.send({...d,uid:UID})}catch(e){}}
+function leaveOnline(){if(!ON)return;clearInterval(hb);try{ON.peer.destroy()}catch(e){}ON=null;setOpp('Bilgisayar');window.KChat&&KChat.unmount();try{history.replaceState(null,'',location.pathname)}catch(e){}}
+function linkFor(c){return (location.protocol.startsWith('http')?location.origin+location.pathname:'https://mihrali47.github.io/durak/pisti/')+'#'+c}
+function hostOnline(){leaveOnline();const code=Math.random().toString(36).slice(2,7).toUpperCase();ON={host:true,code,peer:new Peer(PFX+code),conn:null,last:0};paused=true;
+  ON.peer.on('open',()=>{try{history.replaceState(null,'','#'+code)}catch(e){}});
+  ON.peer.on('error',e=>{if(e.type==='network')toast('Sunucuya bağlanılamadı, tekrar deneniyor…')});
+  ON.peer.on('connection',c=>c.on('data',d=>hostRecv(c,d)));
+  hb=setInterval(()=>{if(!ON)return;if(ON.conn&&G&&ON.started)push(null);if(ON.started&&ON.last&&Date.now()-ON.last>30000&&!ON.warned){ON.warned=1;toast(`${NAME.c} bağlantısı koptu, geri dönmesi bekleniyor`)}},3000);
+  onlineMenu()}
+function hostRecv(c,d){if(!ON||!d)return;
+  if(d.t==='hello'){if(ON.uid&&ON.uid!==d.uid){c.send({t:'full'});return}ON.uid=d.uid;ON.conn=c;ON.last=Date.now();ON.warned=0;setOpp(String(d.name||'Misafir').slice(0,14));
+    KChat.mount({send:m=>{try{ON.conn.send(m)}catch(e){}}});
+    if(!ON.started){ON.started=true;close();paused=false;newGame()}else push(null);return}
+  if(d.uid!==ON.uid)return;ON.last=Date.now();ON.warned=0;
+  if(d.t==='play'){if(G.turn!=='c'||G.busy||G.ended)return push(null);const i=G.hand.c.findIndex(x=>x.id===d.id);if(i<0)return push(null);
+    G.busy=true;const from=$('handC').children[i];if(from)from.style.visibility='hidden';sTap();const c=G.hand.c[i];
+    fly(c,from,$('pile')).then(()=>{G.hand.c.splice(i,1);resolve('c',c)})}
+  else if(d.t==='chat')KChat.receive({name:NAME.c,x:d.x,l:d.l});
+  else if(d.t==='emo')KChat.emoji({name:NAME.c,e:d.e})}
+function onlineMenu(){if(!ON)return showMenu();
+  if(ON.host&&!ON.started){const link=linkFor(ON.code);
+    open(`<h2>Masa kuruldu</h2><p>Bu linki arkadaşına gönder. Girdiği an oyun başlar.</p>
+      <div class="row"><input id="lnk" readonly value="${link}" style="flex:1 1 200px;min-height:44px;border-radius:12px;border:1px solid #d9cfbd;padding:0 10px;font:600 14px/1 var(--body)"><button class="btn" id="cp">Kopyala</button></div>
+      ${window.KH?'<div class="row"><button class="btn ghost" id="khF">👥 Arkadaşlarını çağır</button></div>':''}
+      <div><p class="lbl">Kaç puana oynayalım?</p><div class="seg"><button data-t="51" aria-pressed="${target===51}">51</button><button data-t="101" aria-pressed="${target===101}">101</button></div></div>
+      <p class="muted">Arkadaşın bekleniyor… Bu sayfayı kapatma.</p>
+      <div class="row"><button class="btn ghost" id="cancel">Vazgeç</button></div>`);
+    $('cp').onclick=async()=>{try{if(navigator.share&&matchMedia('(pointer:coarse)').matches){await navigator.share({title:'Pişti',url:link});return}await navigator.clipboard.writeText(link);toast('Link kopyalandı')}catch(e){$('lnk').select()}};
+    if($('khF'))$('khF').onclick=()=>KH.invitePicker('Pişti',link);
+    $('sheet').querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{target=+b.dataset.t;$('sheet').querySelectorAll('[data-t]').forEach(x=>x.setAttribute('aria-pressed',x===b))});
+    $('cancel').onclick=()=>{leaveOnline();showMenu()};return}
+  open(`<h2>Online masa</h2><p>${esc(NAME.c)} ile oynuyorsun.</p>
+    <div class="row">${ON.host?'<button class="btn" id="re">Yeni oyun başlat</button>':''}<button class="btn ghost" id="back">Oyuna dön</button></div>
+    <div class="row"><button class="btn ghost" id="leave">Masadan kalk</button></div>`);
+  if($('re'))$('re').onclick=()=>{close();newGame()};$('back').onclick=close;$('leave').onclick=()=>{leaveOnline();G.ended=true;showMenu()}}
+function toast(t){const b=document.createElement('div');b.className='burst';b.style.fontSize='16px';b.textContent=t;$('table').appendChild(b);setTimeout(()=>b.remove(),2200)}
+/* misafir */
+function joinOnline(code){if(!myName()){open(`<h2>Pişti masasına davet</h2><p>Adını yaz ve masaya otur.</p><input id="nm" maxlength="14" placeholder="Adını yaz" style="width:100%;min-height:46px;border-radius:12px;border:1px solid #d9cfbd;padding:0 12px;font:600 16px/1 var(--body)">
+    <div class="row"><button class="btn" id="go">Masaya otur</button></div>`);$('go').onclick=()=>{try{localStorage.setItem('pisti_name',($('nm').value.trim()||'Misafir').slice(0,14))}catch(e){}joinOnline(code)};return}
+  ON={host:false,code,peer:new Peer(),conn:null,last:0};paused=true;open('<h2>Bağlanılıyor…</h2><p class="muted">Masaya bağlanıyorsun, birkaç saniye sürebilir.</p>');
+  const connect=()=>{if(!ON)return;try{ON.conn&&ON.conn.close()}catch(e){}const c=ON.peer.connect(PFX+code);ON.conn=c;c.on('open',()=>c.send({t:'hello',uid:UID,name:myName()}));c.on('data',d=>{ON.last=Date.now();guestRecv(d)})};
+  ON.peer.on('open',connect);
+  ON.peer.on('error',e=>{if(e.type==='peer-unavailable')open('<h2>Masa bulunamadı</h2><p class="muted">Arkadaşının sayfası kapalı olabilir. Linki tekrar iste.</p><div class="row"><button class="btn" id="mm">Menü</button></div>'),$('mm').onclick=()=>{leaveOnline();showMenu()}});
+  KChat.mount({send:m=>gsend(m)});
+  hb=setInterval(()=>{if(!ON)return;gsend({t:'ping'});if(ON.last&&Date.now()-ON.last>9000){ON.last=Date.now();connect()}},3000)}
+function guestRecv(d){if(!d)return;
+  if(d.t==='full'){open('<h2>Masa dolu</h2><p class="muted">Bu masada başka biri oynuyor.</p>');return}
+  if(d.t==='chat')return KChat.receive({name:NAME.c,x:d.x,l:d.l});
+  if(d.t==='emo')return KChat.emoji({name:NAME.c,e:d.e});
+  if(d.t==='st'){if(d.v<=gver)return;gver=d.v;setOpp(d.name);Q.push(d);if(!qBusy)drain()}}
+async function drain(){qBusy=true;while(Q.length){const d=Q.shift();try{await apply(d)}catch(e){console.error(e)}}qBusy=false}
+function load(S){target=S.target;const c=S.handC.slice().sort((a,b)=>RANKS.indexOf(a.r)-RANKS.indexOf(b.r)||SUITS.indexOf(a.s)-SUITS.indexOf(b.s));
+  G={total:{p:S.total.c,c:S.total.p},handNo:S.handNo,deck:Array(S.deckN).fill(null),pile:S.pile,hand:{p:c,c:Array(S.handPn).fill(null)},
+    taken:{p:Array(S.takenC).fill(0),c:Array(S.takenP).fill(0)},pisti:{p:S.pisti.c,c:S.pisti.p},last:sw(S.last),turn:sw(S.turn),ended:S.ended,busy:false,seen:new Set()}}
+async function apply(d){const ev=d.ev,S=d.S;if(!$('ov').hidden&&!['end'].includes($('sheet').dataset.k||'')&&/Bağlanılıyor|Masa/.test($('sheet').textContent))close();
+  if(!ev){if(!(G&&G.busy&&Date.now()-(G.busyAt||0)<2500))load(S),render();return}
+  const who=sw(ev.who);
+  if(ev.k==='play'){if(who==='c'){const from=$('handC').lastElementChild;if(from)from.style.visibility='hidden';sTap();await fly(ev.c,from,$('pile'))}
+    load(S);render();if(!ev.take)log(`${NAME[who]} ${cname(ev.c)} attı.`);return}
+  if(ev.k==='take'){load(S);render();await wait(320);
+    if(ev.v){burst(ev.c.r==='J'?'VALE PİŞTİ!':'PİŞTİ!');sPisti();log(`${NAME[who]} ${cname(ev.c)} ile PİŞTİ yaptı! +${ev.v}`,true);await wait(500)}
+    else{sTake();log(`${NAME[who]} ${cname(ev.c)} ile ${ev.n} kartı topladı.`,true)}
+    await sweep(who);return}
+  if(ev.k==='deal'){load(S);log(`Yeni kartlar dağıtıldı. Destede ${S.deckN} kart kaldı.`);render(true);return}
+  if(ev.k==='hand'){if($('sheet').dataset.k==='end')close();if(S.handNo===1)$('log').innerHTML='';load(S);log(`${S.handNo}. el başladı. Yerdeki açık kart: ${cname(S.pile[S.pile.length-1])}.`);render(true);return}
+  if(ev.k==='end'){load(S);render();await wait(500);const p=ev.c,c=ev.p,sp=ev.sc,sc=ev.sp;
+    const row=(l,a,b)=>`<tr><td>${l}</td><td>${a}</td><td>${b}</td></tr>`;let head,sub;
+    if(ev.done){const won=G.total.p>G.total.c;if(won)record.w++;else record.l++;try{localStorage.setItem('pisti_record',JSON.stringify(record))}catch(e){}
+      head=won?'Oyunu kazandın!':`${NAME.c} kazandı`;sub=`${Math.max(G.total.p,G.total.c)}–${Math.min(G.total.p,G.total.c)}`}
+    else{head=`${G.handNo}. el bitti`;sub=`Hedef ${target}. Sıradaki el başlıyor.`}
+    open(`<h2>${head}</h2><p class="muted">${sub}</p>
+    <table class="tbl"><thead><tr><th>Bu el</th><th>Sen</th><th>${esc(NAME.c)}</th></tr></thead><tbody>
+    ${row('As',p.as,c.as)}${row('Vale',p.vale,c.vale)}${row('Sinek 2',p.s2,c.s2)}${row('Karo 10',p.k10,c.k10)}
+    ${row(`Kart çoğunluğu (${p.n}–${c.n})`,p.n>c.n?3:0,c.n>p.n?3:0)}${row('Pişti',p.pisti,c.pisti)}
+    <tr class="sum"><td>El puanı</td><td>${sp}</td><td>${sc}</td></tr>
+    <tr class="tot"><td>Toplam</td><td>${G.total.p}</td><td>${G.total.c}</td></tr></tbody></table>
+    <p class="muted">${esc(NAME.c)} ${ev.done?'yeni oyunu':'sıradaki eli'} başlatınca devam edersiniz.</p>`);$('sheet').dataset.k='end';return}
+  load(S);render()}
+
 /* açılışta masa hazır, menü üstünde */
 G={total:{p:0,c:0},handNo:0,dealer:'c',ended:true};
-newGame();showMenu();
+newGame();
+const hc=(location.hash||'').slice(1).toUpperCase();if(/^[A-Z0-9]{5}$/.test(hc))joinOnline(hc);else showMenu();
+addEventListener('load',()=>window.KH&&KH.setPresence('Pişti'));
 })();
 </script>
 

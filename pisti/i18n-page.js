@@ -3,8 +3,15 @@
 const SU={maça:['пики','spades'],kupa:['червы','hearts'],karo:['бубны','diamonds'],sinek:['трефы','clubs']},RK={vale:['валет','jack'],'kız':['дама','queen'],papaz:['король','king'],as:['туз','ace']};
 const cn=(s,j)=>s.replace(/(maça|kupa|karo|sinek)\s+(vale|kız|papaz|as|\d+)/gi,(m,a,b)=>{a=a.toLocaleLowerCase('tr');b=b.toLocaleLowerCase('tr');return (RK[b]?RK[b][j]:b)+(j?' of ':' ')+SU[a][j]});
 const W=j=>({Sen:['Вы','You'],Bilgisayar:['Компьютер','Computer']});
-const nm=(n,j)=>(W(j)[n]||[n,n])[j];
+const nm=(n,j)=>(W(j)[n]||[n,n])[j],NM='(.+?)';
 window.I18N_EXTRA=[
+['As','Тузы','Aces'],['Vale','Валеты','Jacks'],['El puanı','Очки за раздачу','Hand points'],['Pişti','Пишти','Pishti'],['Oyunu kazandın!','Вы выиграли игру!','You won the game!'],['Sonraki el','Следующая раздача','Next hand'],['Yeni oyun','Новая игра','New game'],
+['Arkadaşınla online oyna','Играть онлайн с другом','Play online with a friend'],['Masa kuruldu','Стол создан','Table created'],['Bu linki arkadaşına gönder. Girdiği an oyun başlar.','Отправьте ссылку другу. Игра начнётся, как только он войдёт.','Send this link to your friend. The game starts as soon as they join.'],
+['Kopyala','Копировать','Copy'],['Link kopyalandı','Ссылка скопирована','Link copied'],['👥 Arkadaşlarını çağır','👥 Позвать друзей','👥 Invite friends'],['Arkadaşın bekleniyor… Bu sayfayı kapatma.','Ждём друга… Не закрывайте страницу.','Waiting for your friend… Keep this page open.'],['Vazgeç','Отмена','Cancel'],
+['Online masa','Онлайн-стол','Online table'],['Yeni oyun başlat','Начать новую игру','Start a new game'],['Masadan kalk','Встать из-за стола','Leave the table'],['Pişti masasına davet','Приглашение за стол Пишти','Invitation to a Pishti table'],['Adını yaz ve masaya otur.','Введите имя и садитесь за стол.','Enter your name and take a seat.'],['Adını yaz','Введите имя','Enter your name'],
+['Masaya otur','Сесть за стол','Take a seat'],['Bağlanılıyor…','Подключение…','Connecting…'],['Masaya bağlanıyorsun, birkaç saniye sürebilir.','Подключаемся к столу, это займёт несколько секунд.','Connecting to the table, this can take a few seconds.'],['Masa bulunamadı','Стол не найден','Table not found'],
+['Arkadaşının sayfası kapalı olabilir. Linki tekrar iste.','Возможно, друг закрыл страницу. Попросите ссылку снова.','Your friend\'s page may be closed. Ask for the link again.'],['Menü','Меню','Menu'],['Masa dolu','Стол занят','Table full'],['Bu masada başka biri oynuyor.','За этим столом уже кто-то играет.','Someone else is already playing at this table.'],
+['Sunucuya bağlanılamadı, tekrar deneniyor…','Нет связи с сервером, пробуем снова…','Can\'t reach the server, retrying…'],['Rakip','Соперник','Opponent'],['Misafir','Гость','Guest'],
 ['Pişti','Пишти','Pishti'],['Menü','Меню','Menu'],['Oyuna dön','Вернуться в игру','Back to game'],['Kaç puana oynayalım?','До скольких очков играем?','Play to how many points?'],['Yeni oyuna başla','Начать новую игру','Start a new game'],
 ["Bilgisayara karşı oynuyorsun. Kartlar 4'er dağıtılır, deste bitince el sayılır. Yerde kalanlar son toplayana gider.",'Вы играете против компьютера. Сдаётся по 4 карты; когда колода кончится, раздача подсчитывается. Оставшиеся на столе карты получает последний взявший.','You play against the computer. Cards are dealt 4 at a time; when the deck runs out the hand is scored. Cards left on the table go to the last player who took.'],
 ['Elindeki kartı yerdeki en üst kartla eşleştir ya da vale atıp yeri topla. Yerde tek kart varken eşleştirirsen','Положите карту того же ранга, что верхняя на столе, или валета, чтобы забрать стол. Если на столе одна карта и вы её взяли —','Match the top card on the pile, or play a jack to sweep it. If you match when only one card is on the pile, it\'s a'],
@@ -16,10 +23,15 @@ window.I18N_EXTRA=[
 ['Bu el','Эта раздача','This hand'],['Toplam','Итого','Total'],['Piş','Пиш','Pish'],['PİŞTİ!','ПИШТИ!','PISHTI!'],['ti','ти','ti'],
 ];
 const mk=j=>[
+[/^Kart çoğunluğu \((\d+)–(\d+)\)$/,(m,a,b)=>j?`Most cards (${a}–${b})`:`Больше карт (${a}–${b})`],
+[/^(\d+)\. el bitti$/,(m,n)=>j?`Hand ${n} finished`:`Раздача ${n} окончена`],[/^Hedef (\d+)\. Sıradaki el başlıyor\.$/,(m,n)=>j?`Target ${n}. The next hand is starting.`:`Цель ${n}. Начинается следующая раздача.`],
+[/^(.+) (yeni oyunu|sıradaki eli) başlatınca devam edersiniz\.$/,(m,n,w)=>j?`You'll continue when ${n} starts the ${w==='yeni oyunu'?'new game':'next hand'}.`:`Продолжите, когда ${n} начнёт ${w==='yeni oyunu'?'новую игру':'следующую раздачу'}.`],
+[/^(.+) ile oynuyorsun\.$/,(m,n)=>j?`You're playing with ${n}.`:`Вы играете с ${n}.`],[/^(.+) oynuyor…$/,(m,n)=>j?`${n} is playing…`:`Ходит ${n}…`],[/^(.+) kazandı$/,(m,n)=>j?`${nm(n,1)} won`:`${nm(n,0)} побеждает`],
+[/^(.+) bağlantısı koptu, geri dönmesi bekleniyor$/,(m,n)=>j?`${n} disconnected, waiting for them to return`:`${n} отключился, ждём возвращения`],
 [/^(\d+)\. el başladı\. Yerdeki açık kart: (.+)\.$/,(m,n,c)=>j?`Hand ${n} started. Face-up card: ${cn(c,1)}.`:`Раздача ${n}. Открытая карта: ${cn(c,0)}.`],
-[/^(Sen|Bilgisayar) (.+) attı\.$/,(m,w,c)=>j?`${nm(w,1)} played ${cn(c,1)}.`:`${nm(w,0)}: ${cn(c,0)}.`],
-[/^(Sen|Bilgisayar) (.+) ile (\d+) kartı topladı\.$/,(m,w,c,n)=>j?`${nm(w,1)} took ${n} cards with ${cn(c,1)}.`:`${nm(w,0)} забирает ${n} карт: ${cn(c,0)}.`],
-[/^(Sen|Bilgisayar) (.+) ile PİŞTİ yaptı! \+(\d+)$/,(m,w,c,v)=>j?`${nm(w,1)} made PISHTI with ${cn(c,1)}! +${v}`:`${nm(w,0)}: ПИШТИ (${cn(c,0)})! +${v}`],
+[/^(.+?) (.+) attı\.$/,(m,w,c)=>j?`${nm(w,1)} played ${cn(c,1)}.`:`${nm(w,0)}: ${cn(c,0)}.`],
+[/^(.+?) (.+) ile (\d+) kartı topladı\.$/,(m,w,c,n)=>j?`${nm(w,1)} took ${n} cards with ${cn(c,1)}.`:`${nm(w,0)} забирает ${n} карт: ${cn(c,0)}.`],
+[/^(.+?) (.+) ile PİŞTİ yaptı! \+(\d+)$/,(m,w,c,v)=>j?`${nm(w,1)} made PISHTI with ${cn(c,1)}! +${v}`:`${nm(w,0)}: ПИШТИ (${cn(c,0)})! +${v}`],
 [/^Yeni kartlar dağıtıldı\. Destede (\d+) kart kaldı\.$/,(m,n)=>j?`New cards dealt. ${n} left in the deck.`:`Новая сдача. В колоде осталось ${n}.`],
 [/^Yerde kalan (\d+) kart son alan (sana|Bilgisayara) gitti\.$/,(m,n,w)=>j?`The ${n} remaining cards went to ${w==='sana'?'you':'the computer'}.`:`Оставшиеся ${n} карт ушли ${w==='sana'?'вам':'компьютеру'}.`],
 [/^(\d+) kart · (\d+) pişti$/,(m,a,b)=>j?`${a} cards · ${b} pishti`:`${a} карт · ${b} пишти`],[/^Deste (\d+)$/,(m,n)=>j?`Deck ${n}`:`Колода ${n}`],[/^Yerde (\d+) kart$/,(m,n)=>j?`${n} on the pile`:`На столе ${n}`],
