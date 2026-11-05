@@ -2,6 +2,14 @@
 (()=>{
 const CO={'kırmızı':['красная','red'],mavi:['синяя','blue'],'sarı':['жёлтая','yellow'],siyah:['чёрная','black']};
 window.I18N_EXTRA=[
+['Sıra sende: ortadan çek ya da soldan al. Istakaya sürükleyebilirsin.','Ваш ход: возьмите фишку из середины или слева. Можно перетащить на подставку.','Your turn: draw from the middle or take from the left. You can drag onto your rack.'],
+['👥 Arkadaşlarla online','👥 Онлайн с друзьями','👥 Online with friends'],['Masa kuruldu','Стол создан','Table created'],['Linki arkadaşlarına gönder. En fazla 4 kişi; boş yerlere bilgisayar oturur.','Отправьте ссылку друзьям. До 4 игроков, свободные места займёт компьютер.','Send the link to your friends. Up to 4 players; the computer fills empty seats.'],
+['Kopyala','Копировать','Copy'],['👥 Arkadaşlarını çağır','👥 Позвать друзей','👥 Invite friends'],['Bilgisayar oturacak','Сядет компьютер','Computer will sit'],['Vazgeç','Отмена','Cancel'],['Arkadaşın bekleniyor…','Ждём друга…','Waiting for your friend…'],
+['Masaya oturdun','Вы за столом','You\'re seated'],['Ev sahibi oyunu başlatınca taşlar dağıtılacak.','Фишки раздадут, когда хозяин начнёт игру.','Tiles are dealt when the host starts the game.'],['Masadan kalk','Встать из-за стола','Leave the table'],['Online masa','Онлайн-стол','Online table'],['Yeni oyun başlat','Начать новую игру','Start a new game'],
+['101 Okey masasına davet','Приглашение за стол Окей 101','Invitation to a 101 Okey table'],['Adını yaz ve masaya otur.','Введите имя и садитесь за стол.','Enter your name and take a seat.'],['Adını yaz','Введите имя','Enter your name'],['Masaya otur','Сесть за стол','Take a seat'],['Bağlanılıyor…','Подключение…','Connecting…'],
+['Masaya bağlanıyorsun, birkaç saniye sürebilir.','Подключаемся к столу, это займёт несколько секунд.','Connecting to the table, this can take a few seconds.'],['Masa bulunamadı','Стол не найден','Table not found'],['Ev sahibinin sayfası kapalı olabilir. Linki tekrar iste.','Возможно, хозяин закрыл страницу. Попросите ссылку снова.','The host\'s page may be closed. Ask for the link again.'],
+['Masa dolu','Стол занят','Table full'],['Bu masada 4 kişi var.','За этим столом уже 4 игрока.','This table already has 4 players.'],['Link kopyalandı','Ссылка скопирована','Link copied'],['Sunucuya bağlanılamadı, tekrar deneniyor…','Нет связи с сервером, пробуем снова…','Can\'t reach the server, retrying…'],
+['Orta bitti','Середина закончилась','The middle ran out'],['Bitirdin!','Вы закончили!','You went out!'],['Masanın galibi sensin!','Вы победитель стола!','You won the table!'],['Oyuncu','Игрок','Player'],['Bu el','Эта партия','This hand'],['Ceza','Штраф','Penalty'],['Toplam','Итого','Total'],['Misafir','Гость','Guest'],
 ['101 Okey','Окей 101','101 Okey'],['101 OKEY','ОКЕЙ 101','101 OKEY'],['Menü','Меню','Menu'],['Masaya otur','Сесть за стол','Take a seat'],['Masaya dön','К столу','Back to table'],['Yardım','Помощь','Help'],['Puanlar','Очки','Scores'],['Puan tablosu','Таблица очков','Score table'],['Toplam','Итого','Total'],
 ['Sen, Nuri, Rıza ve Hamdi Abi. Serilerini 101\'e tamamla ya da 5 çift yap, aç, masaya işle, elini ilk sen bitir.','Вы, Нури, Рыза и Хамди. Наберите 101 в сериях или 5 пар, откройтесь, докладывайте и закончите первым.','You, Nuri, Rıza and Hamdi. Reach 101 in runs or make 5 pairs, open, lay off, and go out first.'],
 ['Kaç el?','Сколько партий?','How many hands?'],['3 el','3 партии','3 hands'],['5 el','5 партий','5 hands'],['5 El','5 партий','5 hands'],['9 el','9 партий','9 hands'],['Oyun türü','Тип игры','Game type'],['Katlamalı','С удвоением','Rising'],['Katlamasız','Без удвоения','Standard'],
@@ -37,9 +45,35 @@ window.I18N_EXTRA=[
 
 
 ];
+const BNK={Nuri:'Нури','Rıza':'Рыза',Hamdi:'Хамди',Sen:'Вы'};const nmK=(n,j)=>j?(n==='Sen'?'You':n):(BNK[n]||n);
+const COK={'kırmızı':['красная','red'],mavi:['синяя','blue'],'sarı':['жёлтая','yellow'],siyah:['чёрная','black']};
+const TN=(x,j)=>{if(x==='okey')return j?'the okey':'окей';if(x==='sahte okey')return j?'the fake okey':'фальшивый окей';if(x==='Taşı')return j?'the tile':'фишку';const m=x.match(/^(kırmızı|mavi|sarı|siyah) (\d+)$/);return m?`${COK[m[1]][j]} ${m[2]}`:x};
 const mk=j=>[
+[/^(\d+)\. el · okey (kırmızı|mavi|sarı|siyah) (\d+)$/,(m,n,c,v)=>j?`Hand ${n} · okey ${COK[c][1]} ${v}`:`Партия ${n} · окей ${COK[c][0]} ${v}`],[/^Baraj (\d+)$/,(m,n)=>j?`Bar ${n}`:`Барьер ${n}`],
+[/^(.+?) oynuyor…$/,(m,a)=>j?`${nmK(a,1)} is playing…`:`Ходит ${nmK(a,0)}…`],
+[/^(.+?) (\d+) taş işledi\.$/,(m,a,n)=>j?`${nmK(a,1)} laid off ${n} tiles.`:`${nmK(a,0)} доложил фишек: ${n}.`],
+[/^(.+?) (\d+) çiftle açtı!$/,(m,a,n)=>j?`${nmK(a,1)} opened with ${n} pairs!`:`${nmK(a,0)} открылся на ${n} парах!`],
+[/^(.+?) (.+) koyup masadaki okeyi aldı!$/,(m,a,x)=>j?`${nmK(a,1)} placed ${TN(x,1)} and took the okey from the table!`:`${nmK(a,0)} положил ${TN(x,0)} и забрал окей со стола!`],
+[/^(.+?) (\d+) çift daha koydu\.$/,(m,a,n)=>j?`${nmK(a,1)} laid ${n} more pairs.`:`${nmK(a,0)} выложил ещё ${n} пар.`],
+[/^(.+?) (\d+) puanla açtı!$/,(m,a,n)=>j?`${nmK(a,1)} opened with ${n} points!`:`${nmK(a,0)} открылся на ${n} очков!`],
+[/^(.+?) (\d+) ile açtı$/,(m,a,n)=>j?`${nmK(a,1)} opened with ${n}`:`${nmK(a,0)} открылся на ${n}`],
+[/^(.+?) bitti!$/,(m,a)=>j?`${nmK(a,1)} went out!`:`${nmK(a,0)} закончил!`],[/^(.+?) bitti$/,(m,a)=>j?`${nmK(a,1)} went out`:`${nmK(a,0)} закончил`],
+[/^(.+?) göstergeyi gösterdi \(−101\)\.$/,(m,a)=>j?`${nmK(a,1)} showed the indicator (−101).`:`${nmK(a,0)} показал индикатор (−101).`],
+[/^(.+?) işlek taş attı, 101 ceza!$/,(m,a)=>j?`${nmK(a,1)} discarded a playable tile, 101 penalty!`:`${nmK(a,0)} сбросил подходящую фишку, штраф 101!`],
+[/^(.+?) masaya (\d+) dizi daha koydu\.$/,(m,a,n)=>j?`${nmK(a,1)} laid ${n} more sets.`:`${nmK(a,0)} выложил ещё ${n} комбинаций.`],
+[/^(.+?) masaya (\d+) dizi koydu$/,(m,a,n)=>j?`${nmK(a,1)} laid ${n} sets`:`${nmK(a,0)} выложил комбинаций: ${n}`],
+[/^(.+?) okey attı, 101 ceza!$/,(m,a)=>j?`${nmK(a,1)} discarded the okey, 101 penalty!`:`${nmK(a,0)} сбросил окей, штраф 101!`],
+[/^(.+?) yandan (.+) aldı\.$/,(m,a,x)=>j?`${nmK(a,1)} took ${TN(x,1)} from the side.`:`${nmK(a,0)} взял сбоку ${TN(x,0)}.`],
+[/^(.+?) çiftlere (\d+) çift işledi\.$/,(m,a,n)=>j?`${nmK(a,1)} added ${n} pairs.`:`${nmK(a,0)} доложил пар: ${n}.`],
+[/^(.+?) okeyi aldı$/,(m,a)=>j?`${nmK(a,1)} took the okey`:`${nmK(a,0)} забрал окей`],[/^(.+?) çifte gitti$/,(m,a)=>j?`${nmK(a,1)} went for pairs`:`${nmK(a,0)} пошёл на пары`],
+[/^(.+?) (kırmızı \d+|mavi \d+|sarı \d+|siyah \d+|okey|sahte okey) attı\.?$/,(m,a,x)=>j?`${nmK(a,1)} discarded ${TN(x,1)}`:`${nmK(a,0)} сбросил ${TN(x,0)}`],
+[/^(.+?) kazandı$/,(m,a)=>j?`${nmK(a,1)} won`:`${nmK(a,0)} побеждает`],[/^(.+?) ile oynuyorsun\.$/,(m,a)=>j?`You're playing with ${a}.`:`Вы играете с: ${a}.`],
+[/^Masadakiler \((\d)\/4\)$/,(m,n)=>j?`At the table (${n}/4)`:`За столом (${n}/4)`],[/^(.+) · ev sahibi$/,(m,a)=>j?`${a} · host`:`${a} · хозяин`],[/^Oyunu başlat \((\d) kişi\)$/,(m,n)=>j?`Start the game (${n} players)`:`Начать игру (игроков: ${n})`],
+[/^Ev sahibi (yeni oyunu|sıradaki eli) başlatınca devam edersiniz\.$/,(m,w)=>j?`You'll continue when the host starts the ${w==='yeni oyunu'?'new game':'next hand'}.`:`Продолжите, когда хозяин начнёт ${w==='yeni oyunu'?'новую игру':'следующую партию'}.`],
+[/^(.+) geri bıraktın, ortadan çek$/,(m,x)=>j?`You put ${TN(x,1)} back, draw from the middle`:`Вы вернули ${TN(x,0)}, берите из середины`],
+[/^(.+?) attı$/,(m,a)=>j?`${nmK(a,1)} discarded`:`${nmK(a,0)} сбросил`],[/^(.+?) attı · al$/,(m,a)=>j?`${nmK(a,1)} discarded · take`:`${nmK(a,0)} сбросил · взять`],
 [/^(\d+) ile açtın!$/i,(m,n)=>j?`You opened with ${n}!`:`Вы открылись на ${n}!`],[/^(\d+) İLE AÇTIN$/,(m,n)=>j?`OPENED WITH ${n}`:`ОТКРЫЛИСЬ НА ${n}`],[/^Açtın · (\d+)$/,(m,n)=>j?`Opened · ${n}`:`Открыто · ${n}`],[/^(\d+) taş$/,(m,n)=>j?`${n} tiles`:`${n} фишек`],[/^(.+)'nin taşına$/,(m,a)=>j?`on ${a}'s tile`:`на фишку ${a}`],
-[/^(kırmızı|mavi|sarı|siyah) (\d+)$/,(m,c,n)=>j?`${CO[c][1]} ${n}`:`${CO[c][0]} ${n}`],[/^(Nuri|Rıza|Hamdi) attı$/,(m,a)=>j?`${a} discarded`:`${({Nuri:'Нури','Rıza':'Рыза',Hamdi:'Хамди'})[a]} сбросил`],[/^(Nuri|Rıza|Hamdi) attı · al$/,(m,a)=>j?`${a} discarded · take`:`${a} сбросил · взять`],
+[/^(kırmızı|mavi|sarı|siyah) (\d+)$/,(m,c,n)=>j?`${CO[c][1]} ${n}`:`${CO[c][0]} ${n}`],
 [/^Açmak için 101 lazım, (\d+) var$/,(m,n)=>j?`Need 101 to open, you have ${n}`:`Для открытия нужно 101, у вас ${n}`],[/^Çiftle açmak için 5 çift lazım, (\d+) var$/,(m,n)=>j?`Need 5 pairs to open, you have ${n}`:`Нужно 5 пар, у вас ${n}`],
 [/^Çifte gitmek için 5 çift lazım, ıstakanda (\d+) var\.$/,(m,n)=>j?`You need 5 pairs; you have ${n}.`:`Нужно 5 пар, у вас ${n}.`],[/^(\d+)\. el \/ (\d+)$/,(m,a,b)=>j?`Hand ${a} / ${b}`:`Партия ${a} / ${b}`],
 ];

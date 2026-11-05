@@ -32,7 +32,8 @@ function toggle(){let p=document.querySelector('.kc-p');if(p){p.remove();return}
   document.body.appendChild(p);draw();
   p.querySelectorAll('.er button').forEach(b=>b.onclick=()=>{p.remove();opt.send({t:'emo',e:b.textContent});bubble(`<span class="kc-emo">${b.textContent}</span>`)});
   p.querySelector('form').onsubmit=e=>{e.preventDefault();const i=p.querySelector('input'),x=i.value.trim().slice(0,140);if(!x)return;i.value='';opt.send({t:'chat',x,l:myL()});add('Sen',x,myL(),true)}}
-window.KChat={mount(o){opt=o;style();if(!btn){btn=document.createElement('button');btn.className='kc-btn';btn.textContent='💬';btn.onclick=toggle;document.body.appendChild(btn)}btn.hidden=false},
+window.KChat={mount(o){opt=o;style();if(!btn){btn=document.createElement('button');btn.className='kc-btn';btn.textContent='💬';btn.onclick=toggle;document.body.appendChild(btn)}btn.hidden=false;
+    if(o.side==='left'){btn.style.right='auto';btn.style.left='max(12px,env(safe-area-inset-left))';document.getElementById('kc-css').textContent+='.kc-p{right:auto;left:max(12px,env(safe-area-inset-left))}'}},
   unmount(){if(btn)btn.hidden=true;document.querySelector('.kc-p')?.remove()},
   receive(m){add(String(m.name||'?').slice(0,14),String(m.x||'').slice(0,140),String(m.l||'').slice(0,2))},
   emoji(m){bubble(`<b>${esc(String(m.name||'').slice(0,14))}</b> <span class="kc-emo">${esc(String(m.e||'').slice(0,4))}</span>`)}};
