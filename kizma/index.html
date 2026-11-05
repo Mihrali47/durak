@@ -5,7 +5,7 @@
 <title>Kızma Birader</title>
 <script src="i18n-page.js"></script><script src="../i18n.js"></script>
 <script src="../mqtt.min.js"></script><script src="../relay.js"></script>
-<script src="engine.js"></script><script src="../account.js"></script>
+<script src="engine.js"></script><script src="../account.js"></script><script src="../quick.js"></script>
 <link rel="manifest" href="../manifest.webmanifest"><link rel="icon" href="../icon.svg" type="image/svg+xml">
 <meta name="theme-color" content="#2b1b11">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -209,6 +209,7 @@ function showMenu(){const sv=ST.get('save',null),rec=ST.get('rec',[0,0]);
       ${G&&G.phase!=='over'&&mode!=='guest'?'<button class="btn pri" id="mBack">Oyuna dön</button>':''}
       ${!G&&sv?'<button class="btn pri" id="mLoad">Kaldığın yerden devam et</button>':''}
       <button class="btn ${G||sv?'':'pri'}" id="mBot">Bilgisayara karşı yeni oyun</button>
+      <button class="btn pri" id="mQuick">⚡ Hızlı oyun</button>
       <button class="btn" id="mOn">Arkadaşlarla online</button>
       <button class="btn" id="mRules">Kurallar</button>
       <a class="btn" href="../" style="text-align:center;text-decoration:none">Salona dön</a></div>
@@ -216,7 +217,7 @@ function showMenu(){const sv=ST.get('save',null),rec=ST.get('rec',[0,0]);
   s.querySelectorAll('#mN button').forEach(b=>b.onclick=()=>{nPlayers=+b.dataset.n;ST.set('n',nPlayers);s.querySelectorAll('#mN button').forEach(x=>x.classList.toggle('on',x===b))});
   if($('mBack'))$('mBack').onclick=()=>{hideOv();after()};
   if($('mLoad'))$('mLoad').onclick=()=>{mode='off';me=0;G=sv.G;names=sv.names;names[0]=myName();human=[true,false,false,false];shownRid=G.rid;shownMid=G.mid;hideOv();sync()};
-  $('mBot').onclick=()=>{if(mode!=='off')leaveOnline();mode='off';newGame()};$('mOn').onclick=showOnline;$('mRules').onclick=showRules}
+  $('mBot').onclick=()=>{if(mode!=='off')leaveOnline();mode='off';newGame()};$('mQuick').onclick=quickPlay;$('mOn').onclick=showOnline;$('mRules').onclick=showRules}
 $('bMenu').onclick=showMenu;$('bRules').onclick=showRules;
 $('ov').addEventListener('click',e=>{if(e.target===$('ov')&&$('sheet').dataset.k==='rules'&&G){hideOv();after()}});
 /* ---------- online ---------- */
@@ -234,7 +235,7 @@ function hostRoom(){leaveOnline();mode='host';started=false;room=Math.random().t
   peer=new Peer(PFX+room);showLobby();peer.on('open',()=>{history.replaceState(null,'','#'+room);showLobby()});
   peer.on('connection',c=>c.on('data',d=>hostRecv(c,d)));
   peer.on('error',e=>{if(e.type==='superseded'){toast('Bu masa başka bir pencerede açıldı');mode='off'}else if(e.type==='network')toast('Sunucuya bağlanılamadı, tekrar deneniyor…')});
-  clearInterval(hb);hb=setInterval(()=>{if(mode!=='host')return;if(started)bcastState();else bcast({t:'lobby',names:lob.map(x=>x.name)});schedule()},3000)}
+  clearInterval(hb);hb=setInterval(()=>{if(mode!=='host')return;if(started)bcastState();else{bcast({t:'lobby',names:lob.map(x=>x.name)});quickTick()}schedule()},3000)}
 function hostRecv(c,d){if(!d||!d.uid)return;lastSeen[d.uid]=Date.now();
   if(d.t==='hello'){conns[d.uid]=c;const nm=String(d.name||'Misafir').slice(0,14);let L=lob.find(x=>x.uid===d.uid);
     if(!L){if(!started){if(lob.length>=4){c.send({t:'full'});return}lob.push({uid:d.uid,name:nm})}
@@ -250,14 +251,14 @@ function showLobby(){if(mode!=='host'&&mode!=='guest')return;const L=mode==='hos
     ${mode==='host'?`<p>Bu linki arkadaşlarına gönder. Herkes gelince başlat.</p><div class="lnk"><input id="lk" readonly value="${linkFor(room||'')}"><button id="lkC">Kopyala</button></div>
       ${window.KH?'<div class="row" style="margin-top:8px"><button class="btn" id="lkF">👥 Arkadaşlarını çağır</button></div>':''}
       <p class="lbl">Boş yerler</p><div class="seg" id="lF"><button data-f="1" class="${fill?'on':''}">Bilgisayar otursun</button><button data-f="0" class="${fill?'':'on'}">Boş kalsın</button></div>`:'<p>Ev sahibi oyunu başlatınca oyun açılacak.</p>'}
-    <p class="lbl">Oyuncular</p><ul class="rank">${[0,1,2,3].map(i=>`<li><b>${L[i]||'Boş'}</b><span>${i===0?'Ev sahibi':L[i]?'Hazır':''}</span></li>`).join('')}</ul>
+    ${quick&&mode==='host'?'<p><b>Oyuncu aranıyor…</b> Masa dolunca ya da 2. kişi geldikten 20 saniye sonra oyun kendiliğinden başlar.</p>':''}<p class="lbl">Oyuncular</p><ul class="rank">${[0,1,2,3].map(i=>`<li><b>${L[i]||'Boş'}</b><span>${i===0?'Ev sahibi':L[i]?'Hazır':''}</span></li>`).join('')}</ul>
     <div class="row"><button class="btn" id="lBack">Çık</button>${mode==='host'?`<button class="btn pri" id="lGo" ${L.length<2?'disabled':''}>Başlat (${L.length} kişi)</button>`:''}</div>`);
   if($('lkF'))$('lkF').onclick=()=>KH.invitePicker('Kızma Birader',linkFor(room));
   if($('lkC'))$('lkC').onclick=async()=>{const v=$('lk').value;try{if(navigator.share&&matchMedia('(pointer:coarse)').matches){await navigator.share({title:'Kızma Birader',url:v});return}await navigator.clipboard.writeText(v);toast('Link kopyalandı')}catch(e){toast('Linki seçip kopyala')}};
   s.querySelectorAll('#lF button').forEach(b=>b.onclick=()=>{fill=b.dataset.f==='1';ST.set('fill',fill);s.querySelectorAll('#lF button').forEach(x=>x.classList.toggle('on',x===b))});
   $('lBack').onclick=()=>{leaveOnline();mode='off';G=null;history.replaceState(null,'',location.pathname);showMenu()};
   if($('lGo'))$('lGo').onclick=()=>startOnline()}
-function startOnline(again){started=true;me=0;const n=lob.length;const act=fill?[0,1,2,3]:KB.seatsFor(n);seatOf={};names=[null,null,null,null];human=[false,false,false,false];
+function startOnline(again){if(window.KQuick)KQuick.update({started:true});quick=false;started=true;me=0;const n=lob.length;const act=fill?[0,1,2,3]:KB.seatsFor(n);seatOf={};names=[null,null,null,null];human=[false,false,false,false];
   lob.forEach((x,k)=>{const s=fill?k:act[k];seatOf[x.uid]=s;names[s]=x.name;human[s]=true});let b=0;act.forEach(p=>{if(!names[p])names[p]=BOTN[b++]});
   G=KB.newGame({seats:act});$('bChat').hidden=false;newGame()}
 function joinRoom(code){leaveOnline();mode='guest';room=code;started=false;G=null;
@@ -275,7 +276,7 @@ function guestRecv(d){lastRx=Date.now();if(!d)return;
     if(G&&d.G.rid===0&&d.G.mid===0&&(G.rid>0)){shownRid=0;shownMid=0;showOver.done=false;if($('sheet').dataset.k==='over')hideOv()}
     me=s;ver=d.ver;G=d.G;names=d.names;human=d.human;started=true;$('bChat').hidden=false;if(['lobby','join'].includes($('sheet').dataset.k))hideOv();sync(first?'first':0)}
   else if(d.t==='emo')showEmo(d.p,d.e);else if(d.t==='chat'&&d.p!==me)addChat(d.p,d.x,d.l)}
-function leaveOnline(){clearInterval(hb);try{peer&&peer.destroy()}catch(e){}peer=null;conn=null;conns={};started=false;$('bChat').hidden=true}
+function leaveOnline(){if(window.KQuick)KQuick.stop();quick=false;clearInterval(hb);try{peer&&peer.destroy()}catch(e){}peer=null;conn=null;conns={};started=false;$('bChat').hidden=true}
 /* ---------- sohbet ve emoji (mesajlar okuyanın diline çevrilir) ---------- */
 const EMO=['👍','😂','😮','😡','🙏','👏'],CHAT=[];const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const myL=()=>String(window.LANG||navigator.language||'tr').slice(0,2).toLowerCase();
@@ -300,6 +301,18 @@ $('bChat').onclick=e=>{e.stopPropagation();let b=document.querySelector('.emobar
 /* tahta boyutu */
 function fit(){const w=$('wrapb');document.documentElement.style.setProperty('--bs',Math.min(w.clientWidth,w.clientHeight)+'px')}
 addEventListener('resize',fit);fit();
+
+/* ---------- hızlı oyun: açık masaya otur ya da masa aç ---------- */
+let quick=false,quick2=0;
+function quickPlay(){if(myName()==='Sen'){const s=ov('qname',`<h2>⚡ Hızlı oyun</h2><p>Adını yaz, sana masa bulalım.</p><input class="name" id="qN" maxlength="14" placeholder="Adını yaz"><div class="row"><button class="btn" id="qB">Geri</button><button class="btn pri" id="qG">Masa bul</button></div>`);
+    $('qB').onclick=showMenu;$('qG').onclick=()=>{const v=$('qN').value.trim().slice(0,14);if(!v)return;ST.set('name',v);quickPlay()};return}
+  if(mode!=='off')leaveOnline();
+  ov('lobby','<h2>Masa aranıyor…</h2><p>Açık bir masa varsa oturtuyoruz, yoksa sana yeni masa açıyoruz.</p><div class="row"><button class="btn" id="qC">Vazgeç</button></div>');$('qC').onclick=()=>{leaveOnline();mode='off';showMenu()};
+  KQuick.find('kizma',{onJoin:c=>joinRoom(c),onHost:()=>{hostRoom();quick=true;quick2=0;KQuick.advertise('kizma',room,{n:1,max:4});showLobby()}})}
+function quickTick(){if(!quick||mode!=='host'||started)return;const n=lob.length;KQuick.update({n});
+  if(n>=2&&!quick2)quick2=Date.now();if(n<2)quick2=0;
+  if(4>2&&(n>=4||(n>=2&&Date.now()-quick2>20000))){startOnline();return}
+  if(n===1){const r=KQuick.rival('kizma',room);if(r){leaveOnline();joinRoom(r)}}}
 const hc=(location.hash||'').slice(1).toUpperCase();
 if(/^[A-Z0-9]{5}$/.test(hc))joinRoom(hc);else showMenu();
 addEventListener('load',()=>{fit();window.KH&&KH.setPresence('Kızma Birader')});

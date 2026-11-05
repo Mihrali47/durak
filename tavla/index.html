@@ -5,7 +5,7 @@
 <title>Tavla</title>
 <script src="i18n-page.js"></script><script src="../i18n.js"></script>
 <script src="../mqtt.min.js"></script><script src="../relay.js"></script><script src="../chat.js"></script>
-<script src="engine.js"></script><script src="../account.js"></script>
+<script src="engine.js"></script><script src="../account.js"></script><script src="../quick.js"></script>
 <link rel="manifest" href="../manifest.webmanifest"><link rel="icon" href="../icon.svg" type="image/svg+xml">
 <meta name="theme-color" content="#2b1b11">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -213,6 +213,7 @@ function showMenu(){const sv=ST.get('save',null),rec=ST.get('rec',[0,0]);
       ${G&&G.phase!=='over'&&mode!=='guest'&&G.games+G.mid>0?'<button class="btn pri" id="mBack">Oyuna dön</button>':''}
       ${(!G||!G.mid)&&sv?'<button class="btn pri" id="mLoad">Kaldığın yerden devam et</button>':''}
       <button class="btn" id="mBot">Bilgisayara karşı yeni maç</button>
+      <button class="btn pri" id="mQuick">⚡ Hızlı oyun</button>
       <button class="btn" id="mOn">Arkadaşınla online</button>
       <button class="btn" id="mRules">Kurallar</button>
       <a class="btn" href="../">Salona dön</a></div>
@@ -220,7 +221,7 @@ function showMenu(){const sv=ST.get('save',null),rec=ST.get('rec',[0,0]);
   s.querySelectorAll('#mT button').forEach(b=>b.onclick=()=>{target=+b.dataset.n;ST.set('target',target);s.querySelectorAll('#mT button').forEach(x=>x.classList.toggle('on',x===b))});
   if($('mBack'))$('mBack').onclick=()=>{hideOv();after()};
   if($('mLoad'))$('mLoad').onclick=()=>{mode='off';me=0;G=sv.G;names=sv.names;names[0]=myName();pre=[];shownMid=G.mid;shownRid=G.rid;view0=TV.st(G);hideOv();sync()};
-  $('mBot').onclick=()=>{if(mode!=='off')leaveOnline();mode='off';newMatch()};$('mOn').onclick=showOnline;$('mRules').onclick=showRules}
+  $('mBot').onclick=()=>{if(mode!=='off')leaveOnline();mode='off';newMatch()};$('mQuick').onclick=quickPlay;$('mOn').onclick=showOnline;$('mRules').onclick=showRules}
 $('bMenu').onclick=showMenu;$('bRules').onclick=showRules;
 $('ov').addEventListener('click',e=>{if(e.target===$('ov')&&$('sheet').dataset.k==='rules'&&G){hideOv();after()}});
 /* ---------- online (2 kişi): ev sahibi beyaz ---------- */
@@ -238,16 +239,16 @@ function hostRoom(){leaveOnline();mode='host';started=false;guest=null;room=Math
   peer.on('connection',c=>c.on('data',d=>hostRecv(c,d)));
   peer.on('error',e=>{if(e.type==='network')toast('Sunucuya bağlanılamadı, tekrar deneniyor…')});
   KChat.mount({send:m=>send({...m,name:myName()})});
-  clearInterval(hb);hb=setInterval(()=>{if(mode!=='host')return;if(started){bcastState();schedule()}},3000)}
+  clearInterval(hb);hb=setInterval(()=>{if(mode!=='host')return;if(started){bcastState();schedule()}else quickTick()},3000)}
 function hostRecv(c,d){if(!d||!d.uid)return;
   if(d.t==='hello'){if(guest&&guest!==d.uid){c.send({t:'full'});return}guest=d.uid;conn=c;lastSeen=Date.now();names=[myName(),String(d.name||'Misafir').slice(0,14)];
-    if(!started){started=true;me=0;newMatch()}else{ver++;bcastState()}return}
+    if(!started){started=true;me=0;if(window.KQuick)KQuick.update({n:2,started:true});quick=false;newMatch()}else{ver++;bcastState()}return}
   if(d.uid!==guest)return;lastSeen=Date.now();
   if(d.t==='act'&&d.a)act(1,d.a);else if(d.t==='chat')KChat.receive({name:names[1],x:d.x,l:d.l});else if(d.t==='emo')KChat.emoji({name:names[1],e:d.e})}
 function showLobby(){const link=linkFor(room);const s=ov('lobby',`<h2>Masa hazır</h2><p>Bu linki arkadaşına gönder. Girdiği an oyun başlar.</p><div class="lnk"><input id="lk" readonly value="${link}"><button id="lkC">Kopyala</button></div>
     ${window.KH?'<div class="row"><button class="btn" id="lkF">👥 Arkadaşlarını çağır</button></div>':''}
     <p class="lbl">Maç kaç puana?</p><div class="seg" id="lT">${[3,5,7].map(n=>`<button data-n="${n}" class="${target===n?'on':''}">${n} puan</button>`).join('')}</div>
-    <p>Arkadaşın bekleniyor… Bu sayfayı kapatma.</p><div class="row"><button class="btn" id="lBack">Vazgeç</button></div>`);
+    ${quick?'<p><b>Rakip aranıyor…</b> Biri gelince oyun hemen başlar. Linki arkadaşına da gönderebilirsin.</p>':'<p>Arkadaşın bekleniyor… Bu sayfayı kapatma.</p>'}<div class="row"><button class="btn" id="lBack">Vazgeç</button></div>`);
   s.querySelectorAll('#lT button').forEach(b=>b.onclick=()=>{target=+b.dataset.n;ST.set('target',target);s.querySelectorAll('#lT button').forEach(x=>x.classList.toggle('on',x===b))});
   if($('lkF'))$('lkF').onclick=()=>KH.invitePicker('Tavla',link);
   $('lkC').onclick=async()=>{try{if(navigator.share&&matchMedia('(pointer:coarse)').matches){await navigator.share({title:'Tavla',url:link});return}await navigator.clipboard.writeText(link);toast('Link kopyalandı')}catch(e){toast('Linki seçip kopyala')}};
@@ -269,7 +270,19 @@ function guestRecv(d){lastRx=Date.now();if(!d)return;
     me=1;started=true;names=d.names;
     if(busy&&!sync.inner&&view){busy=false}
     G=d.G;pre=[];sel=null;if(first)view0=TV.st(G);if(['lobby','join','end'].includes($('sheet').dataset.k)&&!['gameOver','over'].includes(G.phase))hideOv();sync(first?'first':0)}}
-function leaveOnline(){clearInterval(hb);try{peer&&peer.destroy()}catch(e){}peer=null;conn=null;guest=null;started=false;window.KChat&&KChat.unmount();try{history.replaceState(null,'',location.pathname)}catch(e){}}
+function leaveOnline(){if(window.KQuick)KQuick.stop();quick=false;clearInterval(hb);try{peer&&peer.destroy()}catch(e){}peer=null;conn=null;guest=null;started=false;window.KChat&&KChat.unmount();try{history.replaceState(null,'',location.pathname)}catch(e){}}
+
+/* ---------- hızlı oyun: açık masaya otur ya da masa aç ---------- */
+let quick=false,quick2=0;
+function quickPlay(){if(myName()==='Sen'){const s=ov('qname',`<h2>⚡ Hızlı oyun</h2><p>Adını yaz, sana masa bulalım.</p><input class="name" id="qN" maxlength="14" placeholder="Adını yaz"><div class="row"><button class="btn" id="qB">Geri</button><button class="btn pri" id="qG">Masa bul</button></div>`);
+    $('qB').onclick=showMenu;$('qG').onclick=()=>{const v=$('qN').value.trim().slice(0,14);if(!v)return;ST.set('name',v);quickPlay()};return}
+  if(mode!=='off')leaveOnline();
+  ov('lobby','<h2>Masa aranıyor…</h2><p>Açık bir masa varsa oturtuyoruz, yoksa sana yeni masa açıyoruz.</p><div class="row"><button class="btn" id="qC">Vazgeç</button></div>');$('qC').onclick=()=>{leaveOnline();mode='off';showMenu()};
+  KQuick.find('tavla',{onJoin:c=>joinRoom(c),onHost:()=>{hostRoom();quick=true;quick2=0;KQuick.advertise('tavla',room,{n:1,max:2});showLobby()}})}
+function quickTick(){if(!quick||mode!=='host'||started)return;const n=(guest?2:1);KQuick.update({n});
+  if(n>=2&&!quick2)quick2=Date.now();if(n<2)quick2=0;
+  if(2>2&&(n>=2||(n>=2&&Date.now()-quick2>20000))){startOnline();return}
+  if(n===1){const r=KQuick.rival('tavla',room);if(r){leaveOnline();joinRoom(r)}}}
 const hc=(location.hash||'').slice(1).toUpperCase();
 if(/^[A-Z0-9]{5}$/.test(hc))joinRoom(hc);else showMenu();
 addEventListener('load',()=>window.KH&&KH.setPresence('Tavla'));

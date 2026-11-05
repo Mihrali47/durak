@@ -174,6 +174,13 @@ const T=[
 ['Zar at, kapı kur, rakibini kır, pullarını ilk sen topla. Mars 2 puan. Bilgisayara karşı ya da linkle arkadaşınla.','Бросайте кости, стройте блоки, бейте соперника и первыми выведите шашки. Марс — 2 очка. Против компьютера или с другом по ссылке.','Roll, build points, hit your opponent and bear off first. A gammon is 2 points. Against the computer or with a friend by link.'],['2 kişi','2 игрока','2 players'],['3 / 5 / 7 puan','3 / 5 / 7 очков','3 / 5 / 7 points'],
 ['İhaleli, kozlu dört kişilik batak. Kaç el alacağını söyle, kozu seç, batmadan tuttur. Bilgisayara karşı ya da linkle arkadaşlarınla.','Батак на четверых с торговлей и козырями. Заявите взятки, выберите козырь и не провалитесь. Против компьютера или с друзьями по ссылке.','Four-player Batak with bidding and trumps. Call your tricks, pick trumps and make your bid. Against the computer or with friends by link.'],['5 / 11 / 21 el','5 / 11 / 21 раздач','5 / 11 / 21 hands'],
 ['Ücretsiz · Kayıt şart değil · Reklamsız','Бесплатно · Регистрация не обязательна · Без рекламы','Free · No sign-up required · No ads'],
+['⚡ Hızlı oyun','⚡ Быстрая игра','⚡ Quick play'],['Masa aranıyor…','Ищем стол…','Finding a table…'],['Açık bir masa varsa oturtuyoruz, yoksa sana yeni masa açıyoruz.','Если есть свободный стол, посадим вас за него, иначе откроем новый.','If there is an open table we seat you there, otherwise we open a new one.'],
+['Oyuncu aranıyor…','Ищем игроков…','Looking for players…'],[' Masa dolunca ya da 2. kişi geldikten 20 saniye sonra oyun kendiliğinden başlar.',' Игра начнётся сама, когда стол заполнится или через 20 секунд после прихода второго игрока.',' The game starts by itself when the table is full or 20 seconds after the second player arrives.'],
+['Oyuncu aranıyor… Masa dolunca ya da 2. kişi geldikten 20 saniye sonra oyun kendiliğinden başlar.','Ищем игроков… Игра начнётся сама, когда стол заполнится или через 20 секунд после прихода второго игрока.','Looking for players… The game starts by itself when the table is full or 20 seconds after the second player arrives.'],
+['Rakip aranıyor…','Ищем соперника…','Looking for an opponent…'],['Rakip aranıyor… Biri gelince oyun hemen başlar.','Ищем соперника… Игра начнётся, как только кто-то войдёт.','Looking for an opponent… The game starts as soon as someone joins.'],
+[' Biri gelince oyun hemen başlar. Linki arkadaşına da gönderebilirsin.',' Игра начнётся, как только кто-то войдёт. Можно отправить ссылку и другу.',' The game starts as soon as someone joins. You can also send the link to a friend.'],
+['Adını yaz, sana masa bulalım.','Введите имя, и мы найдём вам стол.','Enter your name and we\'ll find you a table.'],['Adını yaz, sana rakip bulalım.','Введите имя, и мы найдём соперника.','Enter your name and we\'ll find you an opponent.'],['Masa bul','Найти стол','Find a table'],['Rakip bul','Найти соперника','Find an opponent'],
+['Bekleyen biri varsa masasına oturtuyoruz, yoksa sana masa açıyoruz.','Если кто-то ждёт, посадим вас к нему, иначе откроем стол.','If someone is waiting we seat you with them, otherwise we open a table.'],['Önce adını yaz','Сначала введите имя','Enter your name first'],['Online','Онлайн','Online'],['Arkadaşınla online','Онлайн с другом','Online with a friend'],
 ['Kayıt ol','Регистрация','Sign up'],['Profilim','Мой профиль','My profile'],['Adın','Ваше имя','Your name'],['Resmin','Аватар','Avatar'],['Vazgeç','Отмена','Cancel'],['Kaydediliyor…','Сохраняем…','Saving…'],
 ['Adını ve resmini seç. Sana bir arkadaş kodu verilecek, arkadaşların seni bu kodla ekler.','Выберите имя и аватар. Вы получите код друга — по нему вас смогут добавить.','Pick a name and avatar. You\'ll get a friend code that friends use to add you.'],
 ['Bir arkadaşın seni davet etti.','Вас пригласил друг.','A friend invited you.'],[' Kayıt olunca otomatik arkadaş olursunuz.',' После регистрации вы автоматически станете друзьями.',' Once you sign up you\'ll be friends automatically.'],
@@ -248,7 +255,7 @@ const go=()=>{walk(document.body);mo.observe(document.body,{subtree:true,childLi
 if(document.body)go();else addEventListener('DOMContentLoaded',go);
 })();
 </script>
-<script src="../account.js"></script><script>addEventListener('load',()=>window.KH&&KH.setPresence('Durak'))</script>
+<script src="../account.js"></script><script src="../quick.js"></script><script>addEventListener('load',()=>window.KH&&KH.setPresence('Durak'))</script>
 </head><body>
 <title>Durak</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -1437,7 +1444,7 @@ function showWaiting(){
   if(ON.seat!==0){open(`<h2>Masaya oturdun</h2><p>Masa sahibinin oyunu başlatmasını bekliyorsun.</p>
     <div><p class="lbl">Masadakiler (${P.length}/${MAXP})</p><ul class="rank">${P.map((p,i)=>`<li>${esc0(p)}${i===0?' · masa sahibi':''}${i===ON.seat?' (sen)':''}</li>`).join('')}</ul></div>
     <div class="rowb"><button class="btn ghost" id="cancelOn">Masadan kalk</button></div>`);$('cancelOn').onclick=()=>{leaveOnline();showMenu()};return}
-  open(`<h2>Masa kuruldu</h2><p>Linki arkadaşlarına gönder. En fazla 4 kişi. Herkes gelince <b>Oyunu başlat</b>'a bas.</p>
+  open(`<h2>Masa kuruldu</h2>${ON.quick?'<p><b>Oyuncu aranıyor…</b> Masa dolunca ya da 2. kişi geldikten 20 saniye sonra oyun kendiliğinden başlar.</p>':''}<p>Linki arkadaşlarına gönder. En fazla 4 kişi. Herkes gelince <b>Oyunu başlat</b>'a bas.</p>
   <div class="rowb"><input id="lnk" readonly value="${link}" style="flex:1 1 200px;height:46px;border-radius:12px;border:1px solid #c5ced6;padding:0 10px;font:600 14px/1 var(--body)"><button class="btn" id="cp">Kopyala</button></div>
   <div class="rowb"><a class="btn" id="wa" style="display:grid;place-items:center;text-decoration:none" href="https://wa.me/?text=${encodeURIComponent('Durak oynayalım mı? '+link+'  Masa kodu: '+ON.code+' (açılmazsa menüde Kod kutusuna yaz, Katıl)')}" target="_blank" rel="noopener">WhatsApp'tan gönder</a></div>${window.KH?'<div class="rowb"><button class="btn" id="khF">👥 Arkadaşlarını çağır</button></div>':''}
   <div><p class="lbl">Masadakiler (${P.length}/${MAXP})</p><ul class="rank">${P.map((p,i)=>`<li>${esc0(p.name)}${i===0?' (sen)':''}</li>`).join('')}</ul></div>
@@ -1450,6 +1457,7 @@ function showWaiting(){
 }
 const esc0=s=>String(typeof s==='string'?s:(s&&s.name)||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 function startOnlineGame(first){
+  if(window.KQuick&&ON.quick){KQuick.update({started:true});ON.quick=false}
   const n=ON.players.length;ON.meta.n=n;ON.started=true;close();
   G=G&&G.n===n?G:{n,duraks:Array(n).fill(0),games:0,lastDurak:null};
   newDeal(n,ON.meta.opts,first==null?null:first);applyNames();lastPushed='';tKey='';U.sel=null;render();
@@ -1488,6 +1496,7 @@ function joinOnline(code,silent){
 let HB=null,lastSeen=0;
 function heartbeat(){clearInterval(HB);lastSeen=Date.now();HB=setInterval(()=>{if(!ON){clearInterval(HB);return}
   send({t:'ping'});
+  if(ON.quick&&ON.seat===0&&!ON.started){const n=ON.players.length;KQuick.update({n});if(n>=2&&!ON.q2)ON.q2=Date.now();if(n<2)ON.q2=0;if(n>=MAXP||(n>=2&&Date.now()-ON.q2>20000)){startOnlineGame(true);return}if(n===1){const r=KQuick.rival('durak',ON.code);if(r){leaveOnline();joinOnline(r);return}}}
   // kaybolan güncellemeler kendiliğinden toparlansın: mevcut durumu sürüm artırmadan tekrar gönder
   if(D&&ON.started&&!U.busy&&!APPLYING){try{send({t:'state',state:canon(),ver:ON.ver,from:ON.seat,re:1})}catch(e){}}
   if(ON.seat===0){for(const [s,c] of Object.entries(ON.conns||{})){if(c&&Date.now()-(ON.seen[s]||0)>15000&&!c._warned){c._warned=1;toast(`${(ON.players[s]||{}).name||'Bir oyuncu'} bağlantısı koptu, geri gelmesi bekleniyor`)}}}
@@ -1563,10 +1572,14 @@ async function applyRemote0(prev){if(prev&&prev.ended&&!D.ended)close();
   if(D.ended&&!prev.ended)gameEnd();
 }
 function onlineRematch(){if(!D||!D.ended)return;const first=D.durak!=null?(D.durak+1)%D.n:null;startOnlineGame(first)}
-function leaveOnline(){clearInterval(HB);try{CONN&&CONN.close()}catch(e){}try{ON&&ON.conns&&Object.values(ON.conns).forEach(c=>{try{c.close()}catch(e){}})}catch(e){}try{PEER&&PEER.destroy()}catch(e){}CONN=null;PEER=null;ON=null;NAMES=BOTS.slice()}
+function leaveOnline(){if(window.KQuick)KQuick.stop();clearInterval(HB);try{CONN&&CONN.close()}catch(e){}try{ON&&ON.conns&&Object.values(ON.conns).forEach(c=>{try{c.close()}catch(e){}})}catch(e){}try{PEER&&PEER.destroy()}catch(e){}CONN=null;PEER=null;ON=null;NAMES=BOTS.slice()}
 setTimeout(()=>{const h=(location.hash||'').slice(1).toUpperCase();if(/^[A-Z0-9]{5}$/.test(h)){close();joinOnline(h)}},0);
 addEventListener('hashchange',()=>{const h=(location.hash||'').slice(1).toUpperCase();if(/^[A-Z0-9]{5}$/.test(h)&&(!ON||ON.code!==h)){close();joinOnline(h)}});
 window.__dbg=()=>({busy:U.busy,applying:APPLYING,pending:PENDING,opt:myOptions().mode,seat:ON&&ON.seat,ver:ON&&ON.ver,players:ON&&ON.players});
+
+function quickOnline(){if(!(localStorage.getItem('durak_name')||'').trim()){toast('Önce adını yaz');try{$('nameIn').focus()}catch(e){}return}
+  leaveOnline();open('<h2>Masa aranıyor…</h2><p>Açık bir masa varsa oturtuyoruz, yoksa sana yeni masa açıyoruz.</p><div class="rowb"><button class="btn ghost" id="qC">Vazgeç</button></div>');$('qC').onclick=()=>{leaveOnline();showMenu()};
+  KQuick.find('durak',{onJoin:c=>joinOnline(c),onHost:()=>{hostOnline();if(ON){ON.quick=true;ON.q2=0;KQuick.advertise('durak',ON.code,{n:1,max:MAXP});showWaiting()}}})}
 
 /* menü */
 function open(h){$('sheet').innerHTML=h;$('ov').hidden=false;const b=$('sheet').querySelector('.btn');b&&b.focus()}
@@ -1610,14 +1623,14 @@ function showMenu(){
   <div><p class="lbl">Kart arkası</p><div class="swatch" id="sK">${LOOKS.back.filter(x=>owns('back',x[0])).map(x=>[x[0],x[2]]).map(([k,c])=>`<button data-v="${k}" aria-label="${k}" aria-pressed="${U.back===k}" style="background:${c}"></button>`).join('')}</div></div>
   </div></details>
   <div class="rowb"><button class="btn ${rewardWaiting()?'undo':'ghost'}" id="goShop">${rewardWaiting()?'🎁 Ödülün hazır · Mağaza':'Mağaza, görevler, görünüm'}</button></div>
-  <div class="sec"><p class="lbl">Arkadaşınla online (2 kişi, kayıt yok)</p><div class="rowb"><button class="btn" id="goOn">Masa kur, link gönder</button></div>
+  <div class="sec"><p class="lbl">Online</p><div class="rowb"><button class="btn pass" id="goQ">⚡ Hızlı oyun</button><button class="btn" id="goOn">Masa kur, link gönder</button></div>
   <div class="rowb"><input id="codeIn" maxlength="5" placeholder="Kod" aria-label="Masa kodu" style="flex:1 1 120px;height:48px;border-radius:12px;border:1px solid #c5ced6;padding:0 12px;font:700 18px/1 var(--body);letter-spacing:.2em;text-transform:uppercase"><button class="btn ghost" id="joinOn">Katıl</button></div></div>
   <div class="rowb"><button class="btn pass" id="go">${inGame?'Yeni el':'Masaya otur'}</button>${inGame?'<button class="btn ghost" id="back">Oyuna dön</button>':''}</div>
   <p class="muted">${coinTxt()} coin · ${isTest()?'∞':fmt(PF.gold||0)} gold · ${league(PF.rating)} · ${PF.games?`${PF.games} elde ${PF.duraks} kere durak oldun.`:'Rakiplerin Nuri, Rıza, Hamdi Abi, Cemil ve Kâzım.'}</p>`);
   $('nameIn').oninput=e=>{try{localStorage.setItem('durak_name',e.target.value.trim())}catch(x){};showCoins()};
   bindSeg('sN',v=>U.n=+v);bindSeg('sT',v=>U.transfer=v==='1');bindSeg('sS',v=>U.speed=+v);bindSeg('sB',v=>U.stake=+v);bindSeg('sD',v=>U.deck=+v);bindSeg('sR',v=>U.neighbors=v==='1');bindSeg('sC',v=>U.cheat=v==='1');bindSeg('sM',v=>U.timer=+v);bindSeg('sSh',v=>U.showTrump=v==='1');bindSeg('sDr',v=>U.draw=v==='1');bindSeg('sF5',v=>U.first5=v==='1');bindSeg('sO',v=>{U.sort=v;if(D)render()});bindSeg('sF',v=>U.felt=v);bindSeg('sK',v=>U.back=v);
   $('goShop').onclick=()=>showShop();
-  $('goOn').onclick=()=>showHostSetup();$('joinOn').onclick=()=>{const v=($('codeIn').value||'').trim().toUpperCase();if(/^[A-Z0-9]{5}$/.test(v))joinOnline(v);else toast('Kod 5 harf/rakam olmalı')};
+  $('goOn').onclick=()=>showHostSetup();$('goQ').onclick=()=>{if(typeof KQuick==='undefined'){toast('Hızlı oyun yüklenemedi');return}quickOnline()};$('joinOn').onclick=()=>{const v=($('codeIn').value||'').trim().toUpperCase();if(/^[A-Z0-9]{5}$/.test(v))joinOnline(v);else toast('Kod 5 harf/rakam olmalı')};
   $('go').onclick=()=>{close();leaveOnline();G=null;startGame()};if(inGame)$('back').onclick=()=>{close();run()};
 }
 $('bMenu').onclick=showMenu;

@@ -1,4 +1,4 @@
-<!doctype html><html><head><script src="i18n-page.js"></script><script src="../i18n.js"></script><script src="../account.js"></script><script src="../mqtt.min.js"></script><script src="../relay.js"></script><script src="../chat.js"></script><script>addEventListener("load",()=>window.KH&&KH.setPresence("101 Okey"))</script><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html><head><script src="i18n-page.js"></script><script src="../i18n.js"></script><script src="../account.js"></script><script src="../quick.js"></script><script src="../mqtt.min.js"></script><script src="../relay.js"></script><script src="../chat.js"></script><script>addEventListener("load",()=>window.KH&&KH.setPresence("101 Okey"))</script><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>101 Okey</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1136,7 +1136,7 @@ function showMenu(){
   <div><p class="lbl">Test · bir rakip hep çifte gitsin</p><div class="seg" id="segP" style="grid-template-columns:repeat(2,1fr)"><button data-v="0" aria-pressed="${!U.rig.pair}">Kapalı</button><button data-v="1" aria-pressed="${!!U.rig.pair}">Açık</button></div></div>
   </details>
   <div><p class="lbl">Rakiplerin hızı</p><div class="seg" id="segS" style="grid-template-columns:repeat(2,1fr)"><button data-v="1" aria-pressed="${U.speed===1}">Normal</button><button data-v="0.5" aria-pressed="${U.speed!==1}">Hızlı</button></div></div>
-  <div class="rowb"><button class="btn ghost" id="onl">👥 Arkadaşlarla online</button></div>
+  <div class="rowb"><button class="btn green" id="qk">⚡ Hızlı oyun</button><button class="btn ghost" id="onl">👥 Arkadaşlarla online</button></div>
   <div class="rowb"><button class="btn green" id="go">${inGame?'Yeni oyun':'Masaya otur'}</button>${inGame?'<button class="btn ghost" id="back">Oyuna dön</button>':''}</div>
   <p class="muted">${rec.g?`${rec.g} oyunda ${rec.w} galibiyet.`:'Yardımsızda okey ters dönmez, işlekler işaretlenmez.'}</p>`);
   $('segO').querySelectorAll('button').forEach(b=>b.onclick=()=>{U.rising=b.dataset.v==='1';try{localStorage.setItem('okey101_kat',U.rising?'1':'0')}catch(e){}$('segO').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b))});
@@ -1145,7 +1145,7 @@ function showMenu(){
   segBind('segR',v=>U.rig.all=v==='1');segBind('segK',v=>{U.rig.ok=+v;if(S&&!S.ended&&GM&&GM.started&&+v){const before=H().filter(wild).length;rigOkey(+v);const n=H().filter(wild).length-before;if(n>0){log(`Test: eline ${n} okey verildi`,true);render()}}});segBind('segP',v=>U.rig.pair=v==='1');
   $('segS').querySelectorAll('button').forEach(b=>b.onclick=()=>{U.speed=+b.dataset.v;try{localStorage.setItem('okey101_speed',U.speed)}catch(e){}$('segS').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b))});
   $('segN').querySelectorAll('button').forEach(b=>b.onclick=()=>{menuN=+b.dataset.n;$('segN').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b))});
-  $('onl').onclick=hostOnline;
+  $('onl').onclick=hostOnline;$('qk').onclick=quickPlay;
   $('go').onclick=()=>{leaveOnline();close();startGame(menuN);GM.started=true};if(inGame)$('back').onclick=close;
 }
 function showScore(){
@@ -1204,7 +1204,7 @@ function hostOnline(){leaveOnline();const code=Math.random().toString(36).slice(
   OK.peer.on('error',e=>{if(e.type==='network')toast('Sunucuya bağlanılamadı, tekrar deneniyor…')});
   OK.peer.on('connection',c=>c.on('data',d=>hostRecvK(c,d)));
   KChat.mount({side:'left',send:m=>{const n=OK.names[0]||myNameK();bcastK({...m,name:n})}});
-  OK.hb=setInterval(()=>{if(!OK.on)return;if(OK.started){sendAll();if(S&&!S.ended&&S.turn!==0&&!U.busy&&!isRemote(S.turn))run()}else bcastK({t:'lobby',names:OK.lob.map(l=>l.name)})},2500);
+  OK.hb=setInterval(()=>{if(!OK.on)return;if(OK.quick&&!OK.started){const n=OK.lob.length;KQuick.update({n});if(n>=2&&!OK.q2)OK.q2=Date.now();if(n<2)OK.q2=0;if(n>=4||(n>=2&&Date.now()-OK.q2>20000)){startOnline();return}if(n===1){const r=KQuick.rival('okey101',OK.code);if(r){leaveOnline();joinOnline(r);return}}}if(OK.started){sendAll();if(S&&!S.ended&&S.turn!==0&&!U.busy&&!isRemote(S.turn))run()}else bcastK({t:'lobby',names:OK.lob.map(l=>l.name)})},2500);
   onlineMenu()}
 function hostRecvK(c,d){if(!d||!d.uid)return;OK.seen[d.uid]=Date.now();
   let L=OK.lob.find(l=>l.uid===d.uid);
@@ -1227,7 +1227,7 @@ function onlineMenu(){
     open(`<h2>Masa kuruldu</h2><p class="muted">Linki arkadaşlarına gönder. En fazla 4 kişi; boş yerlere bilgisayar oturur.</p>
       <div class="rowb"><input id="lnkK" readonly value="${link}" style="flex:1 1 200px;min-height:46px;border-radius:12px;border:1px solid #c9c1b0;padding:0 10px;font:600 14px/1 inherit"><button class="btn green" id="cpK">Kopyala</button></div>
       ${window.KH?'<div class="rowb"><button class="btn ghost" id="khK">👥 Arkadaşlarını çağır</button></div>':''}
-      <p class="lbl">Masadakiler (${n}/4)</p><ul class="loglist">${[0,1,2,3].map(i=>`<li>${OK.lob[i]?escK(OK.lob[i].name)+(i===0?' · ev sahibi':''):'Bilgisayar oturacak'}</li>`).join('')}</ul>
+      ${OK.quick?'<p class="muted"><b>Oyuncu aranıyor…</b> Masa dolunca ya da 2. kişi geldikten 20 saniye sonra oyun kendiliğinden başlar.</p>':''}<p class="lbl">Masadakiler (${n}/4)</p><ul class="loglist">${[0,1,2,3].map(i=>`<li>${OK.lob[i]?escK(OK.lob[i].name)+(i===0?' · ev sahibi':''):'Bilgisayar oturacak'}</li>`).join('')}</ul>
       <div><p class="lbl">Kaç el?</p><div class="seg" id="segNK">${[3,5,9].map(x=>`<button data-n="${x}" aria-pressed="${x===menuN}">${x} el</button>`).join('')}</div></div>
       <div><p class="lbl">Oyun türü</p><div class="seg" id="segOK" style="grid-template-columns:repeat(2,1fr)"><button data-v="1" aria-pressed="${!!U.rising}">Katlamalı</button><button data-v="0" aria-pressed="${!U.rising}">Katlamasız</button></div></div>
       <div class="rowb"><button class="btn ghost" id="cancelK">Vazgeç</button><button class="btn green" id="startK" ${n<2?'disabled style="opacity:.5"':''}>${n<2?'Arkadaşın bekleniyor…':`Oyunu başlat (${n} kişi)`}</button></div>`);
@@ -1242,11 +1242,15 @@ function onlineMenu(){
     <div class="rowb"><button class="btn green" id="backK">Oyuna dön</button></div>${OK.host?'<div class="rowb"><button class="btn ghost" id="reK">Yeni oyun başlat</button></div>':''}
     <div class="rowb"><button class="btn ghost" id="leaveK">Masadan kalk</button></div>`);
   $('backK').onclick=close;if($('reK'))$('reK').onclick=()=>{close();startOnline()};$('leaveK').onclick=()=>{leaveOnline();showMenu()}}
-function startOnline(){OK.started=true;OK.human=[0,1,2,3].map(i=>!!OK.lob.find(l=>l.seat===i));let b=0;
+function startOnline(){if(window.KQuick)KQuick.update({started:true});OK.quick=false;OK.started=true;OK.human=[0,1,2,3].map(i=>!!OK.lob.find(l=>l.seat===i));let b=0;
   OK.names=[0,1,2,3].map(i=>{const l=OK.lob.find(x=>x.seat===i);return l?l.name:ORIG_N[1+(b++)]});setNames(viewNames(0));
   const rig=U.rig;U.rig={all:false,ok:0,pair:false};close();startGame(menuN);GM.started=true;U.rig=rig;sendAll()}
-function leaveOnline(){if(!OK.on)return;clearInterval(OK.hb);try{OK.peer.destroy()}catch(e){}Object.assign(OK,{on:false,host:false,started:false,conns:{},lob:[],conn:null,gver:-1,endShown:-1});
+function leaveOnline(){if(window.KQuick)KQuick.stop();if(!OK.on)return;OK.quick=false;clearInterval(OK.hb);try{OK.peer.destroy()}catch(e){}Object.assign(OK,{on:false,host:false,started:false,conns:{},lob:[],conn:null,gver:-1,endShown:-1});
   setNames(ORIG_N);NAMES[0]='Sen';window.KChat&&KChat.unmount();try{history.replaceState(null,'',location.pathname)}catch(e){}}
+function quickPlay(){if(!myNameK()){open(`<h2>⚡ Hızlı oyun</h2><p class="muted">Adını yaz, sana masa bulalım.</p><input id="nmK" maxlength="14" placeholder="Adını yaz" style="width:100%;min-height:46px;border-radius:12px;border:1px solid #c9c1b0;padding:0 12px;font:600 16px/1 inherit">
+    <div class="rowb"><button class="btn green" id="goK">Masa bul</button></div>`);$('goK').onclick=()=>{const v=$('nmK').value.trim().slice(0,14);if(!v)return;try{localStorage.setItem('okey101_name',v)}catch(e){}quickPlay()};return}
+  leaveOnline();open('<h2>Masa aranıyor…</h2><p class="muted">Açık bir masa varsa oturtuyoruz, yoksa sana yeni masa açıyoruz.</p><div class="rowb"><button class="btn ghost" id="qcK">Vazgeç</button></div>');$('qcK').onclick=()=>{leaveOnline();showMenu()};
+  KQuick.find('okey101',{onJoin:c=>joinOnline(c),onHost:()=>{hostOnline();OK.quick=true;OK.q2=0;KQuick.advertise('okey101',OK.code,{n:1,max:4});onlineMenu()}})}
 /* misafir */
 function joinOnline(code){if(!myNameK()){open(`<h2>101 Okey masasına davet</h2><p class="muted">Adını yaz ve masaya otur.</p><input id="nmK" maxlength="14" placeholder="Adını yaz" style="width:100%;min-height:46px;border-radius:12px;border:1px solid #c9c1b0;padding:0 12px;font:600 16px/1 inherit">
     <div class="rowb"><button class="btn green" id="goK">Masaya otur</button></div>`);$('goK').onclick=()=>{try{localStorage.setItem('okey101_name',($('nmK').value.trim()||'Misafir').slice(0,14))}catch(e){}joinOnline(code)};return}
