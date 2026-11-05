@@ -125,6 +125,7 @@ const BASE=[[[0,9],[1,9],[0,10],[1,10]],[[0,0],[1,0],[0,1],[1,1]],[[9,0],[10,0],
 const ST={get(k,d){try{const v=localStorage.getItem('kb_'+k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem('kb_'+k,JSON.stringify(v))}catch(e){}},del(k){try{localStorage.removeItem('kb_'+k)}catch(e){}}};
 const UID=ST.get('uid',null)||(()=>{const u=Math.random().toString(36).slice(2,10);ST.set('uid',u);return u})();
 const SPD=+(new URLSearchParams(location.search).get('spd')||1);
+let kEsli=ST.get('esli',false);
 let G=null,names=['Sen',...BOTN],me=0,mode='off',human=[true,false,false,false],ver=0,busy=false,shownRid=0,shownMid=0,botT=null,schedKey=null,nPlayers=ST.get('n',4),autoT=null;
 const myName=()=>(window.KH&&KH.name())||ST.get('name','')||'Sen';
 const pn=p=>p===me&&mode==='off'?'Sen':names[p];
@@ -147,7 +148,7 @@ function render(){if(!G)return;if(buildBoard.key!==G.act.join()+':'+me)buildBoar
   if(mine)G.moves.forEach(m=>$(`pw${me}${m.i}`)?.classList.add('can'));
   // oyuncular
   $('players').innerHTML=[0,1,2,3].filter(p=>G.act.includes(p)).map(p=>{const h=G.pawns[p].filter(d=>d>=40).length;
-    return `<div class="pl${G.turn===p&&G.phase!=='over'?' turn':''}" data-p="${p}"><span class="dot" style="background:${CV[p]}"></span><span class="n">${pn(p)}</span><span class="h">${h}/4</span></div>`}).join('');
+    return `<div class="pl${G.turn===p&&G.phase!=='over'?' turn':''}" data-p="${p}"><span class="dot" style="background:${CV[p]}"></span><span class="n">${pn(p)}${G.esli&&p!==me?`<small style="color:${p%2===me%2?'#86d49a':'#f0a196'};font-weight:500"> · ${p%2===me%2?'Ortak':'Rakip'}</small>`:''}</span><span class="h">${h}/4</span></div>`}).join('');
   const d=$('die');if(G.roll&&!d.classList.contains('spin'))d.dataset.v=G.roll;
   const canRoll=!busy&&G.phase==='roll'&&G.turn===me;d.disabled=!canRoll;d.classList.toggle('go',canRoll);
   d.style.outline=`3px solid ${CV[G.turn]}`;d.style.outlineOffset='3px';
@@ -194,15 +195,16 @@ function act(p,a){if(mode==='guest'){send({t:'act',uid:UID,a});return}
 $('die').onclick=()=>{if(!G||busy||G.phase!=='roll'||G.turn!==me)return;$('die').disabled=true;act(me,{k:'roll'})};
 function tapPawn(p,i){if(!G||busy||p!==me||G.turn!==me||G.phase!=='move')return;const k=G.moves.findIndex(m=>m.i===i);if(k<0){toast('Bu piyon oynayamaz');return}clearTimeout(autoT);act(me,{k:'move',m:k})}
 function newGame(){const n=mode==='off'?nPlayers:null;
-  if(mode==='off'){me=0;G=KB.newGame({n});names=[myName(),...BOTN];human=[true,false,false,false]}
+  if(mode==='off'){me=0;G=KB.newGame({n,esli:n===4&&kEsli});names=[myName(),...BOTN];human=[true,false,false,false]}
   shownRid=0;shownMid=0;showOver.done=false;ver++;bcastState();hideOv();buildBoard.key=null;sync()}
 /* ---------- paneller ---------- */
 function ov(k,h){$('ov').style.alignItems='';const s=$('sheet');s.dataset.k=k;s.innerHTML=h;$('ov').hidden=false;return s}
 function hideOv(){$('ov').hidden=true;$('sheet').dataset.k=''}
 function showOver(){if($('sheet').dataset.k==='over'&&!$('ov').hidden)return;ST.del('save');
-  if(!showOver.done){showOver.done=true;KSfx.play(G.winner===me?'win':'lose');const r=ST.get('rec',[0,0]);r[G.winner===me?0:1]++;window.KH&&KH.stat('Kızma Birader',G.winner===me);ST.set('rec',r)}
+  const iWon=G.esli?G.winner%2===me%2:G.winner===me;
+  if(!showOver.done){showOver.done=true;KSfx.play(iWon?'win':'lose');const r=ST.get('rec',[0,0]);r[iWon?0:1]++;window.KH&&KH.stat('Kızma Birader',iWon);ST.set('rec',r)}
   const ord=G.act.slice().sort((a,b)=>G.pawns[b].filter(d=>d>=40).length-G.pawns[a].filter(d=>d>=40).length||G.pawns[b].reduce((x,y)=>x+y,0)-G.pawns[a].reduce((x,y)=>x+y,0));
-  ov('over',`<h2>${G.winner===me?'Tebrikler, kazandın!':`${names[G.winner]} kazandı`}</h2>
+  ov('over',`<h2>${G.esli?(iWon?'Ortağınla kazandınız!':'Rakipler kazandı'):G.winner===me?'Tebrikler, kazandın!':`${names[G.winner]} kazandı`}</h2>
     <ul class="rank">${ord.map(p=>`<li><b style="color:${CV[p]}">●</b><b style="flex:1">${pn(p)}</b><span>Evde: ${G.pawns[p].filter(d=>d>=40).length}/4</span></li>`).join('')}</ul>
     <div class="row">${mode==='guest'?'<p>Ev sahibi yeni oyunu başlatabilir.</p>':`<button class="btn" id="oMenu">Menü</button><button class="btn pri" id="oNew">${mode==='host'?'Rövanş':'Yeni oyun'}</button>`}</div>`);
   if(mode!=='guest'){$('oNew').onclick=()=>{if(mode==='host')startOnline(true);else newGame()};$('oMenu').onclick=showMenu}}
@@ -216,6 +218,7 @@ function showMenu(){const sv=ST.get('save',null),rec=ST.get('rec',[0,0]);
   const s=ov('menu',`<h2>Kızma Birader</h2><p>Zar at, piyonlarını eve götür, rakibini kır. Bilgisayara karşı ya da linkle arkadaşlarınla.</p>
     <p class="lbl">Bilgisayar</p><div class="seg" id="mL">${[["kolay","Kolay"],["normal","Normal"]].map(([k,v])=>`<button data-l="${k}" class="${botLvl===k?'on':''}">${v}</button>`).join('')}</div>
     <p class="lbl">Kaç kişi?</p><div class="seg" id="mN">${[2,3,4].map(n=>`<button data-n="${n}" class="${nPlayers===n?'on':''}">${n} kişi</button>`).join('')}</div>
+    <p class="lbl">4 kişide</p><div class="seg" id="mE"><button data-e="0" class="${kEsli?'':'on'}">Herkes tek</button><button data-e="1" class="${kEsli?'on':''}">Eşli (2'ye 2)</button></div>
     <div class="row" style="flex-direction:column">
       ${G&&G.phase!=='over'&&mode!=='guest'?'<button class="btn pri" id="mBack">Oyuna dön</button>':''}
       ${!G&&sv?'<button class="btn pri" id="mLoad">Kaldığın yerden devam et</button>':''}
@@ -227,6 +230,7 @@ function showMenu(){const sv=ST.get('save',null),rec=ST.get('rec',[0,0]);
       <a class="btn" href="../" style="text-align:center;text-decoration:none">Salona dön</a></div>
     <p style="font-size:12.5px;margin-top:10px">Rekorun: ${rec[0]} galibiyet, ${rec[1]} mağlubiyet.</p>`);
   s.querySelectorAll('#mL button').forEach(b=>b.onclick=()=>{botLvl=b.dataset.l;try{localStorage.setItem('kh_botlvl',JSON.stringify(botLvl))}catch(e){};s.querySelectorAll('#mL button').forEach(x=>x.classList.toggle('on',x===b))});
+  s.querySelectorAll('#mE button').forEach(b=>b.onclick=()=>{kEsli=b.dataset.e==='1';ST.set('esli',kEsli);s.querySelectorAll('#mE button').forEach(x=>x.classList.toggle('on',x===b))});
   s.querySelectorAll('#mN button').forEach(b=>b.onclick=()=>{nPlayers=+b.dataset.n;ST.set('n',nPlayers);s.querySelectorAll('#mN button').forEach(x=>x.classList.toggle('on',x===b))});
   if($('mBack'))$('mBack').onclick=()=>{hideOv();after()};
   if($('mLoad'))$('mLoad').onclick=()=>{mode='off';me=0;G=sv.G;names=sv.names;names[0]=myName();human=[true,false,false,false];shownRid=G.rid;shownMid=G.mid;hideOv();sync()};
@@ -273,7 +277,7 @@ function showLobby(){if(mode!=='host'&&mode!=='guest')return;const L=mode==='hos
   if($('lGo'))$('lGo').onclick=()=>startOnline()}
 function startOnline(again){if(window.KQuick)KQuick.update({started:true});quick=false;started=true;me=0;const n=lob.length;const act=fill?[0,1,2,3]:KB.seatsFor(n);seatOf={};names=[null,null,null,null];human=[false,false,false,false];
   lob.forEach((x,k)=>{const s=fill?k:act[k];seatOf[x.uid]=s;names[s]=x.name;human[s]=true});let b=0;act.forEach(p=>{if(!names[p])names[p]=BOTN[b++]});
-  G=KB.newGame({seats:act});$('bChat').hidden=false;newGame()}
+  G=KB.newGame({seats:act,esli:act.length===4&&kEsli});$('bChat').hidden=false;newGame()}
 function joinRoom(code){leaveOnline();mode='guest';room=code;started=false;G=null;
   if(myName()==='Sen'){const s=ov('join',`<h2>Kızma Birader masasına davet</h2><p>Adını yaz ve masaya otur.</p><input class="name" id="jName" maxlength="14" placeholder="Adını yaz"><div class="row"><button class="btn pri" id="jGo">Masaya otur</button></div>`);
     $('jGo').onclick=()=>{ST.set('name',($('jName').value.trim()||'Misafir').slice(0,14));joinRoom(code)};return}

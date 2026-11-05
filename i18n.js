@@ -117,6 +117,11 @@ const T=[
 ['▶ Yarım kalan oyunun var','▶ Есть незаконченная игра','▶ You have an unfinished game'],
 ['🏆 Liderler','🏆 Лидеры','🏆 Leaderboard'],['En çok kazananlar. Test sürümü: istatistikler oyuncuların kendi cihazından gelir.','Больше всех побед. Тестовая версия: статистика приходит с устройств игроков.','Top winners. Test version: stats come from players\' own devices.'],['Hepsi','Все','All'],['sen','вы','you'],['Henüz kimse yok. Kayıt ol, oyna, listeye gir!','Пока никого нет. Зарегистрируйтесь, играйте и попадите в список!','Nobody here yet. Sign up, play and get on the list!'],
 ['Bilgisayar','Компьютер','Computer'],['Kolay','Лёгкий','Easy'],['Normal','Обычный','Normal'],
+['Adını yaz','Введите имя','Enter your name'],['Bu adla kayıtlı kimse yok','Никто не зарегистрирован под этим именем','No one is registered with that name'],['Bu ad alınmış. Başka bir ad seç ya da bu adla giriş yap.','Это имя занято. Выберите другое или войдите под ним.','That name is taken. Pick another or log in with it.'],
+['Adını ve resmini seç. Başka telefondan sadece adınla girersin; arkadaşların da seni adınla ekler.','Выберите имя и аватар. С другого телефона входите просто по имени; друзья добавляют вас тоже по имени.','Pick a name and avatar. On another phone you log in with just your name; friends add you by name too.'],
+['Şifre yok: adını bilen herkes bu hesaba girebilir. Gerçek hesaplar gelince isteyen şifre koyabilecek.','Без пароля: кто знает ваше имя, может войти в аккаунт. Когда появятся настоящие аккаунты, можно будет задать пароль.','No password: anyone who knows your name can log in. When real accounts arrive you\'ll be able to set one.'],
+['Kayıt olurken yazdığın adla gir.','Войдите под именем, которое указали при регистрации.','Log in with the name you signed up with.'],['Bu hesapta şifre var','У этого аккаунта есть пароль','This account has a password'],['Bu hesaba eskiden şifre konmuş, bir kereliğine şifreyi yaz.','Раньше для аккаунта был задан пароль — введите его один раз.','This account had a password set earlier; enter it once.'],
+['Hesap bilgisi bulunamadı, biraz sonra tekrar dene','Данные аккаунта не найдены, попробуйте чуть позже','Account data not found, try again shortly'],['Adıyla arkadaş ekle','Добавить друга по имени','Add a friend by name'],['Arkadaşının adı','Имя друга','Friend\'s name'],['Arkadaşının adını yaz','Введите имя друга','Enter your friend\'s name'],['Bu adla kimse bulunamadı','Никого с таким именем не найдено','Nobody found with that name'],['Bu senin kendi adın','Это ваше собственное имя','That\'s your own name'],['Ad kopyalandı','Имя скопировано','Name copied'],
 ['Kayıt ol','Регистрация','Sign up'],['Profilim','Мой профиль','My profile'],['Adın','Ваше имя','Your name'],['Resmin','Аватар','Avatar'],['Vazgeç','Отмена','Cancel'],['Kaydediliyor…','Сохраняем…','Saving…'],
 ['Adını ve resmini seç. Sana bir arkadaş kodu verilecek, arkadaşların seni bu kodla ekler.','Выберите имя и аватар. Вы получите код друга — по нему вас смогут добавить.','Pick a name and avatar. You\'ll get a friend code that friends use to add you.'],
 ['Bir arkadaşın seni davet etti.','Вас пригласил друг.','A friend invited you.'],[' Kayıt olunca otomatik arkadaş olursunuz.',' После регистрации вы автоматически станете друзьями.',' Once you sign up you\'ll be friends automatically.'],
@@ -146,6 +151,7 @@ const SU={maça:['пики','spades'],kupa:['червы','hearts'],karo:['буб
 const J=I-1;
 const card=s=>s.replace(/\b(maça|kupa|karo|sinek)\s+(vale|kız|papaz|as|\d+)\b/g,(m,a,b)=>(RK[b]?RK[b][J]:b)+' '+SU[a][J]).replace(/\((koz)\)/g,J?'(trump)':'(козырь)');
 const R=L==='ru'?[
+[/^Giriş adın: (.+)$/,'Имя для входа: $1'],
 [/^(\d)-(\d) kişi$/,'$1–$2 игрока'],[/^(\d) kişi$/,'$1 игрока'],[/^Linkle online (\d)-(\d) kişi$/,'Онлайн по ссылке, $1–$2 игрока'],
 [/^● (\d+) masa oyuncu bekliyor$/,'● столов ждут игроков: $1'],
 [/^Arkadaş kodun: (.+)$/,'Ваш код друга: $1'],[/^Arkadaşların \((\d+)\)$/,'Друзья ($1)'],
@@ -162,6 +168,7 @@ const R=L==='ru'?[
 [/^(.+) hepsini kesti, kartlar çıktı$/,'$1 отбился, бито'],[/^Hepsini kestin, kartlar çıktı$/,'Вы отбились, бито'],[/^Yeni el\. Koz (.+)\. (.*)$/,(m,a,b)=>'Новая раздача. Козырь '+(SU[a]?SU[a][0]:a)+'.'],[/^Pes ettin$/,'Вы сдались'],
 [/^(sana|.+) aktardı$/,'перевёл'],[/^(.+) hileyi yakaladı$/,'$1 поймал шулера'],[/^(.+) hileyi yakaladı: (.+)$/,'$1 поймал шулера'],[/^Saldırı sende$/,'Ваша атака'],[/^Aktardın$/,'Переведено'],[/^Sana aktardı$/,'Переведено на вас'],[/^Kurtuldun$/,'Вы выбрались'],[/^Berabere$/,'Ничья'],
 ]:[
+[/^Giriş adın: (.+)$/,'Login name: $1'],
 [/^(\d)-(\d) kişi$/,'$1–$2 players'],[/^(\d) kişi$/,'$1 players'],[/^Linkle online (\d)-(\d) kişi$/,'Online by link, $1–$2 players'],
 [/^● (\d+) masa oyuncu bekliyor$/,'● $1 tables waiting for players'],
 [/^Arkadaş kodun: (.+)$/,'Your friend code: $1'],[/^Arkadaşların \((\d+)\)$/,'Friends ($1)'],

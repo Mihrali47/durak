@@ -23,20 +23,24 @@ async function loadKey(){const k=LS.get('kh_key',null);if(!k)return;try{KEY=awai
 async function keepKey(k,salt){KEY=k;SALT=salt;LS.set('kh_key',{raw:b64(await crypto.subtle.exportKey('raw',k)),salt})}
 async function setPassword(pw){if(String(pw||'').length<6)return 'Şifre en az 6 karakter olmalı';const salt=crypto.getRandomValues(new Uint8Array(16));
   await keepKey(await deriveKey(pw,salt),b64(salt));P.pw=1;LS.set('kh_profile',P);await upload();return null}
-async function upload(){if(!P||!KEY)return;const iv=crypto.getRandomValues(new Uint8Array(12));
+const nkey=n=>encodeURIComponent(String(n).trim().toLocaleLowerCase('tr').replace(/\s+/g,' '));
+async function upload(){if(!P)return;pub('acct2/'+P.uid,{P,F,S:SS,at:Date.now()},true);if(!KEY)return;const iv=crypto.getRandomValues(new Uint8Array(12));
   const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},KEY,new TextEncoder().encode(JSON.stringify({P,F,S:SS,at:Date.now()})));
   pub('acct/'+P.uid,{v:1,salt:SALT,iv:b64(iv),ct:b64(ct),at:Date.now()},true)}
 function uploadSoon(){clearTimeout(upT);upT=setTimeout(upload,1500)}
 async function openBlob(a,k){const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:ub64(a.iv)},k,ub64(a.ct));return JSON.parse(new TextDecoder().decode(pt))}
-async function login(txt,pw){txt=String(txt||'').trim().replace(/^@/,'');const m=txt.match(/^(.{2,14})#(\d{4})$/);if(!m)return 'Kodunu Ad#1234 şeklinde yaz';
-  const d=await lookup('name/'+key(m[1],m[2]));if(!d||!d.uid)return 'Bu kodla kimse bulunamadı';
-  const a=await lookup('acct/'+d.uid,4500);if(!a||!a.ct)return 'Bu hesap için şifre belirlenmemiş';
+async function login(txt,pw){txt=String(txt||'').trim().replace(/^@/,'');if(txt.length<2)return 'Adını yaz';const m=txt.match(/^(.{2,14})#(\d{4})$/);
+  const d=m?await lookup('name/'+key(m[1],m[2])):await lookup('uname/'+nkey(txt));if(!d||!d.uid)return 'Bu adla kayıtlı kimse yok';
+  const pl=await lookup('acct2/'+d.uid,4500);if(pl&&pl.P){restore(pl.P,pl.F,pl.S);return null}
+  const a=await lookup('acct/'+d.uid,4500);if(!a||!a.ct)return 'Hesap bilgisi bulunamadı, biraz sonra tekrar dene';if(!pw)return 'NEEDPW';
   let k,o;try{k=await deriveKey(String(pw||''),ub64(a.salt));o=await openBlob(a,k)}catch(e){return 'Şifre yanlış'}
-  P=o.P;F=o.F||{};SS=mergeStats(LS.get('kh_stats',{}),o.S||{});LS.set('kh_stats',SS);REQ={};OUT={};LS.set('kh_profile',P);LS.set('kh_friends',F);LS.set('kh_reqs',REQ);LS.set('kh_out',OUT);await keepKey(k,a.salt);
-  try{localStorage.setItem('durak_name',P.name);localStorage.setItem('king_name',JSON.stringify(P.name));localStorage.setItem('kb_name',JSON.stringify(P.name))}catch(e){}
-  clients.forEach(c=>{if(c.connected)initProfile(c)});connect();changed();return null}
+  await keepKey(k,a.salt);restore(o.P,o.F,o.S);return null}
+function restore(p,f,st){P=p;F=f||{};SS=mergeStats(LS.get('kh_stats',{}),st||{});LS.set('kh_stats',SS);REQ={};OUT={};LS.set('kh_profile',P);LS.set('kh_friends',F);LS.set('kh_reqs',REQ);LS.set('kh_out',OUT);
+  try{localStorage.setItem('durak_name',P.name);for(const k of['king_name','kb_name','tv_name','batak_name','pisti4_name'])localStorage.setItem(k,JSON.stringify(P.name));localStorage.setItem('pisti_name',P.name);localStorage.setItem('okey101_name',P.name)}catch(e){}
+  clients.forEach(c=>{if(c.connected)initProfile(c)});connect();changed()}
 // diğer cihazda eklenen arkadaşları birleştir
-async function mergeRemote(){if(!P||!KEY)return;const a=await lookup('acct/'+P.uid,4000);if(!a||!a.ct)return upload();
+async function mergeRemote(){if(!P)return;const pl=await lookup('acct2/'+P.uid,4000);if(pl&&pl.F){let add=0;if(pl.S){SS=mergeStats(SS,pl.S);LS.set('kh_stats',SS)}for(const u in pl.F)if(!F[u]){F[u]=pl.F[u];add++;sub('pres/'+u)}if(add){LS.set('kh_friends',F);changed()}}
+  if(!KEY)return upload();const a=await lookup('acct/'+P.uid,4000);if(!a||!a.ct)return upload();
   try{const o=await openBlob(a,KEY);let add=0;if(o.S){SS=mergeStats(SS,o.S);LS.set('kh_stats',SS)}for(const u in (o.F||{}))if(!F[u]){F[u]=o.F[u];add++;sub('pres/'+u)}if(add){LS.set('kh_friends',F);changed()}}catch(e){}upload()}
 function logout(){if(P)pub('pres/'+P.uid,{on:false,at:Date.now()},true);['kh_profile','kh_friends','kh_reqs','kh_out','kh_key','kh_stats'].forEach(k=>{try{localStorage.removeItem(k)}catch(e){}});
   setTimeout(()=>location.reload(),300)}
@@ -56,7 +60,7 @@ function connect(){if(started)return;started=true;loadMqtt(()=>{
     c.on('message',(t,b)=>onMsg(t,b.toString()));c.on('error',()=>{})}
   setInterval(()=>{if(P)pub('pres/'+P.uid,presBody(),true)},60000);
   addEventListener('pagehide',()=>{if(P)pub('pres/'+P.uid,{on:false,at:Date.now()},true)})})}
-function initProfile(c){if(!initProfile.m){initProfile.m=1;loadKey().then(mergeRemote);setTimeout(pubLB,3000)}c.subscribe([NS+'in/'+P.uid+'/#',...Object.keys(F).map(u=>NS+'pres/'+u)],{qos:1});
+function initProfile(c){if(!initProfile.m){initProfile.m=1;loadKey().then(mergeRemote);setTimeout(pubLB,3000);setTimeout(claimName,2000)}c.subscribe([NS+'in/'+P.uid+'/#',...Object.keys(F).map(u=>NS+'pres/'+u)],{qos:1});
   pubOne(c,'pres/'+P.uid,presBody(),true);pubOne(c,'name/'+key(P.name,P.tag),{...me(),at:Date.now()},true)}
 const presBody=()=>({on:true,at:Date.now(),game:presInfo.game||null,name:P.name,tag:P.tag,av:P.av});
 function pubOne(c,path,obj,retain){try{c.publish(NS+path,obj==null?'':JSON.stringify(obj),{qos:1,retain:!!retain})}catch(e){}}
@@ -92,22 +96,23 @@ function accept(f,silent){F[f.uid]={uid:f.uid,name:f.name,tag:f.tag,av:f.av,sinc
   if(!silent)note(`<b>${esc(code(f))}</b> <span>artık arkadaşın.</span>`);else note(`<b>${esc(code(f))}</b> <span>artık arkadaşın.</span>`)}
 function decline(u){delete REQ[u];save();changed()}
 function removeFriend(u){if(!F[u])return;send(u,'rem');delete F[u];save();unsub('pres/'+u);changed()}
-async function addByCode(txt){txt=String(txt||'').trim().replace(/^@/,'');const m=txt.match(/^(.{2,14})#(\d{4})$/);
-  if(!m)return 'Kodu Ad#1234 şeklinde yaz';if(key(m[1],m[2])===key(P.name,P.tag))return 'Bu senin kendi kodun';
-  const d=await lookup('name/'+key(m[1],m[2]));if(!d||!d.uid)return 'Bu kodla kimse bulunamadı';
+async function addByCode(txt){txt=String(txt||'').trim().replace(/^@/,'');const m=txt.match(/^(.{2,14})#(\d{4})$/);if(txt.length<2)return 'Arkadaşının adını yaz';
+  const d=m?await lookup('name/'+key(m[1],m[2])):await lookup('uname/'+nkey(txt));if(!d||!d.uid)return 'Bu adla kimse bulunamadı';if(d.uid===P.uid)return 'Bu senin kendi adın';
   if(F[d.uid])return 'Zaten arkadaşsınız';
   if(REQ[d.uid]){accept(d);return null}
   OUT[d.uid]={uid:d.uid,name:d.name,tag:d.tag,av:d.av,at:Date.now()};save();send(d.uid,'req');changed();return null}
 function online(u){const p=pres[u];return !!(p&&p.on&&Date.now()-(p.at||0)<150000)}
 function inviteLink(){return (location.origin+location.pathname).replace(/(durak\/)(?:[a-z0-9]+\/)?(?:index\.html)?$/,'$1')+'?arkadas='+P.uid+'.'+P.tok}
 
+async function claimName(){if(!P)return;const k=nkey(P.name),d=await lookup('uname/'+k,2500);if(!d||d.uid===P.uid)pub('uname/'+k,{uid:P.uid,name:P.name,tag:P.tag,av:P.av,at:Date.now()},true)}
 /* ---------- kayıt ---------- */
-async function register(name,av,pw){if(String(pw||'').length<6)return 'Şifre en az 6 karakter olmalı';name=String(name||'').trim().replace(/[#<>+\/]/g,'').slice(0,14);if(name.length<2)return 'Ad en az 2 harf olmalı';
+async function register(name,av){name=String(name||'').trim().replace(/[#<>+\/]/g,'').slice(0,14);if(name.length<2)return 'Ad en az 2 harf olmalı';
+  const taken=await lookup('uname/'+nkey(name),2500);if(taken&&taken.uid)return 'Bu ad alınmış. Başka bir ad seç ya da bu adla giriş yap.';
   let tag,tries=0;
   do{tag=String(1000+(crypto.getRandomValues(new Uint16Array(1))[0]%9000));const d=await lookup('name/'+key(name,tag),2000);if(!d)break}while(++tries<4);
   P={uid:rid(12),name,tag,av:av||AV[0],tok:rid(8),created:Date.now()};LS.set('kh_profile',P);
   try{['durak_name'].forEach(k=>{if(!localStorage.getItem(k))localStorage.setItem(k,name)});localStorage.setItem('king_name',JSON.stringify(name))}catch(e){}
-  clients.forEach(c=>{if(c.connected)initProfile(c)});connect();await setPassword(pw);afterRegister();changed();return null}
+  pub('uname/'+nkey(name),{uid:P.uid,name,tag:P.tag,av:P.av,at:Date.now()},true);clients.forEach(c=>{if(c.connected)initProfile(c)});connect();await upload();afterRegister();changed();return null}
 function afterRegister(){const r=LS.get('kh_pendingref',null);if(!r||!P)return;LS.set('kh_pendingref',null);
   const [u,tok]=String(r).split('.');if(!u||u===P.uid||F[u])return;OUT[u]={uid:u,name:'…',tag:'',at:Date.now()};save();
   const go=()=>send(u,'req',{tok});if(clients.some(c=>c.connected))go();else setTimeout(go,2500)}
@@ -172,50 +177,48 @@ function note(html,btns=[],ms=7000){style();document.querySelector('.kh-note')?.
 function openRegister(why,then){let av=AV[(Math.random()*AV.length)|0];
   const ref=LS.get('kh_pendingref',null);
   const s=sheet('reg',`<h2>Kayıt ol</h2>${why==='invited'&&ref?'<p><b>Bir arkadaşın seni davet etti.</b> Kayıt olunca otomatik arkadaş olursunuz.</p>':''}
-    <p>Adını ve resmini seç. Sana bir arkadaş kodu verilecek, arkadaşların seni bu kodla ekler.</p>
+    <p>Adını ve resmini seç. Başka telefondan sadece adınla girersin; arkadaşların da seni adınla ekler.</p>
     <div class="kh-l">Adın</div><input class="kh-in" id="khName" maxlength="14" placeholder="Adını yaz" value="${esc((()=>{try{return localStorage.getItem('durak_name')||JSON.parse(localStorage.getItem('king_name')||'""')||''}catch(e){return ''}})())}">
-    <div class="kh-l">Şifren</div><input class="kh-in" id="khPw" type="password" minlength="6" maxlength="40" placeholder="En az 6 karakter" autocomplete="new-password">
     <div class="kh-l">Resmin</div><div class="kh-avs">${AV.map(a=>`<button data-a="${a}" class="${a===av?'on':''}">${a}</button>`).join('')}</div>
     <div class="kh-err" id="khErr"></div>
     <div class="kh-row"><button class="kh-b" id="khNo">Vazgeç</button><button class="kh-b p" id="khGo">Kayıt ol</button></div>
     <p style="text-align:center;margin-top:12px"><a href="#" id="khToLogin" style="color:#2f6b4f;font-weight:600">Zaten üye misin? Giriş yap</a></p>
-    <p style="font-size:12.5px;margin-top:8px;color:#7a7365">Test sürümü: hesabın şifreli olarak saklanır, başka telefondan arkadaş kodun ve şifrenle girebilirsin.</p>`);
+    <p style="font-size:12.5px;margin-top:8px;color:#7a7365">Şifre yok: adını bilen herkes bu hesaba girebilir. Gerçek hesaplar gelince isteyen şifre koyabilecek.</p>`);
   s.querySelector('#khToLogin').onclick=e=>{e.preventDefault();openLogin(then)};
   s.querySelectorAll('.kh-avs button').forEach(b=>b.onclick=()=>{av=b.dataset.a;s.querySelectorAll('.kh-avs button').forEach(x=>x.classList.toggle('on',x===b))});
   s.querySelector('#khNo').onclick=closeSheet;
-  s.querySelector('#khGo').onclick=async e=>{e.target.disabled=true;s.querySelector('#khErr').textContent='Kaydediliyor…';const err=await register(s.querySelector('#khName').value,av,s.querySelector('#khPw').value);e.target.disabled=false;
-    if(err){s.querySelector('#khErr').textContent=err;return}closeSheet();note(`<span>Hoş geldin,</span> <b>${esc(code(P))}</b>`);if(then)then();else openProfile()}}
-function openLogin(then){const s=sheet('login',`<h2>Giriş yap</h2><p>Arkadaş kodun ve şifrenle hesabına gir. Kodun profilinde yazar (ör. Ali#4821).</p>
-    <div class="kh-l">Arkadaş kodun</div><input class="kh-in" id="khLc" placeholder="Ad#1234" autocomplete="username">
-    <div class="kh-l">Şifren</div><input class="kh-in" id="khLp" type="password" placeholder="Şifren" autocomplete="current-password">
+  s.querySelector('#khGo').onclick=async e=>{e.target.disabled=true;s.querySelector('#khErr').textContent='Kaydediliyor…';const err=await register(s.querySelector('#khName').value,av);e.target.disabled=false;
+    if(err){s.querySelector('#khErr').textContent=err;return}closeSheet();note(`<span>Hoş geldin,</span> <b>${esc(P.name)}</b>`);if(then)then();else openProfile()}}
+function openLogin(then){const s=sheet('login',`<h2>Giriş yap</h2><p>Kayıt olurken yazdığın adla gir.</p>
+    <div class="kh-l">Adın</div><input class="kh-in" id="khLc" placeholder="Adını yaz" autocomplete="username">
+    <div id="khPwBox" hidden><div class="kh-l">Şifren</div><input class="kh-in" id="khLp" type="password" placeholder="Bu hesapta şifre var" autocomplete="current-password"></div>
     <div class="kh-err" id="khErr"></div>
     <div class="kh-row"><button class="kh-b" id="khNo">Vazgeç</button><button class="kh-b p" id="khGo">Giriş yap</button></div>
     <p style="text-align:center;margin-top:12px"><a href="#" id="khToReg" style="color:#2f6b4f;font-weight:600">Hesabın yok mu? Kayıt ol</a></p>`);
   s.querySelector('#khNo').onclick=closeSheet;s.querySelector('#khToReg').onclick=e=>{e.preventDefault();openRegister(null,then)};
   s.querySelector('#khGo').onclick=async e=>{e.target.disabled=true;s.querySelector('#khErr').textContent='Giriş yapılıyor…';
     const err=await login(s.querySelector('#khLc').value,s.querySelector('#khLp').value);e.target.disabled=false;
-    if(err){s.querySelector('#khErr').textContent=err;return}closeSheet();note(`<span>Hoş geldin,</span> <b>${esc(code(P))}</b>`);if(then)then();else openProfile()}}
+    if(err==='NEEDPW'){s.querySelector('#khPwBox').hidden=false;s.querySelector('#khErr').textContent='Bu hesaba eskiden şifre konmuş, bir kereliğine şifreyi yaz.';return}
+    if(err){s.querySelector('#khErr').textContent=err;return}closeSheet();note(`<span>Hoş geldin,</span> <b>${esc(P.name)}</b>`);if(then)then();else openProfile()}}
 function openProfile(refresh){if(!P)return openRegister();
   if(refresh&&!document.querySelector('.kh-sheet[data-k="prof"]'))return;
   const fr=Object.values(F).sort((a,b)=>online(b.uid)-online(a.uid)||a.name.localeCompare(b.name,'tr'));
   const rq=Object.values(REQ),out=Object.values(OUT);
   const keep=document.getElementById('khCode')?.value||'';
   const s=sheet('prof',`<h2>Profilim</h2>
-    <div class="kh-me"><span class="a">${esc(P.av)}</span><div style="flex:1;min-width:0"><b>${esc(P.name)}</b><small>#${esc(P.tag)}</small><br><small>Arkadaş kodun: ${esc(code(P))}</small></div><button class="kh-b s" id="khCp">Kopyala</button></div>
+    <div class="kh-me"><span class="a">${esc(P.av)}</span><div style="flex:1;min-width:0"><b>${esc(P.name)}</b><small>#${esc(P.tag)}</small><br><small>Giriş adın: ${esc(P.name)}</small></div><button class="kh-b s" id="khCp">Kopyala</button></div>
     <div class="kh-row"><button class="kh-b p" id="khInv">Arkadaş davet et</button><button class="kh-b" id="khLb">🏆 Liderler</button></div>
     ${Object.keys(SS).length?`<div class="kh-l">İstatistiklerim</div><table style="width:100%;border-collapse:collapse;font-size:13.5px">${Object.entries(SS).sort((a,b)=>b[1].g-a[1].g).map(([k,v])=>`<tr style="border-bottom:1px solid #e6dfcf"><td style="padding:5px 2px">${esc(k)}</td><td style="text-align:right">${v.g} <span>oyun</span></td><td style="text-align:right">${v.w} <span>galibiyet</span></td><td style="text-align:right;color:#2f6b4f">%${v.g?Math.round(v.w*100/v.g):0}</td></tr>`).join('')}</table>`:''}
-    <div class="kh-l">Kodla arkadaş ekle</div>
-    <div class="kh-row" style="margin-top:0"><input class="kh-in" id="khCode" placeholder="Ad#1234" value="${esc(keep)}"><button class="kh-b p s" id="khAdd">Ekle</button></div><div class="kh-err" id="khErr"></div>
+    <div class="kh-l">Adıyla arkadaş ekle</div>
+    <div class="kh-row" style="margin-top:0"><input class="kh-in" id="khCode" placeholder="Arkadaşının adı" value="${esc(keep)}"><button class="kh-b p s" id="khAdd">Ekle</button></div><div class="kh-err" id="khErr"></div>
     ${rq.length?`<div class="kh-l">Arkadaşlık istekleri</div>${rq.map(f=>`<div class="kh-li"><span class="a">${esc(f.av||'🙂')}</span><div class="t"><b>${esc(code(f))}</b></div><button class="kh-b s p" data-ok="${esc(f.uid)}">Kabul et</button><button class="kh-b s" data-no="${esc(f.uid)}">Reddet</button></div>`).join('')}`:''}
     <div class="kh-l">Arkadaşların (${fr.length})</div>
     ${fr.length?fr.map(f=>{const p=pres[f.uid],on=online(f.uid);return `<div class="kh-li"><span class="a">${esc(f.av||'🙂')}<i class="${on?'on':''}"></i></span><div class="t"><b>${esc(f.name)}</b><small>${on?(p.game?`<span>Oynuyor:</span> <span>${esc(p.game)}</span>`:'<span>Çevrimiçi</span>'):'<span>Çevrimdışı</span>'}</small></div><button class="kh-b s r" data-rm="${esc(f.uid)}">Sil</button></div>`}).join(''):'<p>Henüz arkadaşın yok. Davet linkini gönder ya da kodla ekle.</p>'}
     ${out.length?`<div class="kh-l">Gönderilen istekler</div>${out.map(f=>`<div class="kh-li"><span class="a">${esc(f.av||'⏳')}</span><div class="t"><b>${esc(f.tag?code(f):'Davet linki')}</b><small>Cevap bekleniyor</small></div></div>`).join('')}`:''}
-    ${P.pw?'':`<div class="kh-l">Şifre belirle</div><p style="font-size:13px">Başka telefondan girebilmek için şifre koy.</p><div class="kh-row" style="margin-top:0"><input class="kh-in" id="khNp" type="password" placeholder="En az 6 karakter" autocomplete="new-password"><button class="kh-b p s" id="khNpGo">Kaydet</button></div><div class="kh-err" id="khNpErr"></div>`}
     <div class="kh-row"><button class="kh-b" id="khOut">Çıkış yap</button><button class="kh-b" id="khClose">Kapat</button></div>`);
   s.querySelector('#khClose').onclick=closeSheet;
-  s.querySelector('#khOut').onclick=e=>{if(!P.pw&&!e.target.dataset.sure){e.target.dataset.sure=1;e.target.textContent='Şifren yok, profil silinir. Emin misin?';return}logout()};
-  if(s.querySelector('#khNpGo'))s.querySelector('#khNpGo').onclick=async()=>{const err=await setPassword(s.querySelector('#khNp').value);if(err){s.querySelector('#khNpErr').textContent=err;return}note('<span>Şifre kaydedildi.</span>');openProfile()};
-  s.querySelector('#khCp').onclick=()=>copy(code(P),'Kod kopyalandı');
+  s.querySelector('#khOut').onclick=()=>logout();
+  s.querySelector('#khCp').onclick=()=>copy(P.name,'Ad kopyalandı');
   s.querySelector('#khInv').onclick=()=>share(inviteLink());s.querySelector('#khLb').onclick=()=>openLeaders();
   s.querySelector('#khAdd').onclick=async e=>{const b=e.target;b.disabled=true;s.querySelector('#khErr').textContent='Aranıyor…';const err=await addByCode(s.querySelector('#khCode').value);b.disabled=false;
     const el=document.getElementById('khErr');if(el)el.textContent=err||'';if(!err){const i=document.getElementById('khCode');if(i)i.value='';note('<span>İstek gönderildi.</span>')}};

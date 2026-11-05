@@ -4,16 +4,17 @@
 const START=[30,0,10,20];
 const absPos=(p,d)=>(START[p]+d)%40;
 function seatsFor(n){return n===2?[0,2]:n===3?[0,1,2]:[0,1,2,3]}
-function newGame(o={}){const act=o.seats||seatsFor(o.n||4);
-  return {act,pawns:[0,1,2,3].map(p=>act.includes(p)?[-1,-1,-1,-1]:null),turn:act[0],phase:'roll',roll:null,moves:[],tries:0,winner:null,last:null,rid:0,mid:0,seed:o.seed||((Math.random()*1e9)|0),rolls:0}}
+function newGame(o={}){const act=o.seats||seatsFor(o.n||4);const esli=!!o.esli&&act.length===4;
+  return {act,pawns:[0,1,2,3].map(p=>act.includes(p)?[-1,-1,-1,-1]:null),turn:act[0],phase:'roll',roll:null,moves:[],tries:0,winner:null,last:null,rid:0,mid:0,esli,seed:o.seed||((Math.random()*1e9)|0),rolls:0}}
 function occupant(G,abs){for(const p of G.act)for(let i=0;i<4;i++){const d=G.pawns[p][i];if(d>=0&&d<40&&absPos(p,d)===abs)return {p,i}}return null}
 function stuck(P,d){for(let x=d+1;x<=43;x++)if(!P.includes(x))return false;return true}
 function movableOnBoard(G,p){const P=G.pawns[p];return P.some(d=>d>=0&&d<40)||P.some(d=>d>=40&&!stuck(P,d))}
-function legal(G,p,r){const P=G.pawns[p],mv=[];const so=occupant(G,START[p]),own=so&&so.p===p,inBase=P.filter(d=>d===-1).length;
+const friend=(G,a,b)=>a===b||(G.esli&&a%2===b%2);
+function legal(G,p,r){const P=G.pawns[p],mv=[];const so=occupant(G,START[p]),own=so&&friend(G,so.p,p),inBase=P.filter(d=>d===-1).length;
   if(r===6&&inBase>0&&!own){const i=P.indexOf(-1);return [{i,from:-1,to:0,hit:so||null}]}
   for(let i=0;i<4;i++){const d=P[i];if(d<0)continue;const nd=d+r;if(nd>43)continue;
     if(nd>=40){let bl=false;for(let x=Math.max(40,d+1);x<=nd;x++)if(P.includes(x)){bl=true;break}if(!bl)mv.push({i,from:d,to:nd,hit:null});continue}
-    const o=occupant(G,absPos(p,nd));if(o&&o.p===p)continue;mv.push({i,from:d,to:nd,hit:o||null})}
+    const o=occupant(G,absPos(p,nd));if(o&&friend(G,o.p,p))continue;mv.push({i,from:d,to:nd,hit:o||null})}
   if(own&&inBase>0){const f=mv.filter(m=>m.from===0);if(f.length)return f}   // başlangıç karesini boşaltmak zorunlu
   return mv}
 function rnd(G){G.rolls++;let s=(G.seed+G.rolls*2654435761)>>>0;s^=s<<13;s^=s>>>17;s^=s<<5;return 1+((s>>>0)%6)}
@@ -24,10 +25,10 @@ function roll(G,p,force){if(G.phase!=='roll')return 'Şimdi zar atılmaz';if(p!=
   G.tries++;const max=movableOnBoard(G,p)?1:3;
   if(G.tries>=max)pass(G);else G.phase='roll';
   return null}
-function pass(G){G.tries=0;G.phase='roll';const a=G.act,i=a.indexOf(G.turn);G.turn=a[(i+1)%a.length];G.moves=[]}
+function pass(G){G.tries=0;G.phase='roll';const a=G.act;let i=a.indexOf(G.turn);for(let k=0;k<4;k++){i=(i+1)%a.length;if(!(G.esli&&G.pawns[a[i]].every(d=>d>=40)))break}G.turn=a[i];G.moves=[]}
 function move(G,p,k){if(G.phase!=='move')return 'Önce zar at';if(p!==G.turn)return 'Sıra sende değil';const m=G.moves[k];if(!m)return 'Bu piyon oynayamaz';
   if(m.hit)G.pawns[m.hit.p][m.hit.i]=-1;G.pawns[p][m.i]=m.to;G.mid++;G.lastRid=G.rid;G.last={p,...m,mid:G.mid};G.moves=[];
-  if(G.pawns[p].every(d=>d>=40)){G.winner=p;G.phase='over';return null}
+  if(G.pawns[p].every(d=>d>=40)&&(!G.esli||G.pawns[(p+2)%4].every(d=>d>=40))){G.winner=p;G.phase='over';return null}
   if(G.roll===6){G.tries=0;G.phase='roll'}else pass(G);
   return null}
 /* bot */

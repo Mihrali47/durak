@@ -2,6 +2,7 @@
 (()=>{
 const BN={Nuri:'Нури','Rıza':'Рыза',Hamdi:'Хамди',Sen:'Вы'};const nm=(n,j)=>j?(n==='Sen'?'You':n):(BN[n]||n);
 window.I18N_EXTRA=[
+['4 kişide','При 4 игроках','With 4 players'],['Herkes tek','Каждый за себя','Free for all'],['Eşli (2\'ye 2)','Парами (2 на 2)','Teams (2 vs 2)'],[' · Ortak',' · партнёр',' · partner'],[' · Rakip',' · соперник',' · rival'],['Ortağınla kazandınız!','Вы с партнёром победили!','You and your partner won!'],['Rakipler kazandı','Победили соперники','The rivals won'],
 ['Kızma Birader','Не сердись','Ludo'],['Menü','Меню','Menu'],['Kurallar','Правила','Rules'],['Sen','Вы','You'],['Zar at','Бросьте кубик','Roll the die'],['Piyonunu seç','Выберите фишку','Pick a pawn'],
 ['6 attın, tekrar at!','Выпало 6, бросайте ещё!','You rolled 6, roll again!'],['Bu piyon oynayamaz','Эта фишка не может ходить','That pawn can\'t move'],['6 gelmedi, tekrar at','Не 6, бросайте ещё','No 6, roll again'],['Oynayacak piyon yok','Нечем ходить','No pawn can move'],
 ['kırdı:','сбивает:','knocked out'],['Kazandın!','Вы победили!','You won!'],['Tebrikler, kazandın!','Поздравляем, вы победили!','Congratulations, you won!'],['Rövanş','Реванш','Rematch'],['Yeni oyun','Новая игра','New game'],['Ev sahibi yeni oyunu başlatabilir.','Хозяин стола может начать новую игру.','The host can start a new game.'],
