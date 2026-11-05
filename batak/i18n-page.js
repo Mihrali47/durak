@@ -4,6 +4,7 @@ const SU={'Maça':['Пики','Spades'],'Kupa':['Червы','Hearts'],'Karo':['
 const BN={Nuri:'Нури','Rıza':'Рыза',Hamdi:'Хамди',Sen:'Вы'};
 const nm=(n,j)=>j?(n==='Sen'?'You':n):(BN[n]||n);
 window.I18N_EXTRA=[
+['Son el','Последняя взятка','Last trick'],['aldı','взял','took it'],['Henüz el alınmadı','Взяток ещё не было','No tricks taken yet'],
 ['İhaleli','С торговлей','Bidding'],['Eşli','Парами','Partners'],['Koz Maça','Козырь пики','Spades trump'],['Oyun türü','Вариант игры','Game type'],['Ortak','Партнёр','Partner'],['Rakip','Соперник','Opponent'],['El bitti','Раздача окончена','Hand over'],
 ['ortaklar','партнёры','the partners'],['Tebrikler, ortağınla kazandınız!','Поздравляем, вы с партнёром победили!','Congratulations, you and your partner won!'],['Rakipler kazandı','Победили соперники','The opponents won'],['Berabere','Ничья','Draw'],
 ['Eşli:','Парами:','Partners:'],[' karşındaki ortağındır. İhaleyi ortaklar birlikte tutturur, puanlar takım olarak yazılır.',' игрок напротив — ваш партнёр. Заявку выполняете вместе, очки записываются командой.',' the player opposite is your partner. Partners make the bid together and score as a team.'],

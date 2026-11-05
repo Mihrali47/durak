@@ -137,6 +137,7 @@ input.name{width:100%;border:1px solid #d9d1bf;border-radius:10px;padding:11px;f
   <header>
     <button class="hb" id="bMenu">Menü</button>
     <div class="t"><b id="hGame">Batak</b><small id="hSub"></small></div>
+    <button class="hb" id="bLast" title="Son el">↺</button>
     <button class="hb" id="bScore">Puanlar</button>
   </header>
   <div class="table">
@@ -332,7 +333,10 @@ function showMenu(){const sv=ST.get('save',null),rec=ST.get('rec',[0,0]);
   $('mBot').onclick=()=>{if(mode!=='off')leaveOnline();mode='off';newMatch(matchHands)};
   $('mQuick').onclick=quickPlay;$('mOn').onclick=showOnline;$('mSnd').onclick=e=>{e.target.textContent=KSfx.toggle()?'Ses: Açık':'Ses: Kapalı'};$('mRules').onclick=showRules}
 $('bMenu').onclick=showMenu;$('bScore').onclick=showScore;
-$('ov').addEventListener('click',e=>{if(e.target===$('ov')&&['score','rules'].includes($('sheet').dataset.k)){hideOv();afterRender()}});
+$('bLast').onclick=()=>{if(!M||!M.last){toast('Henüz el alınmadı');return}const L=M.last;
+  const s=ov('last',`<h2>Son el</h2><p><b>${esc(L.w===me?'Sen':names[L.w])}</b> <span>aldı</span>.</p><div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:10px">${L.trick.map(t=>`<div style="display:flex;flex-direction:column;align-items:center;gap:4px"><div style="width:62px;height:88px;--w:62px">${cardEl(t.c).outerHTML}</div><small style="color:#6a6458">${esc(t.p===me?'Sen':names[t.p])}</small></div>`).join('')}</div><div class="row"><button class="btn pri" id="lOk">Tamam</button></div>`);
+  $('lOk').onclick=()=>{hideOv();afterRender()}};
+$('ov').addEventListener('click',e=>{if(e.target===$('ov')&&['score','rules','last'].includes($('sheet').dataset.k)){hideOv();afterRender()}});
 
 /* ---------- online: ev sahibi oyunu yürütür, herkese durumu yollar ---------- */
 const PFX='kbt-';let peer=null,conn=null,conns={},seats=[null,null,null,null],lastSeen={},room=null,started=false,lastRx=0,hb=null;

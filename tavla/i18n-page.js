@@ -2,6 +2,7 @@
 (()=>{
 const BN={Nuri:'Нури',Sen:'Вы'};const nm=(n,j)=>j?(n==='Sen'?'You':n):(BN[n]||n);
 window.I18N_EXTRA=[
+['Otomatik','Авто','Auto'],
 ['Tavla','Нарды','Backgammon'],['Menü','Меню','Menu'],['Kurallar','Правила','Rules'],['Sen','Вы','You'],['Nuri','Нури','Nuri'],['Geri al','Отменить','Undo'],['Zar at','Бросить кости','Roll'],['Tamam','Готово','Done'],
 ['Oynayacak hamlen yok','Нет возможных ходов','No legal moves'],['Hamlen bitti, Tamam\'a bas','Ход сделан, нажмите «Готово»','Move complete, tap Done'],['Oynatacağın pula dokun','Коснитесь шашки, которой ходите','Tap the checker to move'],['Gideceği yere dokun','Коснитесь клетки, куда идти','Tap where it should go'],
 ['Maçı kazandın!','Вы выиграли матч!','You won the match!'],['Oyunu kazandın!','Вы выиграли партию!','You won the game!'],['Mars!','Марс!','Gammon!'],['+2 puan','+2 очка','+2 points'],['+1 puan','+1 очко','+1 point'],['Ev sahibi devam ettirecek.','Хозяин стола продолжит игру.','The host will continue.'],

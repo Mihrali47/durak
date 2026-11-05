@@ -71,7 +71,7 @@ input.name{width:100%;border:1px solid #d9d1bf;border-radius:10px;padding:11px;f
   <div class="wrapb"><svg class="board" id="svg" viewBox="0 0 760 600" preserveAspectRatio="xMidYMid meet"></svg></div>
   <div class="pl" id="pM"></div>
   <div class="msg" id="msg"></div>
-  <div class="bar"><button class="btn2 gh" id="bUndo" hidden>Geri al</button><button class="btn2" id="bRoll" hidden>Zar at</button><button class="btn2" id="bOk" hidden>Tamam</button></div>
+  <div class="bar"><button class="btn2 gh" id="bUndo" hidden>Geri al</button><button class="btn2" id="bRoll" hidden>Zar at</button><button class="btn2" id="bOk" hidden>Tamam</button><button class="btn2 gh" id="bAuto" hidden>Otomatik</button></div>
 </div>
 <div class="ov" id="ov" hidden><div class="sheet" id="sheet"></div></div>
 <div class="toast" id="toast" hidden></div>
@@ -144,7 +144,8 @@ function render(){if(!G)return;if(!$('svg').firstChild||render.me!==me){drawBase
   pl(o,'pO');pl(me,'pM');
   $('bRoll').hidden=!(mine&&G.phase==='roll');$('bRoll').classList.toggle('go',!$('bRoll').hidden);
   const done=mine&&G.phase==='move'&&complete();
-  $('bOk').hidden=!done;$('bOk').classList.toggle('go',done);$('bUndo').hidden=!(mine&&G.phase==='move'&&pre.length);
+  $('bOk').hidden=!done;$('bAuto').hidden=!(mine&&G.phase==='move'&&!done&&!pre.length&&race());
+  $('bOk').classList.toggle('go',done);$('bUndo').hidden=!(mine&&G.phase==='move'&&pre.length);
   let m='';
   if(G.phase==='gameOver'||G.phase==='over')m='';
   else if(G.turn===me){if(G.phase==='roll')m='Zar at';else if(G.noMove)m='Oynayacak hamlen yok';else if(done)m='Hamlen bitti, Tamam\'a bas';else m=sel==null?'Oynatacağın pula dokun':'Gideceği yere dokun'}
@@ -162,6 +163,9 @@ $('svg').addEventListener('click',e=>{const h=e.target.closest('[data-v]');if(!h
 function doStep(m){KSfx.play('tap');pre.push({f:m.f,t:m.t,d:m.d});sel=null;render();if(complete()&&TV.seqs(G).length===1)setTimeout(()=>{if(complete()&&pre.length)confirmTurn()},500)}
 $('bUndo').onclick=()=>{pre.pop();sel=null;render()};
 $('bOk').onclick=()=>confirmTurn();
+/* yarış (temas yok): pulları otomatik oynat */
+function race(){const b=G.b;let hi0=0,lo1=99;for(let i=1;i<=24;i++){if(b[i]>0)hi0=Math.max(hi0,i);if(b[i]<0)lo1=Math.min(lo1,i)}if(G.bar[0]||G.bar[1])return false;return hi0<lo1}
+$('bAuto').onclick=()=>{if(!G||G.turn!==me||G.phase!=='move')return;pre=TV.botMoves(G);sel=null;confirmTurn()};
 $('bRoll').onclick=()=>{if(!G||busy||G.turn!==me||G.phase!=='roll')return;$('bRoll').hidden=true;act(me,{k:'roll'})};
 function confirmTurn(){if(!G||G.turn!==me||G.phase!=='move'||!complete())return;const mv=pre.slice();
   if(mode==='guest'){const s=cur();view=s;pre=[];busy=true;render();send({t:'act',uid:UID,a:{k:'play',moves:mv}});setTimeout(()=>{if(busy&&view===s){busy=false}},4000);return}

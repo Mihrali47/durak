@@ -4,6 +4,7 @@ const SU={'Maça':['Пики','Spades'],'Kupa':['Червы','Hearts'],'Karo':['
 const BN={Nuri:'Нури','Rıza':'Рыза',Hamdi:'Хамди',Sen:'Вы'};
 const nm=(n,j)=>j?(n==='Sen'?'You':n):(BN[n]||n);
 window.I18N_EXTRA=[
+['Son el','Последняя взятка','Last trick'],['aldı','взял','took it'],['Henüz el alınmadı','Взяток ещё не было','No tricks taken yet'],
 ['King','Кинг','King'],['Menü','Меню','Menu'],['Puanlar','Очки','Scores'],['Sen','Вы','You'],
 ['El almaz','Без взяток','No tricks'],['Kupa almaz','Без червей','No hearts'],['Erkek almaz','Без мальчиков','No kings & jacks'],['Kız almaz','Без девочек','No queens'],['Rıfkı','Рифки','Rifki'],['Son iki','Две последние','Last two'],['Koz','Козырь','Trump'],
 ['Maça','Пики','Spades'],['Kupa','Червы','Hearts'],['Karo','Бубны','Diamonds'],['Sinek','Трефы','Clubs'],
