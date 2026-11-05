@@ -458,6 +458,7 @@ function quickTick(){if(!quick||mode!=='host'||started)return;const n=lobbyNames
 const tkey=()=>M&&['play','bid','trump','choose'].includes(M.phase)?[M.phase,M.turn,M.chooser,M.deal,M.tricks,(M.trick||[]).length].join(':'):null;
 KTimer.init({secs:()=>30,key:tkey,actor:()=>M.phase==='choose'?M.chooser:M.turn,isHuman:p=>!!human[p],name:p=>p===me?'Sen':names[p],mode:()=>started&&!busy?mode:'off',
   onExpire:p=>{toast(`<b>${esc(p===me?'Sen':names[p])}</b>: <span>süre doldu</span>`);if(p===me)hideOv();if(M.phase==='choose'){const [x,t]=K.botChoose(M,p);act(p,{k:'choose',g:x,t})}else if(M.phase==='play')act(p,{k:'play',c:K.botPlay(M,p)})}});
+window.KH_HOST=()=>{mode='off';hostRoom();return linkFor(room)};
 const hc=(location.hash||'').slice(1).toUpperCase();
 if(/^[A-Z0-9]{5}$/.test(hc))joinRoom(hc);else showMenu();
 addEventListener('load',()=>window.KH&&KH.setPresence('King'));

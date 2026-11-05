@@ -213,7 +213,7 @@ function openProfile(refresh){if(!P)return openRegister();
     <div class="kh-row" style="margin-top:0"><input class="kh-in" id="khCode" placeholder="Arkadaşının adı" value="${esc(keep)}"><button class="kh-b p s" id="khAdd">Ekle</button></div><div class="kh-err" id="khErr"></div>
     ${rq.length?`<div class="kh-l">Arkadaşlık istekleri</div>${rq.map(f=>`<div class="kh-li"><span class="a">${esc(f.av||'🙂')}</span><div class="t"><b>${esc(code(f))}</b></div><button class="kh-b s p" data-ok="${esc(f.uid)}">Kabul et</button><button class="kh-b s" data-no="${esc(f.uid)}">Reddet</button></div>`).join('')}`:''}
     <div class="kh-l">Arkadaşların (${fr.length})</div>
-    ${fr.length?fr.map(f=>{const p=pres[f.uid],on=online(f.uid);return `<div class="kh-li"><span class="a">${esc(f.av||'🙂')}<i class="${on?'on':''}"></i></span><div class="t"><b>${esc(f.name)}</b><small>${on?(p.game?`<span>Oynuyor:</span> <span>${esc(p.game)}</span>`:'<span>Çevrimiçi</span>'):'<span>Çevrimdışı</span>'}</small></div><button class="kh-b s r" data-rm="${esc(f.uid)}">Sil</button></div>`}).join(''):'<p>Henüz arkadaşın yok. Davet linkini gönder ya da kodla ekle.</p>'}
+    ${fr.length?fr.map(f=>{const p=pres[f.uid],on=online(f.uid);return `<div class="kh-li"><span class="a">${esc(f.av||'🙂')}<i class="${on?'on':''}"></i></span><div class="t"><b>${esc(f.name)}</b><small>${on?(p.game?`<span>Oynuyor:</span> <span>${esc(p.game)}</span>`:'<span>Çevrimiçi</span>'):'<span>Çevrimdışı</span>'}</small></div><button class="kh-b s p" data-play="${esc(f.uid)}">🎮 Davet et</button><button class="kh-b s r" data-rm="${esc(f.uid)}">Sil</button></div>`}).join(''):'<p>Henüz arkadaşın yok. Davet linkini gönder ya da kodla ekle.</p>'}
     ${out.length?`<div class="kh-l">Gönderilen istekler</div>${out.map(f=>`<div class="kh-li"><span class="a">${esc(f.av||'⏳')}</span><div class="t"><b>${esc(f.tag?code(f):'Davet linki')}</b><small>Cevap bekleniyor</small></div></div>`).join('')}`:''}
     <div class="kh-row"><button class="kh-b" id="khOut">Çıkış yap</button><button class="kh-b" id="khClose">Kapat</button></div>`);
   s.querySelector('#khClose').onclick=closeSheet;
@@ -224,11 +224,25 @@ function openProfile(refresh){if(!P)return openRegister();
     const el=document.getElementById('khErr');if(el)el.textContent=err||'';if(!err){const i=document.getElementById('khCode');if(i)i.value='';note('<span>İstek gönderildi.</span>')}};
   s.querySelectorAll('[data-ok]').forEach(b=>b.onclick=()=>accept(REQ[b.dataset.ok]));
   s.querySelectorAll('[data-no]').forEach(b=>b.onclick=()=>decline(b.dataset.no));
+  s.querySelectorAll('[data-play]').forEach(b=>b.onclick=()=>pickGame(b.dataset.play));
   s.querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{if(b.dataset.sure){removeFriend(b.dataset.rm)}else{b.dataset.sure=1;b.textContent='Emin misin?'}})}
 async function copy(t,msg){try{await navigator.clipboard.writeText(t);note(`<span>${esc(msg)}</span>`)}catch(e){prompt('',t)}}
 async function share(url){const text='Kahvehane\'de benimle oyna! Linke tıkla, kayıt ol, otomatik arkadaş olalım.';
   try{if(navigator.share&&matchMedia('(pointer:coarse)').matches){await navigator.share({title:'Kahvehane',text,url});return}}catch(e){return}
   copy(url,'Davet linki kopyalandı')}
+/* profilden arkadaşı bir oyuna davet et: oyun sayfası masayı kurar, davet kendiliğinden gider */
+const GAMES=[['Durak','durak/'],['King','king/'],['Batak','batak/'],['Okey','okey101/?klasik=1'],['101 Okey','okey101/'],['Pişti','pisti/'],['Eşli Pişti','pisti4/'],['Tavla','tavla/'],['Kızma Birader','kizma/']];
+function pickGame(uid){const f=F[uid];if(!f)return;
+  const s=sheet('pick',`<h2>${esc(f.name)} <span>ile oyna</span></h2><p>Oyunu seç. Masa kurulur ve arkadaşına davet gider; o gelince başlatırsın.${online(uid)?'':' <b>Arkadaşın şu an çevrimdışı</b>, davet yine de 15 dakika bekler; istersen linki WhatsApp\'tan da gönder.'}</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">${GAMES.map(([n,p])=>`<button class="kh-b" data-p="${esc(p)}">${esc(n)}</button>`).join('')}</div>
+    <div class="kh-row"><button class="kh-b" id="khBack">Geri</button></div>`);
+  s.querySelector('#khBack').onclick=()=>openProfile();
+  s.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{const p=b.dataset.p;location.href=ROOT+p+(p.includes('?')?'&':'?')+'davet='+encodeURIComponent(uid)})}
+(()=>{const u=new URLSearchParams(location.search).get('davet');if(!u)return;
+  try{const x=new URL(location.href);x.searchParams.delete('davet');history.replaceState(null,'',x.pathname+x.search+x.hash)}catch(e){}
+  let n=0;const iv=setInterval(()=>{if(++n>40){clearInterval(iv);return}if(typeof window.KH_HOST!=='function'||!P||document.readyState!=='complete')return;clearInterval(iv);
+    setTimeout(()=>{let link;try{link=window.KH_HOST()}catch(e){console.error(e);return}if(!link)return;const f=F[u];const go=()=>send(u,'inv',{game:document.title,link});
+      if(clients.some(c=>c.connected))go();else{connect();setTimeout(go,3000)}note(`<span>Davet gönderildi:</span> <b>${esc(f?f.name:'')}</b>`,[['Linki paylaş',()=>share(link)]],9000)},600)},250)})();
 function invitePicker(game,link){if(!P)return openRegister(null,()=>invitePicker(game,link));
   const fr=Object.values(F).sort((a,b)=>online(b.uid)-online(a.uid));
   const s=sheet('inv',`<h2>Arkadaşını çağır</h2><p>Seçtiklerine bildirim gider, tek dokunuşla masana gelirler.</p>

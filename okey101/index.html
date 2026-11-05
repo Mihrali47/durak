@@ -1321,6 +1321,7 @@ function quickPlay(){if(!myNameK()){open(`<h2>⚡ Hızlı oyun</h2><p class="mut
     <div class="rowb"><button class="btn green" id="goK">Masa bul</button></div>`);$('goK').onclick=()=>{const v=$('nmK').value.trim().slice(0,14);if(!v)return;try{localStorage.setItem('okey101_name',v)}catch(e){}quickPlay()};return}
   leaveOnline();open('<h2>Masa aranıyor…</h2><p class="muted">Açık bir masa varsa oturtuyoruz, yoksa sana yeni masa açıyoruz.</p><div class="rowb"><button class="btn ghost" id="qcK">Vazgeç</button></div>');$('qcK').onclick=()=>{leaveOnline();showMenu()};
   KQuick.find(U.classic?'okey':'okey101',{onJoin:c=>joinOnline(c),onHost:()=>{hostOnline();OK.quick=true;OK.q2=0;KQuick.advertise(U.classic?'okey':'okey101',OK.code,{n:1,max:4});onlineMenu()}})}
+window.KH_HOST=()=>{hostOnline();return linkK(OK.code)+''};
 /* misafir */
 function joinOnline(code){if(!myNameK()){open(`<h2>101 Okey masasına davet</h2><p class="muted">Adını yaz ve masaya otur.</p><input id="nmK" maxlength="14" placeholder="Adını yaz" style="width:100%;min-height:46px;border-radius:12px;border:1px solid #c9c1b0;padding:0 12px;font:600 16px/1 inherit">
     <div class="rowb"><button class="btn green" id="goK">Masaya otur</button></div>`);$('goK').onclick=()=>{try{localStorage.setItem('okey101_name',($('nmK').value.trim()||'Misafir').slice(0,14))}catch(e){}joinOnline(code)};return}

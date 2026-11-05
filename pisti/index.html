@@ -479,6 +479,7 @@ function quickPlay(){if(!myName()){open(`<h2>⚡ Hızlı oyun</h2><p class="mute
     <div class="row"><button class="btn" id="go">Rakip bul</button></div>`);$('go').onclick=()=>{const v=$('nm').value.trim().slice(0,14);if(!v)return;try{localStorage.setItem('pisti_name',v)}catch(e){}quickPlay()};return}
   leaveOnline();open('<h2>Rakip aranıyor…</h2><p class="muted">Bekleyen biri varsa masasına oturtuyoruz, yoksa sana masa açıyoruz.</p><div class="row"><button class="btn ghost" id="qc">Vazgeç</button></div>');$('qc').onclick=()=>{leaveOnline();showMenu()};
   KQuick.find('pisti',{onJoin:c=>joinOnline(c),onHost:()=>{hostOnline();ON.quick=true;KQuick.advertise('pisti',ON.code,{n:1,max:2});onlineMenu()}})}
+window.KH_HOST=()=>{hostOnline();return linkFor(ON.code)};
 /* misafir */
 function joinOnline(code){if(!myName()){open(`<h2>Pişti masasına davet</h2><p>Adını yaz ve masaya otur.</p><input id="nm" maxlength="14" placeholder="Adını yaz" style="width:100%;min-height:46px;border-radius:12px;border:1px solid #d9cfbd;padding:0 12px;font:600 16px/1 var(--body)">
     <div class="row"><button class="btn" id="go">Masaya otur</button></div>`);$('go').onclick=()=>{try{localStorage.setItem('pisti_name',($('nm').value.trim()||'Misafir').slice(0,14))}catch(e){}joinOnline(code)};return}

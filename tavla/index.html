@@ -307,6 +307,7 @@ function quickTick(){if(!quick||mode!=='host'||started)return;const n=(guest?2:1
 const tkey=()=>G&&['roll','move'].includes(G.phase)?[G.phase,G.turn,G.rid,G.mid].join(':'):null;
 KTimer.init({secs:()=>45,key:tkey,actor:()=>G.turn,isHuman:p=>true,name:p=>p===me?'Sen':names[p],mode:()=>started&&!busy?mode:'off',
   onExpire:p=>{toast(`<b>${esc(p===me?'Sen':names[p])}</b>: <span>süre doldu</span>`);if(p===me){pre=[];sel=null}if(G.phase==='roll')act(p,{k:'roll'});else if(G.phase==='move')act(p,{k:'play',moves:TV.botMoves(G)})}});
+window.KH_HOST=()=>{mode='off';hostRoom();return linkFor(room)};
 const hc=(location.hash||'').slice(1).toUpperCase();
 if(/^[A-Z0-9]{5}$/.test(hc))joinRoom(hc);else showMenu();
 addEventListener('load',()=>window.KH&&KH.setPresence('Tavla'));
