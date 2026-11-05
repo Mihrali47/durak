@@ -110,6 +110,13 @@ h1,.body h3,.soon b{text-transform:uppercase}
           <div class="tags"><span class="tag">2 kişi</span><span class="tag">Linkle online</span><span class="tag">Sesli</span></div>
           <span class="play">Masaya otur →</span></div>
       </a>
+      <a class="game" href="pisti4/">
+        <div class="art pisti"><div class="cards"><span style="color:#161616">J</span><span style="color:#c41f2e">♥&#xFE0E;</span><span style="color:#161616">J</span></div></div>
+        <div class="body"><span class="new">Yeni · Arkadaşınla online</span><h3>Eşli Pişti</h3>
+          <p>Dört kişilik pişti, karşındaki ortağın. Ortağınla topla, pişti yap, takım olarak kazanın.</p>
+          <div class="tags"><span class="tag">4 kişi</span><span class="tag">Linkle online 2-4 kişi</span><span class="tag">51 / 101 / 151</span></div>
+          <span class="play">Masaya otur →</span></div>
+      </a>
       <a class="game" href="pisti/">
         <div class="art pisti"><div class="cards"><span style="color:#161616">♠&#xFE0E;</span><span style="color:#c41f2e">♦&#xFE0E;</span><span style="color:#161616">♣&#xFE0E;</span></div></div>
         <div class="body"><h3>Pişti</h3>
@@ -151,7 +158,7 @@ document.getElementById('inst').onclick=async()=>{if(!dp)return;dp.prompt();awai
 
 <script>
 /* canlı: hızlı oyunda oyuncu bekleyen masalar */
-addEventListener('load',()=>setTimeout(()=>{const go=()=>{if(!window.KQuick)return;const map={durak:'durak/',king:'king/',batak:'batak/',kizma:'kizma/',tavla:'tavla/',pisti:'pisti/',okey101:'okey101/',okey:'okey101/?klasik=1'};
+addEventListener('load',()=>setTimeout(()=>{const go=()=>{if(!window.KQuick)return;const map={durak:'durak/',king:'king/',batak:'batak/',kizma:'kizma/',tavla:'tavla/',pisti:'pisti/',okey101:'okey101/',okey:'okey101/?klasik=1',pisti4:'pisti4/'};
   KQuick.watch(cnt=>{document.querySelectorAll('.live').forEach(x=>x.remove());for(const g in cnt){const a=document.querySelector(`a.game[href="${map[g]}"] .body`);if(!a)continue;
     const b=document.createElement('span');b.className='live';b.textContent=cnt[g]===1?'● 1 masa oyuncu bekliyor':`● ${cnt[g]} masa oyuncu bekliyor`;a.prepend(b)}})};
   if(window.mqtt)go();else{const s=document.createElement('script');s.src='mqtt.min.js';s.onload=go;document.head.appendChild(s)}},1200));

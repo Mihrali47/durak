@@ -417,6 +417,7 @@ function showMenu(){
   <div><p class="lbl">Kaç puana oynayalım?</p><div class="seg"><button data-t="51" aria-pressed="${target===51}">51</button><button data-t="101" aria-pressed="${target===101}">101</button></div></div>
   <div class="row"><button class="btn" id="start">${inGame?'Yeni oyuna başla':'Masaya otur'}</button>${inGame?'<button class="btn ghost" id="resume">Oyuna dön</button>':''}</div>
   <div class="row"><button class="btn" id="qk">⚡ Hızlı oyun</button><button class="btn ghost" id="onl">Arkadaşınla online</button></div>
+  <div class="row"><a class="btn ghost" href="../pisti4/" style="text-decoration:none;display:grid;place-items:center">👥 Eşli Pişti (4 kişi)</a></div>
   <p class="muted">Rekorun: ${record.w} galibiyet, ${record.l} mağlubiyet.</p>`);
   $('sheet').querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{target=+b.dataset.t;$('sheet').querySelectorAll('[data-t]').forEach(x=>x.setAttribute('aria-pressed',x===b))});
   $('start').onclick=()=>{leaveOnline();close();paused=false;newGame()};

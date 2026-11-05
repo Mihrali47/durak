@@ -5,6 +5,7 @@ const cn=(s,j)=>s.replace(/(maça|kupa|karo|sinek)\s+(vale|kız|papaz|as|\d+)/gi
 const W=j=>({Sen:['Вы','You'],Bilgisayar:['Компьютер','Computer']});
 const nm=(n,j)=>(W(j)[n]||[n,n])[j],NM='(.+?)';
 window.I18N_EXTRA=[
+['👥 Eşli Pişti (4 kişi)','👥 Пишти парами (4 игрока)','👥 Partner Pishti (4 players)'],
 ['As','Тузы','Aces'],['Vale','Валеты','Jacks'],['El puanı','Очки за раздачу','Hand points'],['Pişti','Пишти','Pishti'],['Oyunu kazandın!','Вы выиграли игру!','You won the game!'],['Sonraki el','Следующая раздача','Next hand'],['Yeni oyun','Новая игра','New game'],
 ['Arkadaşınla online oyna','Играть онлайн с другом','Play online with a friend'],['Masa kuruldu','Стол создан','Table created'],['Bu linki arkadaşına gönder. Girdiği an oyun başlar.','Отправьте ссылку другу. Игра начнётся, как только он войдёт.','Send this link to your friend. The game starts as soon as they join.'],
 ['Kopyala','Копировать','Copy'],['Link kopyalandı','Ссылка скопирована','Link copied'],['👥 Arkadaşlarını çağır','👥 Позвать друзей','👥 Invite friends'],['Arkadaşın bekleniyor… Bu sayfayı kapatma.','Ждём друга… Не закрывайте страницу.','Waiting for your friend… Keep this page open.'],['Vazgeç','Отмена','Cancel'],
