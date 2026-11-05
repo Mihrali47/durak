@@ -209,6 +209,12 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 .banner.bad span{color:var(--bad);border-color:var(--bad);text-shadow:0 3px 0 #5a0d06;box-shadow:0 0 40px rgba(255,107,91,.4)}
 @keyframes ban{0%{transform:scale(.3) rotate(-6deg);opacity:0}18%{transform:scale(1.12) rotate(2deg);opacity:1}30%{transform:scale(1)}80%{opacity:1}100%{transform:translateY(-30px);opacity:0}}
 .pl.on .av{animation:bob 1s ease-in-out infinite alternate}
+.pl.on{animation:turnBlink 1s ease-in-out infinite}
+.rack.myturn{animation:rackBlink 1s ease-in-out infinite}
+@keyframes turnBlink{50%{filter:brightness(1.35);box-shadow:0 0 0 6px rgba(143,240,179,.55),0 0 28px rgba(143,240,179,.7)}}
+@keyframes rackBlink{50%{filter:brightness(1.18);box-shadow:0 0 0 5px rgba(143,240,179,.6),0 0 30px rgba(143,240,179,.6)}}
+@media (prefers-reduced-motion:reduce){.pl.on,.rack.myturn{animation:none}}
+
 @keyframes bob{to{transform:translateY(-3px) scale(1.06)}}
 .deck .tile:last-of-type{transition:transform .15s}
 .deck.pick:hover .tile:last-of-type{transform:translateY(-4px)}
