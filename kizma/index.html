@@ -5,7 +5,7 @@
 <title>Kızma Birader</title>
 <script src="i18n-page.js"></script><script src="../i18n.js"></script>
 <script src="../mqtt.min.js"></script><script src="../relay.js"></script>
-<script src="engine.js"></script><script src="../account.js"></script><script src="../quick.js"></script><script src="../ttimer.js"></script>
+<script src="engine.js"></script><script src="../account.js"></script><script src="../quick.js"></script><script src="../ttimer.js"></script><script src="../sfx.js"></script>
 <link rel="manifest" href="../manifest.webmanifest"><link rel="icon" href="../icon.svg" type="image/svg+xml">
 <meta name="theme-color" content="#2b1b11">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -158,14 +158,14 @@ async function sync(first){if(!G)return;if(busy)return sync.again=true;
   if(G.rid!==shownRid){busy=true;shownRid=G.rid;render();await animDie(G.roll);busy=false;
     if(G.rp===me&&G.phase==='roll'&&!(G.last&&G.last.mid===G.mid&&G.lastRid===G.rid)){if(G.turn===me&&G.roll!==6)toast('6 gelmedi, tekrar at',1400);else if(G.turn!==me)toast('Oynayacak piyon yok',1400)}}
   render();if(sync.again){sync.again=false;return sync()}after()}
-function animDie(v){return new Promise(r=>{const d=$('die');d.classList.remove('spin');void d.offsetWidth;d.classList.add('spin');let n=0;
+function animDie(v){KSfx.play('dice');return new Promise(r=>{const d=$('die');d.classList.remove('spin');void d.offsetWidth;d.classList.add('spin');let n=0;
   const iv=setInterval(()=>{d.dataset.v=1+(Math.random()*6|0);if(++n>5){clearInterval(iv);d.dataset.v=v}},70/SPD);setTimeout(()=>{d.classList.remove('spin');d.dataset.v=v;r()},560/SPD)})}
 function markAnim(L,on){for(const id of [`pw${L.p}${L.i}`,L.hit?`pw${L.hit.p}${L.hit.i}`:null]){const e=id&&$(id);if(e){if(on)e.dataset.anim=1;else delete e.dataset.anim}}}
 function animMove(L){return new Promise(async r=>{const e=$(`pw${L.p}${L.i}`);if(!e)return r();e.classList.add('up');
   const steps=[];if(L.from<0)steps.push(xyOf(L.p,L.i,0));else for(let d=L.from+1;d<=L.to;d++)steps.push(xyOf(L.p,L.i,d));
-  for(const xy of steps){place(e,xy);await new Promise(z=>setTimeout(z,125/SPD))}
+  for(const xy of steps){place(e,xy);KSfx.play('tap');await new Promise(z=>setTimeout(z,125/SPD))}
   e.classList.remove('up');
-  if(L.hit){const h=$(`pw${L.hit.p}${L.hit.i}`);if(h){h.style.transition='left .35s,top .35s';place(h,BASE[L.hit.p][L.hit.i]);await new Promise(z=>setTimeout(z,380/SPD));h.style.transition=''}}
+  if(L.hit){const h=$(`pw${L.hit.p}${L.hit.i}`);if(h){KSfx.play('hit');h.style.transition='left .35s,top .35s';place(h,BASE[L.hit.p][L.hit.i]);await new Promise(z=>setTimeout(z,380/SPD));h.style.transition=''}}
   markAnim(L,0);r()})}
 function after(){if(!G||busy)return;
   if(G.phase==='over'){showOver();return}
@@ -190,7 +190,7 @@ function newGame(){const n=mode==='off'?nPlayers:null;
 function ov(k,h){$('ov').style.alignItems='';const s=$('sheet');s.dataset.k=k;s.innerHTML=h;$('ov').hidden=false;return s}
 function hideOv(){$('ov').hidden=true;$('sheet').dataset.k=''}
 function showOver(){if($('sheet').dataset.k==='over'&&!$('ov').hidden)return;ST.del('save');
-  if(!showOver.done){showOver.done=true;const r=ST.get('rec',[0,0]);r[G.winner===me?0:1]++;window.KH&&KH.stat('Kızma Birader',G.winner===me);ST.set('rec',r)}
+  if(!showOver.done){showOver.done=true;KSfx.play(G.winner===me?'win':'lose');const r=ST.get('rec',[0,0]);r[G.winner===me?0:1]++;window.KH&&KH.stat('Kızma Birader',G.winner===me);ST.set('rec',r)}
   const ord=G.act.slice().sort((a,b)=>G.pawns[b].filter(d=>d>=40).length-G.pawns[a].filter(d=>d>=40).length||G.pawns[b].reduce((x,y)=>x+y,0)-G.pawns[a].reduce((x,y)=>x+y,0));
   ov('over',`<h2>${G.winner===me?'Tebrikler, kazandın!':`${names[G.winner]} kazandı`}</h2>
     <ul class="rank">${ord.map(p=>`<li><b style="color:${CV[p]}">●</b><b style="flex:1">${pn(p)}</b><span>Evde: ${G.pawns[p].filter(d=>d>=40).length}/4</span></li>`).join('')}</ul>
@@ -212,12 +212,13 @@ function showMenu(){const sv=ST.get('save',null),rec=ST.get('rec',[0,0]);
       <button class="btn pri" id="mQuick">⚡ Hızlı oyun</button>
       <button class="btn" id="mOn">Arkadaşlarla online</button>
       <button class="btn" id="mRules">Kurallar</button>
+      <button class="btn" id="mSnd">${KSfx.on?'Ses: Açık':'Ses: Kapalı'}</button>
       <a class="btn" href="../" style="text-align:center;text-decoration:none">Salona dön</a></div>
     <p style="font-size:12.5px;margin-top:10px">Rekorun: ${rec[0]} galibiyet, ${rec[1]} mağlubiyet.</p>`);
   s.querySelectorAll('#mN button').forEach(b=>b.onclick=()=>{nPlayers=+b.dataset.n;ST.set('n',nPlayers);s.querySelectorAll('#mN button').forEach(x=>x.classList.toggle('on',x===b))});
   if($('mBack'))$('mBack').onclick=()=>{hideOv();after()};
   if($('mLoad'))$('mLoad').onclick=()=>{mode='off';me=0;G=sv.G;names=sv.names;names[0]=myName();human=[true,false,false,false];shownRid=G.rid;shownMid=G.mid;hideOv();sync()};
-  $('mBot').onclick=()=>{if(mode!=='off')leaveOnline();mode='off';newGame()};$('mQuick').onclick=quickPlay;$('mOn').onclick=showOnline;$('mRules').onclick=showRules}
+  $('mBot').onclick=()=>{if(mode!=='off')leaveOnline();mode='off';newGame()};$('mQuick').onclick=quickPlay;$('mOn').onclick=showOnline;$('mSnd').onclick=e=>{e.target.textContent=KSfx.toggle()?'Ses: Açık':'Ses: Kapalı'};$('mRules').onclick=showRules}
 $('bMenu').onclick=showMenu;$('bRules').onclick=showRules;
 $('ov').addEventListener('click',e=>{if(e.target===$('ov')&&$('sheet').dataset.k==='rules'&&G){hideOv();after()}});
 /* ---------- online ---------- */

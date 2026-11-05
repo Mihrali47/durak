@@ -1265,7 +1265,7 @@ function hostOnline(){leaveOnline();const code=Math.random().toString(36).slice(
   OK.peer.on('error',e=>{if(e.type==='network')toast('Sunucuya bağlanılamadı, tekrar deneniyor…')});
   OK.peer.on('connection',c=>c.on('data',d=>hostRecvK(c,d)));
   KChat.mount({side:'left',send:m=>{const n=OK.names[0]||myNameK();bcastK({...m,name:n})}});
-  OK.hb=setInterval(()=>{if(!OK.on)return;if(OK.quick&&!OK.started){const n=OK.lob.length;KQuick.update({n});if(n>=2&&!OK.q2)OK.q2=Date.now();if(n<2)OK.q2=0;if(n>=4||(n>=2&&Date.now()-OK.q2>20000)){startOnline();return}if(n===1){const r=KQuick.rival('okey101',OK.code);if(r){leaveOnline();joinOnline(r);return}}}if(OK.started){sendAll();if(S&&!S.ended&&S.turn!==0&&!U.busy&&!isRemote(S.turn))run()}else bcastK({t:'lobby',names:OK.lob.map(l=>l.name)})},2500);
+  OK.hb=setInterval(()=>{if(!OK.on)return;if(OK.quick&&!OK.started){const n=OK.lob.length;KQuick.update({n});if(n>=2&&!OK.q2)OK.q2=Date.now();if(n<2)OK.q2=0;if(n>=4||(n>=2&&Date.now()-OK.q2>20000)){startOnline();return}if(n===1){const r=KQuick.rival(U.classic?'okey':'okey101',OK.code);if(r){leaveOnline();joinOnline(r);return}}}if(OK.started){sendAll();if(S&&!S.ended&&S.turn!==0&&!U.busy&&!isRemote(S.turn))run()}else bcastK({t:'lobby',names:OK.lob.map(l=>l.name)})},2500);
   onlineMenu()}
 function hostRecvK(c,d){if(!d||!d.uid)return;OK.seen[d.uid]=Date.now();
   let L=OK.lob.find(l=>l.uid===d.uid);
@@ -1313,7 +1313,7 @@ function leaveOnline(){if(window.KQuick)KQuick.stop();if(!OK.on)return;OK.quick=
 function quickPlay(){if(!myNameK()){open(`<h2>⚡ Hızlı oyun</h2><p class="muted">Adını yaz, sana masa bulalım.</p><input id="nmK" maxlength="14" placeholder="Adını yaz" style="width:100%;min-height:46px;border-radius:12px;border:1px solid #c9c1b0;padding:0 12px;font:600 16px/1 inherit">
     <div class="rowb"><button class="btn green" id="goK">Masa bul</button></div>`);$('goK').onclick=()=>{const v=$('nmK').value.trim().slice(0,14);if(!v)return;try{localStorage.setItem('okey101_name',v)}catch(e){}quickPlay()};return}
   leaveOnline();open('<h2>Masa aranıyor…</h2><p class="muted">Açık bir masa varsa oturtuyoruz, yoksa sana yeni masa açıyoruz.</p><div class="rowb"><button class="btn ghost" id="qcK">Vazgeç</button></div>');$('qcK').onclick=()=>{leaveOnline();showMenu()};
-  KQuick.find('okey101',{onJoin:c=>joinOnline(c),onHost:()=>{hostOnline();OK.quick=true;OK.q2=0;KQuick.advertise('okey101',OK.code,{n:1,max:4});onlineMenu()}})}
+  KQuick.find(U.classic?'okey':'okey101',{onJoin:c=>joinOnline(c),onHost:()=>{hostOnline();OK.quick=true;OK.q2=0;KQuick.advertise(U.classic?'okey':'okey101',OK.code,{n:1,max:4});onlineMenu()}})}
 /* misafir */
 function joinOnline(code){if(!myNameK()){open(`<h2>101 Okey masasına davet</h2><p class="muted">Adını yaz ve masaya otur.</p><input id="nmK" maxlength="14" placeholder="Adını yaz" style="width:100%;min-height:46px;border-radius:12px;border:1px solid #c9c1b0;padding:0 12px;font:600 16px/1 inherit">
     <div class="rowb"><button class="btn green" id="goK">Masaya otur</button></div>`);$('goK').onclick=()=>{try{localStorage.setItem('okey101_name',($('nmK').value.trim()||'Misafir').slice(0,14))}catch(e){}joinOnline(code)};return}

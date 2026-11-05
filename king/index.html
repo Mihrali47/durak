@@ -5,7 +5,7 @@
 <title>King</title>
 <script src="i18n-page.js"></script><script src="../i18n.js"></script>
 <script src="../mqtt.min.js"></script><script src="../relay.js"></script>
-<script src="engine.js"></script><script src="../account.js"></script><script src="../quick.js"></script><script src="../ttimer.js"></script>
+<script src="engine.js"></script><script src="../account.js"></script><script src="../quick.js"></script><script src="../ttimer.js"></script><script src="../sfx.js"></script>
 <link rel="manifest" href="../manifest.webmanifest"><link rel="icon" href="../icon.svg" type="image/svg+xml">
 <meta name="theme-color" content="#1f3b2f">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -215,12 +215,13 @@ function sync(fromNet){if(!M)return;
     if(shownTid===null&&fromNet==='first'){shownTid=M.last.id}
     else{shownTid=M.last.id;showTrick(M.last);return}}
   render();afterRender()}
-function showTrick(last){busy=true;showing={trick:last.trick,w:last.w,lit:false};render();
+function showTrick(last){KSfx.play('card');setTimeout(()=>KSfx.play('trick'),450/SPD);sfxK=M.deal*1000+(M.tricks||0)*5;busy=true;showing={trick:last.trick,w:last.w,lit:false};render();
   setTimeout(()=>{showing.lit=true;render()},420/SPD);
   setTimeout(()=>{const v=V(last.w),dx=[0,-1,0,1][v]*160,dy=[1,0,-1,0][v]*190;
     $('mid').querySelectorAll('.slot').forEach(s=>{s.style.transform=`translate(${dx}px,${dy}px) scale(.5)`;s.style.opacity=0});},1150/SPD);
   setTimeout(()=>{busy=false;showing=null;sel=null;render();afterRender()},1600/SPD)}
-function afterRender(){if(busy)return;
+let sfxK=null;
+function afterRender(){if(busy)return;{const ck=M.deal*1000+(M.tricks||0)*5+(M.trick||[]).length;if(sfxK!=null&&ck>sfxK&&(M.trick||[]).length)KSfx.play('card');sfxK=ck}
   // seçim duyurusu
   if(M.phase==='play'&&M.game&&choiceSeen!==M.deal+':'+M.game){choiceSeen=M.deal+':'+M.game;
     toast(`<b>${pn(M.chooser)}</b>: <span>${K.NAMES[M.game]}</span>`+(M.game==='koz'?` · <span>${SN[M.trump]}</span>`:''))}
@@ -288,7 +289,7 @@ function showChoose(step){const o=K.options(M,me),pk=M.picks[me];
 function showDealEnd(){const k=M.phase==='over'?'over':'dealEnd';if($('sheet').dataset.k===k&&!$('ov').hidden)return;$('ov').style.alignItems='';
   const l=M.log[M.log.length-1];
   if(M.phase==='over'){const ord=[0,1,2,3].sort((a,b)=>M.score[b]-M.score[a]);ST.del('save');
-    const wins=ST.get('rec',[0,0]);if(!showDealEnd.counted){showDealEnd.counted=true;wins[ord[0]===me?0:1]++;window.KH&&KH.stat('King',ord[0]===me);ST.set('rec',wins)}
+    const wins=ST.get('rec',[0,0]);if(!showDealEnd.counted){showDealEnd.counted=true;KSfx.play(ord[0]===me?'win':'lose');wins[ord[0]===me?0:1]++;window.KH&&KH.stat('King',ord[0]===me);ST.set('rec',wins)}
     const s=ov('over',`<h2>${M.king!=null?(M.king===me?'KING! Oyunu sen kazandın':`KING! ${names[M.king]} kazandı`):(ord[0]===me?'Tebrikler, kazandın!':`${names[ord[0]]} kazandı`)}</h2>
       ${M.king!=null?`<p>Koz elinde 11 el alan oyunu anında kazanır.</p>`:''}
       <ul class="rank">${ord.map(p=>`<li><span>${pn(p)}</span><b>${M.score[p]}</b></li>`).join('')}</ul>
@@ -324,13 +325,14 @@ function showMenu(){$('ov').style.alignItems='';const sv=ST.get('save',null),rec
       <button class="btn pri" id="mQuick">⚡ Hızlı oyun</button>
       <button class="btn" id="mOn">Arkadaşlarla online</button>
       <button class="btn" id="mRules">Kurallar</button>
+      <button class="btn" id="mSnd">${KSfx.on?'Ses: Açık':'Ses: Kapalı'}</button>
       <a class="btn" href="../" style="text-align:center;text-decoration:none">Salona dön</a></div>
     <p style="font-size:12.5px;margin-top:10px">Rekorun: ${rec[0]} galibiyet, ${rec[1]} mağlubiyet.</p>`);
   s.querySelectorAll('#mH button').forEach(b=>b.onclick=()=>{matchHands=+b.dataset.h;ST.set('hands',matchHands);s.querySelectorAll('#mH button').forEach(x=>x.classList.toggle('on',x===b))});
   if($('mBack'))$('mBack').onclick=()=>{hideOv();afterRender()};
   if($('mLoad'))$('mLoad').onclick=()=>{mode='off';M=sv.M;names=sv.names;names[0]=myName();human=[true,false,false,false];me=0;shownTid=M.last?M.last.id:null;dealSeen=M.deal;choiceSeen=M.game?M.deal+':'+M.game:null;hideOv();sync()};
   $('mBot').onclick=()=>{if(mode!=='off')leaveOnline();mode='off';newMatch(matchHands)};
-  $('mQuick').onclick=quickPlay;$('mOn').onclick=showOnline;$('mRules').onclick=showRules}
+  $('mQuick').onclick=quickPlay;$('mOn').onclick=showOnline;$('mSnd').onclick=e=>{e.target.textContent=KSfx.toggle()?'Ses: Açık':'Ses: Kapalı'};$('mRules').onclick=showRules}
 $('bMenu').onclick=showMenu;$('bScore').onclick=showScore;
 $('ov').addEventListener('click',e=>{if(e.target===$('ov')&&['score','rules'].includes($('sheet').dataset.k)){hideOv();afterRender()}});
 

@@ -25,5 +25,7 @@ function stop(){clearInterval(adT);if(ad)pub(ad.game+'/'+ad.code,null);ad=null}
 /* iki kişi aynı anda masa açtıysa: tek başına bekleyen, daha eski bir açık masa görürse oraya geçer */
 function rival(game,code,since){const t=open(game,code).filter(v=>v.n>=1&&v.code<code);return t.length?t[0].code:null}
 addEventListener('pagehide',()=>{if(ad)pub(ad.game+'/'+ad.code,null)});
-window.KQuick={find,advertise,update,stop,rival,get active(){return !!ad}};
+function watch(cb){conn(ok=>{if(!ok)return;clients.forEach(c=>{try{c.subscribe(NS+'+/+',{qos:1})}catch(e){}});
+  const tick=()=>{const now=Date.now(),cnt={};for(const [k,v] of seen){const g=k.split('/')[0];if(v&&!v.started&&v.n<v.max&&now-(v.at||0)<25000)cnt[g]=(cnt[g]||0)+1}cb(cnt)};tick();setInterval(tick,4000)})}
+window.KQuick={find,advertise,update,stop,rival,watch,get active(){return !!ad}};
 })();

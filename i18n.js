@@ -112,6 +112,7 @@ const T=[
 ['İstatistiklerim','Моя статистика','My stats'],['oyun','игр','games'],['galibiyet','побед','wins'],
 ['süre doldu','время вышло','time is up'],
 ['Klasik dört kişilik okey. Taşlarını per ve seri yap ya da 7 çift diz, 15. taşı ortaya at, bit. Okeyle ya da çiftle biten 2 kat yazar.','Классический окей на четверых. Соберите серии и наборы или 7 пар, выложите 15-ю фишку в центр и закончите. Окончание океем или парами — вдвойне.','Classic four-player okey. Build runs and sets or 7 pairs, put your 15th tile in the middle and go out. Going out with the okey or pairs counts double.'],['Hızlı oyun','Быстрая игра','Quick play'],['Okey','Окей','Okey'],
+['Ses: Açık','Звук: вкл','Sound: on'],['Ses: Kapalı','Звук: выкл','Sound: off'],['● 1 masa oyuncu bekliyor','● 1 стол ждёт игроков','● 1 table waiting for players'],
 ['Kayıt ol','Регистрация','Sign up'],['Profilim','Мой профиль','My profile'],['Adın','Ваше имя','Your name'],['Resmin','Аватар','Avatar'],['Vazgeç','Отмена','Cancel'],['Kaydediliyor…','Сохраняем…','Saving…'],
 ['Adını ve resmini seç. Sana bir arkadaş kodu verilecek, arkadaşların seni bu kodla ekler.','Выберите имя и аватар. Вы получите код друга — по нему вас смогут добавить.','Pick a name and avatar. You\'ll get a friend code that friends use to add you.'],
 ['Bir arkadaşın seni davet etti.','Вас пригласил друг.','A friend invited you.'],[' Kayıt olunca otomatik arkadaş olursunuz.',' После регистрации вы автоматически станете друзьями.',' Once you sign up you\'ll be friends automatically.'],
@@ -141,6 +142,7 @@ const SU={maça:['пики','spades'],kupa:['червы','hearts'],karo:['буб
 const J=I-1;
 const card=s=>s.replace(/\b(maça|kupa|karo|sinek)\s+(vale|kız|papaz|as|\d+)\b/g,(m,a,b)=>(RK[b]?RK[b][J]:b)+' '+SU[a][J]).replace(/\((koz)\)/g,J?'(trump)':'(козырь)');
 const R=L==='ru'?[
+[/^● (\d+) masa oyuncu bekliyor$/,'● столов ждут игроков: $1'],
 [/^Arkadaş kodun: (.+)$/,'Ваш код друга: $1'],[/^Arkadaşların \((\d+)\)$/,'Друзья ($1)'],
 [/^(.+) durak oldu$/,'$1 — дурак'],[/^(.+) pes etti$/,'$1 сдался'],[/^Koz (maça|kupa|karo|sinek)$/i,(m,a)=>'Козырь '+SU[a.toLowerCase()][0]],[/^KOZ (MAÇA|KUPA|KARO|SINEK)$/,(m,a)=>'Козырь '+SU[a.toLocaleLowerCase('tr')][0]],
 [/^(.+) masaya oturdu$/,'$1 сел за стол'],[/^(.+) masaya döndü$/,'$1 вернулся'],[/^Oyun başladı · (\d+) kişi$/,'Игра началась · $1 игр.'],[/^Oyunu başlat \((\d+) kişi\)$/,'Начать игру ($1 игр.)'],[/^Masadakiler \((\d+)\/(\d+)\)$/,'За столом ($1/$2)'],
@@ -155,6 +157,7 @@ const R=L==='ru'?[
 [/^(.+) hepsini kesti, kartlar çıktı$/,'$1 отбился, бито'],[/^Hepsini kestin, kartlar çıktı$/,'Вы отбились, бито'],[/^Yeni el\. Koz (.+)\. (.*)$/,(m,a,b)=>'Новая раздача. Козырь '+(SU[a]?SU[a][0]:a)+'.'],[/^Pes ettin$/,'Вы сдались'],
 [/^(sana|.+) aktardı$/,'перевёл'],[/^(.+) hileyi yakaladı$/,'$1 поймал шулера'],[/^(.+) hileyi yakaladı: (.+)$/,'$1 поймал шулера'],[/^Saldırı sende$/,'Ваша атака'],[/^Aktardın$/,'Переведено'],[/^Sana aktardı$/,'Переведено на вас'],[/^Kurtuldun$/,'Вы выбрались'],[/^Berabere$/,'Ничья'],
 ]:[
+[/^● (\d+) masa oyuncu bekliyor$/,'● $1 tables waiting for players'],
 [/^Arkadaş kodun: (.+)$/,'Your friend code: $1'],[/^Arkadaşların \((\d+)\)$/,'Friends ($1)'],
 [/^(.+) durak oldu$/,'$1 is the durak'],[/^(.+) pes etti$/,'$1 resigned'],[/^Koz (maça|kupa|karo|sinek)$/i,(m,a)=>'Trump: '+SU[a.toLowerCase()][1]],[/^KOZ (MAÇA|KUPA|KARO|SINEK)$/,(m,a)=>'Trump: '+SU[a.toLocaleLowerCase('tr')][1]],
 [/^(.+) masaya oturdu$/,'$1 joined'],[/^(.+) masaya döndü$/,'$1 is back'],[/^Oyun başladı · (\d+) kişi$/,'Game started · $1 players'],[/^Oyunu başlat \((\d+) kişi\)$/,'Start game ($1 players)'],[/^Masadakiler \((\d+)\/(\d+)\)$/,'At the table ($1/$2)'],

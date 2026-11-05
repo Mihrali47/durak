@@ -5,7 +5,7 @@
 <title>Tavla</title>
 <script src="i18n-page.js"></script><script src="../i18n.js"></script>
 <script src="../mqtt.min.js"></script><script src="../relay.js"></script><script src="../chat.js"></script>
-<script src="engine.js"></script><script src="../account.js"></script><script src="../quick.js"></script><script src="../ttimer.js"></script>
+<script src="engine.js"></script><script src="../account.js"></script><script src="../quick.js"></script><script src="../ttimer.js"></script><script src="../sfx.js"></script>
 <link rel="manifest" href="../manifest.webmanifest"><link rel="icon" href="../icon.svg" type="image/svg+xml">
 <meta name="theme-color" content="#2b1b11">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -159,7 +159,7 @@ $('svg').addEventListener('click',e=>{const h=e.target.closest('[data-v]');if(!h
   if(from.length){sel=real;const ts=[...new Set(from.map(m=>m.t))];if(ts.length===1){const c=from.sort((a,b)=>a.d-b.d)[0];doStep(c);return}render();return}
   if(opts.some(m=>m.f==='bar')){sel='bar';render();return}
   sel=null;render()});
-function doStep(m){pre.push({f:m.f,t:m.t,d:m.d});sel=null;render();if(complete()&&TV.seqs(G).length===1)setTimeout(()=>{if(complete()&&pre.length)confirmTurn()},500)}
+function doStep(m){KSfx.play('tap');pre.push({f:m.f,t:m.t,d:m.d});sel=null;render();if(complete()&&TV.seqs(G).length===1)setTimeout(()=>{if(complete()&&pre.length)confirmTurn()},500)}
 $('bUndo').onclick=()=>{pre.pop();sel=null;render()};
 $('bOk').onclick=()=>confirmTurn();
 $('bRoll').onclick=()=>{if(!G||busy||G.turn!==me||G.phase!=='roll')return;$('bRoll').hidden=true;act(me,{k:'roll'})};
@@ -174,9 +174,9 @@ async function sync(first){if(!G)return;if(busy&&!sync.inner)return sync.again=t
   if(first==='first'){shownMid=G.mid;shownRid=G.rid}
   if(G.last&&G.last.mid!==shownMid){busy=true;const L=G.last;shownMid=L.mid;
     if(L.p!==me&&view0){const s={b:view0.b.slice(),bar:view0.bar.slice(),off:view0.off.slice()};view=s;drawDice(L.dice||[],0);let u=0;
-      for(const m of L.moves){await wait(330);TV.apply(s,L.p,{...m});render();drawDice(L.dice||[],++u)}await wait(250)}
+      for(const m of L.moves){await wait(330);const mm={...m};TV.apply(s,L.p,mm);KSfx.play(mm.hit?'hit':'tap');render();drawDice(L.dice||[],++u)}await wait(250)}
     view=null;busy=false}
-  if(G.rid!==shownRid){shownRid=G.rid;if(G.turn!==me&&G.phase==='move'&&!G.open)await wait(150)}
+  if(G.rid!==shownRid){shownRid=G.rid;if(G.phase==='move')KSfx.play('dice');if(G.turn!==me&&G.phase==='move'&&!G.open)await wait(150)}
   view0=TV.st(G);busy=false;view=null;render();
   if(sync.again){sync.again=false;return sync()}after()}
 let view0=null;const wait=ms=>new Promise(r=>setTimeout(r,ms/SPD));
@@ -193,6 +193,7 @@ function newMatch(){if(mode==='off'){me=0;names=[myName(),'Nuri']}G=TV.newMatch(
 function ov(k,h){const s=$('sheet');s.dataset.k=k;s.innerHTML=h;$('ov').hidden=false;return s}
 function hideOv(){$('ov').hidden=true;$('sheet').dataset.k=''}
 function showEnd(){const k=G.phase+G.games;if(showEnd.k===k&&!$('ov').hidden)return;const first=showEnd.k!==k;showEnd.k=k;const w=G.winner,over=G.phase==='over';
+  if(first)KSfx.play((over?G.matchWinner:w)===me?'win':'lose');
   if(over&&first){const r=ST.get('rec',[0,0]);r[G.matchWinner===me?0:1]++;window.KH&&KH.stat('Tavla',G.matchWinner===me);ST.set('rec',r);ST.del('save')}
   ov('end',`<h2>${over?(G.matchWinner===me?'Maçı kazandın!':`${esc(names[G.matchWinner])} maçı kazandı`):(w===me?'Oyunu kazandın!':`${esc(names[w])} oyunu kazandı`)}</h2>
     <p>${G.pts===2?'<b>Mars!</b> +2 puan':'+1 puan'} · <span>Maç ${G.target} puana</span></p>
@@ -216,12 +217,13 @@ function showMenu(){const sv=ST.get('save',null),rec=ST.get('rec',[0,0]);
       <button class="btn pri" id="mQuick">⚡ Hızlı oyun</button>
       <button class="btn" id="mOn">Arkadaşınla online</button>
       <button class="btn" id="mRules">Kurallar</button>
+      <button class="btn" id="mSnd">${KSfx.on?'Ses: Açık':'Ses: Kapalı'}</button>
       <a class="btn" href="../">Salona dön</a></div>
     <p style="font-size:12.5px;margin-top:10px">Rekorun: ${rec[0]} galibiyet, ${rec[1]} mağlubiyet.</p>`);
   s.querySelectorAll('#mT button').forEach(b=>b.onclick=()=>{target=+b.dataset.n;ST.set('target',target);s.querySelectorAll('#mT button').forEach(x=>x.classList.toggle('on',x===b))});
   if($('mBack'))$('mBack').onclick=()=>{hideOv();after()};
   if($('mLoad'))$('mLoad').onclick=()=>{mode='off';me=0;G=sv.G;names=sv.names;names[0]=myName();pre=[];shownMid=G.mid;shownRid=G.rid;view0=TV.st(G);hideOv();sync()};
-  $('mBot').onclick=()=>{if(mode!=='off')leaveOnline();mode='off';newMatch()};$('mQuick').onclick=quickPlay;$('mOn').onclick=showOnline;$('mRules').onclick=showRules}
+  $('mBot').onclick=()=>{if(mode!=='off')leaveOnline();mode='off';newMatch()};$('mQuick').onclick=quickPlay;$('mOn').onclick=showOnline;$('mSnd').onclick=e=>{e.target.textContent=KSfx.toggle()?'Ses: Açık':'Ses: Kapalı'};$('mRules').onclick=showRules}
 $('bMenu').onclick=showMenu;$('bRules').onclick=showRules;
 $('ov').addEventListener('click',e=>{if(e.target===$('ov')&&$('sheet').dataset.k==='rules'&&G){hideOv();after()}});
 /* ---------- online (2 kişi): ev sahibi beyaz ---------- */
