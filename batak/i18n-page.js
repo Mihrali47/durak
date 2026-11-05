@@ -4,6 +4,10 @@ const SU={'Maça':['Пики','Spades'],'Kupa':['Червы','Hearts'],'Karo':['
 const BN={Nuri:'Нури','Rıza':'Рыза',Hamdi:'Хамди',Sen:'Вы'};
 const nm=(n,j)=>j?(n==='Sen'?'You':n):(BN[n]||n);
 window.I18N_EXTRA=[
+['İhaleli','С торговлей','Bidding'],['Eşli','Парами','Partners'],['Koz Maça','Козырь пики','Spades trump'],['Oyun türü','Вариант игры','Game type'],['Ortak','Партнёр','Partner'],['Rakip','Соперник','Opponent'],['El bitti','Раздача окончена','Hand over'],
+['ortaklar','партнёры','the partners'],['Tebrikler, ortağınla kazandınız!','Поздравляем, вы с партнёром победили!','Congratulations, you and your partner won!'],['Rakipler kazandı','Победили соперники','The opponents won'],['Berabere','Ничья','Draw'],
+['Eşli:','Парами:','Partners:'],[' karşındaki ortağındır. İhaleyi ortaklar birlikte tutturur, puanlar takım olarak yazılır.',' игрок напротив — ваш партнёр. Заявку выполняете вместе, очки записываются командой.',' the player opposite is your partner. Partners make the bid together and score as a team.'],
+['Koz Maça:','Козырь пики:','Spades trump:'],[' ihale yok, koz hep maça. Herkes aldığı el kadar puan alır.',' без торговли, козырь всегда пики. Каждый получает столько очков, сколько взял взяток.',' no bidding, spades are always trumps. Everyone scores the tricks they take.'],
 ['Batak','Батак','Batak'],['İhale','Торговля','Bidding'],['Koz seçiliyor','Выбор козыря','Choosing trumps'],['Pas','Пас','Pass'],['ihaleyi aldı:','выиграл торговлю:','won the bid:'],
 ['Henüz kimse söylemedi.','Пока никто не заявил.','No one has bid yet.'],[' Kaç el alırsın? Aldığın el sayısını tutturamazsan söylediğin kadar puan silinir.',' Сколько взяток возьмёте? Если не наберёте заявленное, столько очков и снимут.',' How many tricks will you take? Miss your bid and that many points are taken off.'],
 ['Kaç el alırsın? Aldığın el sayısını tutturamazsan söylediğin kadar puan silinir.','Сколько взяток возьмёте? Если не наберёте заявленное, столько очков и снимут.','How many tricks will you take? Miss your bid and that many points are taken off.'],
