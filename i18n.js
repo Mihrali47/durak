@@ -146,6 +146,7 @@ const SU={maça:['пики','spades'],kupa:['червы','hearts'],karo:['буб
 const J=I-1;
 const card=s=>s.replace(/\b(maça|kupa|karo|sinek)\s+(vale|kız|papaz|as|\d+)\b/g,(m,a,b)=>(RK[b]?RK[b][J]:b)+' '+SU[a][J]).replace(/\((koz)\)/g,J?'(trump)':'(козырь)');
 const R=L==='ru'?[
+[/^(\d)-(\d) kişi$/,'$1–$2 игрока'],[/^(\d) kişi$/,'$1 игрока'],[/^Linkle online (\d)-(\d) kişi$/,'Онлайн по ссылке, $1–$2 игрока'],
 [/^● (\d+) masa oyuncu bekliyor$/,'● столов ждут игроков: $1'],
 [/^Arkadaş kodun: (.+)$/,'Ваш код друга: $1'],[/^Arkadaşların \((\d+)\)$/,'Друзья ($1)'],
 [/^(.+) durak oldu$/,'$1 — дурак'],[/^(.+) pes etti$/,'$1 сдался'],[/^Koz (maça|kupa|karo|sinek)$/i,(m,a)=>'Козырь '+SU[a.toLowerCase()][0]],[/^KOZ (MAÇA|KUPA|KARO|SINEK)$/,(m,a)=>'Козырь '+SU[a.toLocaleLowerCase('tr')][0]],
@@ -161,6 +162,7 @@ const R=L==='ru'?[
 [/^(.+) hepsini kesti, kartlar çıktı$/,'$1 отбился, бито'],[/^Hepsini kestin, kartlar çıktı$/,'Вы отбились, бито'],[/^Yeni el\. Koz (.+)\. (.*)$/,(m,a,b)=>'Новая раздача. Козырь '+(SU[a]?SU[a][0]:a)+'.'],[/^Pes ettin$/,'Вы сдались'],
 [/^(sana|.+) aktardı$/,'перевёл'],[/^(.+) hileyi yakaladı$/,'$1 поймал шулера'],[/^(.+) hileyi yakaladı: (.+)$/,'$1 поймал шулера'],[/^Saldırı sende$/,'Ваша атака'],[/^Aktardın$/,'Переведено'],[/^Sana aktardı$/,'Переведено на вас'],[/^Kurtuldun$/,'Вы выбрались'],[/^Berabere$/,'Ничья'],
 ]:[
+[/^(\d)-(\d) kişi$/,'$1–$2 players'],[/^(\d) kişi$/,'$1 players'],[/^Linkle online (\d)-(\d) kişi$/,'Online by link, $1–$2 players'],
 [/^● (\d+) masa oyuncu bekliyor$/,'● $1 tables waiting for players'],
 [/^Arkadaş kodun: (.+)$/,'Your friend code: $1'],[/^Arkadaşların \((\d+)\)$/,'Friends ($1)'],
 [/^(.+) durak oldu$/,'$1 is the durak'],[/^(.+) pes etti$/,'$1 resigned'],[/^Koz (maça|kupa|karo|sinek)$/i,(m,a)=>'Trump: '+SU[a.toLowerCase()][1]],[/^KOZ (MAÇA|KUPA|KARO|SINEK)$/,(m,a)=>'Trump: '+SU[a.toLocaleLowerCase('tr')][1]],

@@ -24,7 +24,7 @@ window.I18N_EXTRA=[
 const mk=j=>[
 [/^(\d) puan$/,(m,n)=>j?`${n} points`:`${n} очков`],[/^Maç (\d) puana$/,(m,n)=>j?`Match to ${n}`:`Матч до ${n}`],
 [/^(.+?) oynuyor…$/,(m,a)=>j?`${nm(a,1)} is playing…`:`Ходит ${nm(a,0)}…`],[/^(.+?) maçı kazandı$/,(m,a)=>j?`${nm(a,1)} won the match`:`${nm(a,0)} выиграл матч`],[/^(.+?) oyunu kazandı$/,(m,a)=>j?`${nm(a,1)} won the game`:`${nm(a,0)} выиграл партию`],
-[/^Açılış zarı: (.+?) (\d) – (.+?) (\d)\. (.*)$/,(m,a,x,b,y,r)=>(j?`Opening roll: ${nm(a,1)} ${x} – ${nm(b,1)} ${y}. `:`Первый бросок: ${nm(a,0)} ${x} – ${nm(b,0)} ${y}. `)+r],
+[/^Açılış zarı: (.+?) (\d) – (.+?) (\d)\. (.*)$/,(m,a,x,b,y,r)=>(j?`Opening roll: ${nm(a,1)} ${x} – ${nm(b,1)} ${y}. `:`Первый бросок: ${nm(a,0)} ${x} – ${nm(b,0)} ${y}. `)+((window.I18N_EXTRA.find(e=>e[0]===r)||[])[j?2:1]||(/^(.+?) oynuyor…$/.test(r)?(j?`${nm(r.replace(/ oynuyor…$/,''),1)} is playing…`:`Ходит ${nm(r.replace(/ oynuyor…$/,''),0)}…`):r))],
 [/^Rekorun: (\d+) galibiyet, (\d+) mağlubiyet\.$/,(m,a,b)=>j?`Your record: ${a} wins, ${b} losses.`:`Ваш рекорд: ${a} побед, ${b} поражений.`],
 ];
 window.I18N_RULES={ru:mk(0),en:mk(1)};
