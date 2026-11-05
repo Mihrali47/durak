@@ -1,0 +1,504 @@
+<!doctype html>
+<html lang="tr"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>1000</title>
+<script src="i18n-page.js"></script><script src="../i18n.js"></script>
+<script src="../mqtt.min.js"></script><script src="../relay.js"></script>
+<script src="engine.js"></script><script src="../account.js"></script><script src="../quick.js"></script><script src="../ttimer.js"></script><script src="../sfx.js"></script>
+<link rel="manifest" href="../manifest.webmanifest"><link rel="icon" href="../icon.svg" type="image/svg+xml">
+<meta name="theme-color" content="#1f3b2f">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700&display=swap">
+<style>
+/* 1000: üç kişilik masa. Sen altta, rakipler solda ve sağda; ortada el ve prikup. */
+:root{--room:#13261e;--felt:#2f5a47;--felt2:#264c3c;--line:rgba(255,255,255,.14);--card:#fff;--edge:#d6dbe0;--red:#c8323a;--black:#1a1d22;
+  --back:#7a3b47;--backl:#9a5662;--ink:#f1f5f2;--muted:#c3d4cb;--gold:#e8c86a;--bad:#f0a196;--good:#9fe0b0;
+  --body:"Rubik",system-ui,-apple-system,"Segoe UI",sans-serif;--suit:"DejaVu Sans","Segoe UI Symbol","Apple Symbols",serif;color-scheme:dark}
+*,*::before,*::after{box-sizing:border-box}
+html,body{height:100%;margin:0;overflow:hidden}
+body{background:radial-gradient(ellipse at 50% 45%,var(--felt) 0%,var(--felt2) 65%,var(--room) 100%);color:var(--ink);font:15px/1.35 var(--body);
+  -webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+button{font:inherit;color:inherit;cursor:pointer}
+[hidden]{display:none!important}
+.app{position:relative;height:100%;max-width:820px;margin:0 auto;display:flex;flex-direction:column;
+  padding:max(6px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left));
+  --cw:min(17vw,9.6vh,84px);--ch:calc(var(--cw)*1.42);--tw:min(16vw,9vh,78px)}
+header{display:flex;align-items:center;gap:8px;min-height:40px}
+header .t{flex:1;min-width:0}
+header .t b{display:block;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+header .t small{color:var(--muted);font-size:12.5px}
+.hb{background:rgba(0,0,0,.22);border:1px solid var(--line);border-radius:10px;padding:7px 11px;font-size:13.5px}
+.trump{display:inline-flex;align-items:center;gap:4px}
+.trump i{font-style:normal;font-family:var(--suit);font-size:17px;background:#fff;border-radius:6px;padding:0 5px;line-height:22px}
+/* masa */
+.table{position:relative;flex:1;min-height:0;display:grid;grid-template-columns:auto 1fr auto;grid-template-rows:1fr;gap:4px}
+.seat{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:74px;padding:4px}
+.seat.left{grid-column:1;grid-row:1;align-self:center}
+.seat.right{grid-column:3;grid-row:1;align-self:center}
+.av{position:relative;width:46px;height:46px;border-radius:50%;background:#e9dcc4;color:#3b2a1a;display:grid;place-items:center;font-weight:700;font-size:19px;
+  border:3px solid rgba(255,255,255,.25);transition:border-color .2s,box-shadow .2s}
+.seat.turn .av,.me.turn .av{border-color:var(--gold);box-shadow:0 0 0 4px rgba(232,200,106,.25)}
+.av .cz{position:absolute;right:-6px;bottom:-4px;background:var(--gold);color:#2b2010;border-radius:8px;font-size:10.5px;padding:1px 4px;font-weight:700}
+.nm{font-size:13px;font-weight:500;max-width:96px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.st{font-size:12px;color:var(--muted);display:flex;gap:7px}
+.st .pt{color:var(--ink);font-weight:700}
+.st .pt.neg{color:var(--bad)}.st .pt.pos{color:var(--good)}
+.backs{display:flex;height:22px}
+.backs span{width:14px;height:21px;margin-left:-8px;border-radius:3px;background:repeating-linear-gradient(45deg,var(--back) 0 4px,var(--backl) 4px 6px);border:1px solid rgba(255,255,255,.5)}
+.backs span:first-child{margin-left:0}
+.mid{grid-column:2;grid-row:1;position:relative;min-height:calc(var(--tw)*2.9)}
+.slot{position:absolute;left:50%;top:50%;width:var(--tw);height:calc(var(--tw)*1.42);margin:calc(var(--tw)*-.71) 0 0 calc(var(--tw)*-.5);transition:transform .45s cubic-bezier(.3,.8,.3,1),opacity .45s}
+.slot.v0{transform:translate(0,48%)}.slot.v1{transform:translate(-64%,-22%) rotate(-6deg)}.slot.v2{transform:translate(64%,-22%) rotate(6deg)}
+.pk{position:absolute;left:50%;top:6px;transform:translateX(-50%);display:flex;gap:5px;align-items:center}
+.pk .pc{width:calc(var(--tw)*.72);height:calc(var(--tw)*1.02);--w:calc(var(--tw)*.72)}
+.pk .bk{width:100%;height:100%;border-radius:7px;background:repeating-linear-gradient(45deg,var(--back) 0 5px,var(--backl) 5px 8px);border:2px solid rgba(255,255,255,.6)}
+.pk small{color:var(--muted);font-size:12px;margin-right:4px}
+.hand .hc .gv{position:absolute;left:50%;top:-20px;transform:translateX(-50%);background:var(--gold);color:#2b2010;border-radius:8px;font-size:11px;font-weight:700;padding:1px 6px;white-space:nowrap}
+.hand .hc.gs{transform:translateY(-14px)}
+.ov.thru{pointer-events:none}.ov.thru .sheet{pointer-events:auto}
+.seat.turn .av,.me.turn .av{border-color:#3fbf6a;box-shadow:0 0 0 4px rgba(63,191,106,.35);animation:tb 1s ease-in-out infinite}
+@keyframes tb{50%{border-color:rgba(63,191,106,.35);box-shadow:0 0 0 1px rgba(63,191,106,.1)}}
+.brl{font-size:11px;background:#7a4a1c;color:#ffe7b8;border-radius:6px;padding:0 5px}
+.slot.win{box-shadow:0 0 0 3px var(--gold);border-radius:9px}
+.msg{position:absolute;left:0;right:0;bottom:2px;text-align:center;font-size:13.5px;color:var(--muted);pointer-events:none}
+/* kart */
+.card{position:relative;width:100%;height:100%;background:var(--card);border:1px solid var(--edge);border-radius:8px;color:var(--black);box-shadow:0 2px 6px rgba(0,0,0,.28)}
+.card.r{color:var(--red)}
+.card .ix{position:absolute;left:5%;top:3%;display:flex;flex-direction:column;align-items:center;line-height:1;font-weight:700;font-size:calc(var(--w)*.27)}
+.card .ix i{font-style:normal;font-family:var(--suit);font-size:calc(var(--w)*.24);margin-top:1px}
+.card .big{position:absolute;right:8%;bottom:6%;font-family:var(--suit);font-size:calc(var(--w)*.5);line-height:1}
+.card .fc{position:absolute;right:9%;bottom:7%;font-weight:700;font-size:calc(var(--w)*.36);line-height:1;opacity:.92}
+.card .fc i{font-style:normal;font-family:var(--suit);font-size:calc(var(--w)*.3)}
+/* ben */
+.me{display:flex;align-items:center;gap:10px;padding:2px 2px 4px}
+.me .av{width:40px;height:40px;font-size:17px}
+.me .info{flex:1;min-width:0}
+.me .acts{display:flex;gap:6px}
+.hand{position:relative;height:calc(var(--ch) + 22px);touch-action:none;margin-bottom:2px}
+.hand .hc{position:absolute;bottom:0;width:var(--cw);height:var(--ch);--w:var(--cw);transition:transform .18s,filter .18s,left .25s}
+.hand .hc.sel{transform:translateY(-20px)}
+.hand .hc.dim .card{filter:brightness(.62) saturate(.6)}
+.hand.myturn .hc:not(.dim) .card{box-shadow:0 2px 8px rgba(0,0,0,.3),0 0 0 2px rgba(232,200,106,.55)}
+.hand .hc.deal{animation:dealIn .38s cubic-bezier(.2,.8,.3,1) both}
+@keyframes dealIn{from{opacity:0;transform:translate(0,-160px) scale(.6) rotate(-14deg)}}
+.slot .card{--w:var(--tw)}
+.drag{position:fixed;z-index:50;pointer-events:none;width:var(--cw);height:var(--ch);--w:var(--cw);transform:translate(-50%,-60%) rotate(-4deg)}
+/* paneller */
+.ov{position:fixed;inset:0;z-index:40;background:rgba(6,14,10,.55);display:flex;align-items:center;justify-content:center;padding:14px}
+.sheet{background:#f7f3ea;color:#22201b;border-radius:16px;width:min(440px,100%);max-height:calc(100% - 10px);overflow:auto;padding:18px 16px 16px;box-shadow:0 12px 40px rgba(0,0,0,.45)}
+.sheet h2{margin:0 0 4px;font-size:21px}
+.sheet p{margin:6px 0;color:#4d483f;font-size:14px}
+.sheet .row{display:flex;gap:8px;margin-top:12px}
+.btn{flex:1;border:0;border-radius:11px;padding:12px 10px;background:#e7e0d1;color:#22201b;font-weight:500;font-size:15px}
+.btn.pri{background:#2f6b4f;color:#fff}
+.btn:disabled{opacity:.45}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.opt{border:1px solid #d9d1bf;background:#fff;border-radius:12px;padding:10px 10px 9px;text-align:left;display:flex;flex-direction:column;gap:2px}
+.opt b{font-size:15px}
+.opt small{color:#6a6458;font-size:12px}
+.opt.koz{background:#fff6dc;border-color:#e2c56d}
+.opt:disabled{opacity:.38}
+.suits{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}
+.suits button{border:1px solid #d9d1bf;background:#fff;border-radius:12px;padding:10px 0;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:13px}
+.suits button i{font-style:normal;font-family:var(--suit);font-size:30px;line-height:1}
+.suits button.r i{color:var(--red)}
+.seg{display:flex;background:#e7e0d1;border-radius:11px;padding:3px;margin-top:6px}
+.seg button{flex:1;border:0;background:none;border-radius:9px;padding:9px 6px;font-size:14px;color:#3b372f}
+.seg button.on{background:#fff;color:#16130e;font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.lbl{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#7a7365;margin-top:14px;font-weight:600}
+.mini{max-height:118px;overflow:hidden;margin:8px 0 2px;display:flex;flex-wrap:wrap;gap:3px;justify-content:center}
+.mini .mc{width:34px;height:48px;--w:34px}
+table.sc{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
+table.sc th,table.sc td{padding:5px 4px;text-align:right;border-bottom:1px solid #e3dccd;white-space:nowrap}
+table.sc th:first-child,table.sc td:first-child{text-align:left}
+table.sc td.neg{color:#b23a2c}table.sc td.pos{color:#2d7a4b}
+table.sc tr.tot td{font-weight:700;border-top:2px solid #cfc6b3}
+.rank{list-style:none;padding:0;margin:10px 0 0}
+.rank li{display:flex;justify-content:space-between;padding:8px 10px;border-radius:9px;background:#efe9dc;margin-bottom:5px;font-size:15px}
+.rank li:first-child{background:#f6e3a8;font-weight:700}
+.toast{position:fixed;left:50%;top:64px;transform:translateX(-50%);z-index:60;background:rgba(10,20,15,.9);color:#fff;padding:9px 15px;border-radius:12px;font-size:14px;
+  box-shadow:0 6px 20px rgba(0,0,0,.35);transition:opacity .3s;max-width:90vw;text-align:center}
+.lnk{display:flex;gap:6px;margin-top:8px}
+.lnk input{flex:1;min-width:0;border:1px solid #d9d1bf;border-radius:10px;padding:10px;font-size:13px;background:#fff;color:#222}
+.lnk button{border:0;border-radius:10px;background:#2f6b4f;color:#fff;padding:0 14px}
+.seats4 li{display:flex;justify-content:space-between;padding:9px 11px;border-radius:9px;background:#efe9dc;margin-bottom:5px}
+.seats4 li span{color:#7a7365;font-size:13px}
+.emo{position:absolute;font-size:30px;z-index:30;pointer-events:none;animation:emo 2.2s ease-out forwards}
+@keyframes emo{0%{opacity:0;transform:translateY(8px) scale(.6)}15%{opacity:1;transform:none}80%{opacity:1}100%{opacity:0;transform:translateY(-24px)}}
+.emobar{position:absolute;right:0;bottom:calc(100% + 6px);width:min(340px,calc(100vw - 20px));background:#f7f3ea;color:#22201b;border-radius:14px;padding:8px;box-shadow:0 6px 18px rgba(0,0,0,.35);z-index:35}
+.emobar .er{display:flex;justify-content:space-between}
+.emobar .er button{border:0;background:none;font-size:24px;padding:4px}
+.emobar .log{max-height:180px;overflow:auto;font-size:13.5px;margin:4px 2px 6px}
+.emobar .log div{padding:3px 0;border-bottom:1px solid #e6dfcf}
+.emobar .log small{display:block;color:#2f6b4f}
+.emobar form{display:flex;gap:6px}
+.emobar input{flex:1;min-width:0;border:1px solid #d9d1bf;border-radius:10px;padding:9px;font-size:14px;background:#fff;color:#222}
+.emobar form button{border:0;border-radius:10px;background:#2f6b4f;color:#fff;padding:0 12px}
+#bEmo.new{box-shadow:0 0 0 2px var(--gold)}
+.bub{position:fixed;z-index:31;max-width:170px;background:#fff;color:#222;border-radius:12px;padding:6px 9px;font-size:13px;box-shadow:0 4px 12px rgba(0,0,0,.3);pointer-events:none}
+input.name{width:100%;border:1px solid #d9d1bf;border-radius:10px;padding:11px;font-size:15px;margin-top:6px;background:#fff;color:#222}
+@media (prefers-reduced-motion:reduce){.hand .hc.deal{animation:none}.slot{transition:none}}
+
+@media (max-height:480px) and (orientation:landscape){
+  .app{--cw:min(9vw,16vh,70px);--tw:min(8vw,17vh,66px)}
+  .backs{display:none}
+  .seat .av{width:36px;height:36px;font-size:15px}
+  .me{position:absolute;top:calc(max(6px,env(safe-area-inset-top)) + 46px);left:max(10px,env(safe-area-inset-left));z-index:3;background:rgba(0,0,0,.18);border-radius:12px;padding:4px 8px}
+  .me .av{width:32px;height:32px;font-size:14px}
+  .mid{min-height:0}
+}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <header>
+    <button class="hb" id="bMenu">Menü</button>
+    <div class="t"><b id="hGame">1000</b><small id="hSub"></small></div>
+    <button class="hb" id="bLast" title="Son el">↺</button>
+    <button class="hb" id="bScore">Puanlar</button>
+  </header>
+  <div class="table">
+    <div class="seat left" id="s1"></div>
+    <div class="mid" id="mid"><div class="pk" id="pk"></div><div class="msg" id="msg"></div></div>
+    <div class="seat right" id="s2"></div>
+  </div>
+  <div class="me" id="meBox">
+    <div class="av" id="meAv">S</div>
+    <div class="info"><div class="nm" id="meNm">Sen</div><div class="st" id="meSt"></div></div>
+    <div class="acts" style="position:relative"><button class="hb" id="bEmo" hidden>💬</button></div>
+  </div>
+  <div class="hand" id="hand"></div>
+</div>
+<div class="ov" id="ov" hidden><div class="sheet" id="sheet"></div></div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+const K=window.THOUSAND,$=id=>document.getElementById(id);
+let botLvl=(()=>{try{return JSON.parse(localStorage.getItem('kh_botlvl'))||'normal'}catch(e){return 'normal'}})();
+{const _bp=K.botPlay;K.botPlay=(M,p)=>botLvl==='kolay'&&Math.random()<.5?(()=>{const L=K.legal(M,p);return L[Math.random()*L.length|0]})():_bp(M,p)}
+const SYM={S:'♠',H:'♥',D:'♦',C:'♣'},SN={S:'Maça',H:'Kupa',D:'Karo',C:'Sinek'};
+const RN=r=>({11:'J',12:'Q',13:'K',14:'A'})[r]||String(r);
+const BOTN=['Nuri','Rıza'];
+const ST={get(k,d){try{const v=localStorage.getItem('bin_'+k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem('bin_'+k,JSON.stringify(v))}catch(e){}},del(k){try{localStorage.removeItem('bin_'+k)}catch(e){}}};
+const UID=ST.get('uid',null)||(()=>{const u=Math.random().toString(36).slice(2,10);ST.set('uid',u);return u})();
+let M=null,names=['Sen',...BOTN],me=0,mode='off',human=[true,false,false];
+let busy=false,shownTid=null,showing=null,sel=null,botT=null,dealSeen=-1,endT=null,ver=0,marrSeen=0,pkSeen=null,gsel=[];
+const SPD=+(new URLSearchParams(location.search).get('spd')||1);
+const myName=()=>(window.KH&&KH.name())||ST.get('name','')||'Sen';
+const V=p=>(p-me+3)%3;
+const pn=p=>p===me?'Sen':names[p];
+const sym=s=>`<i style="font-style:normal;font-family:var(--suit);color:${s==='H'||s==='D'?'var(--red)':'var(--black)'};background:#fff;border-radius:5px;padding:0 4px">${SYM[s]}&#xFE0E;</i>`;
+
+/* ---------- kart çizimi ---------- */
+function cardEl(c,cls=''){const s=K.cs(c),r=K.cr(c),d=document.createElement('div');d.className='card'+(s==='H'||s==='D'?' r':'')+(cls?' '+cls:'');
+  d.innerHTML=`<div class="ix">${RN(r)}<i>${SYM[s]}&#xFE0E;</i></div>`+(r>=11?`<div class="fc">${RN(r)}<i>${SYM[s]}&#xFE0E;</i></div>`:`<div class="big">${SYM[s]}&#xFE0E;</div>`);return d}
+function toast(html,ms=2200){const t=$('toast');t.innerHTML=html;t.hidden=false;{const o=$('ov');t.style.top=!o.hidden&&o.style.alignItems==='flex-start'?($('sheet').getBoundingClientRect().bottom+10)+'px':''}t.style.opacity=1;clearTimeout(toast.t);toast.t=setTimeout(()=>{t.style.opacity=0;setTimeout(()=>t.hidden=true,300)},ms)}
+function fmt(n){return (n>0?'+':'')+n}
+function cls(n){return n<0?'neg':n>0?'pos':''}
+
+/* ---------- çizim ---------- */
+function render(){if(!M)return;
+  const T=M.trump,H=M.high;
+  $('hGame').innerHTML=M.phase==='bid'?`<span>İhale</span> ${H?H.v:''}`:M.decl!=null&&M.phase!=='dealEnd'&&M.phase!=='over'?`<span>${esc(pn(M.decl))}</span> ${M.bid}`+(T?` <span class="trump">· ${sym(T)}</span>`:' <span style="color:var(--muted);font-weight:400;font-size:13px">· <span>koz yok</span></span>'):'1000';
+  $('hSub').textContent=`${M.deal+(M.phase==='dealEnd'||M.phase==='over'?0:1)}. el`;
+  for(let p=0;p<3;p++){const v=V(p);const turn=['play','bid','give','raise'].includes(M.phase)&&M.turn===p&&!busy;
+    const b=M.bids?M.bids[p]:null;
+    const bt=M.phase==='bid'?(b==null?'':b==='pas'?'<span>Pas</span>':`<span>${b}</span>`):M.decl===p&&M.phase!=='dealEnd'&&M.phase!=='over'?`<span>★ ${M.bid}</span>`:(M.taken?`<span>${M.taken[p].length/3} el</span>`:'');
+    const st=`<span class="pt ${cls(M.score[p])}">${M.score[p]}</span>${M.barrel[p]?'<span class="brl">🛢</span>':''}${bt}`;
+    if(v===0){$('meAv').innerHTML=((mode==='off'?myName():names[p])[0]||'S').toLocaleUpperCase('tr');$('meNm').textContent=mode==='off'?'Sen':names[p];$('meSt').innerHTML=st;$('meBox').classList.toggle('turn',turn);continue}
+    const el=$('s'+v);const n=M.hands?M.hands[p].length:0;
+    el.className='seat '+['','left','right'][v]+(turn?' turn':'');
+    el.innerHTML=`<div class="av">${esc((names[p][0]||'?').toLocaleUpperCase('tr'))}</div><div class="nm">${esc(names[p])}</div><div class="st">${st}</div><div class="backs">${'<span></span>'.repeat(Math.min(n,10))}</div>`}
+  const mid=$('mid');mid.querySelectorAll('.slot').forEach(x=>x.remove());
+  const tr=showing?showing.trick:M.trick||[];
+  for(const t of tr){const s=document.createElement('div');s.className='slot v'+V(t.p)+(showing&&showing.w===t.p&&showing.lit?' win':'');s.appendChild(cardEl(t.c));s.dataset.p=t.p;mid.appendChild(s)}
+  const pk=$('pk');pk.innerHTML='';
+  if(M.phase==='bid'){pk.innerHTML='<small>Prikup</small>'+'<div class="pc"><div class="bk"></div></div>'.repeat(3)}
+  else if((M.phase==='give'||M.phase==='raise')&&M.shownPrikup){pk.innerHTML='<small>Prikup</small>';for(const c of M.shownPrikup){const d=document.createElement('div');d.className='pc';d.appendChild(cardEl(c));pk.appendChild(d)}}
+  let m='';
+  if(M.phase==='bid')m=M.turn===me?'':`${names[M.turn]} ihale düşünüyor…`;
+  else if(M.phase==='give')m=M.turn===me?'':`${names[M.turn]} kart veriyor…`;
+  else if(M.phase==='raise')m=M.turn===me?'':`${names[M.turn]} son kararını veriyor…`;
+  else if(M.phase==='play'&&!busy)m=M.turn===me?(M.trick.length?'Sıra sende':'Sıra sende, el açıyorsun'):`${names[M.turn]} düşünüyor…`;
+  $('msg').textContent=m;
+  renderHand();
+}
+function renderHand(){const h=$('hand');const cards=M&&M.hands?M.hands[me]:[];const mine=M&&M.phase==='play'&&M.turn===me&&!busy;
+  const giving=M&&M.phase==='give'&&M.decl===me;
+  const L=mine?K.legal(M,me):[];h.classList.toggle('myturn',mine||giving);
+  const W=h.clientWidth,cw=h.querySelector('.hc')?.offsetWidth||Math.min(innerWidth*.17,innerHeight*.096,84);
+  const n=cards.length,step=n>1?Math.min(cw*.72,(W-cw)/(n-1)):0,x0=(W-(cw+step*(n-1)))/2;
+  const fresh=M&&dealSeen!==M.deal&&M.phase==='bid';if(fresh)dealSeen=M.deal;
+  h.innerHTML='';cards.forEach((c,i)=>{const d=document.createElement('div');const gi=giving?gsel.indexOf(c):-1;
+    d.className='hc'+(mine&&!L.includes(c)?' dim':'')+(sel===c&&!giving?' sel':'')+(gi>=0?' gs':'')+(fresh?' deal':'');
+    d.style.left=(x0+i*step)+'px';if(fresh)d.style.animationDelay=(i*45)+'ms';d.dataset.c=c;d.appendChild(cardEl(c));
+    if(gi>=0){const g=document.createElement('div');g.className='gv';g.innerHTML=(gi===0?'◀ ':'')+'<span>'+esc(names[(me+1+gi)%3])+'</span>'+(gi===1?' ▶':'');d.appendChild(g)}
+    h.appendChild(d)});
+}
+
+/* ---------- oyun akışı ---------- */
+function isBot(p){if(mode==='guest')return false;if(!human[p])return true;return mode==='host'&&p!==0&&away(p)}
+function sync(fromNet){if(!M)return;
+  if(M.last&&M.last.id!==shownTid){
+    if(shownTid===null&&fromNet==='first'){shownTid=M.last.id}
+    else{shownTid=M.last.id;showTrick(M.last);return}}
+  render();afterRender()}
+function showTrick(last){KSfx.play('card');setTimeout(()=>KSfx.play('trick'),450/SPD);sfxK=M.deal*1000+(M.tricks||0)*5;busy=true;showing={trick:last.trick,w:last.w,lit:false};render();
+  setTimeout(()=>{showing.lit=true;render()},420/SPD);
+  setTimeout(()=>{const v=V(last.w),dx=[0,-1,1][v]*170,dy=[1,-.2,-.2][v]*190;
+    $('mid').querySelectorAll('.slot').forEach(s=>{s.style.transform=`translate(${dx}px,${dy}px) scale(.5)`;s.style.opacity=0});},1150/SPD);
+  setTimeout(()=>{busy=false;showing=null;sel=null;render();afterRender()},1600/SPD)}
+let sfxK=null;
+function afterRender(){if(busy)return;{const ck=M.deal*1000+(M.tricks||0)*5+(M.trick||[]).length;if(sfxK!=null&&ck>sfxK&&(M.trick||[]).length)KSfx.play('card');sfxK=ck}
+  if(M.marrEv&&marrSeen!==M.marrEv.id){marrSeen=M.marrEv.id;const e=M.marrEv;
+    if(M.phase==='play'||M.phase==='dealEnd'||M.phase==='over'){KSfx.play('win');toast(`<b>${esc(pn(e.p))}</b> <span>evlilik ilan etti!</span> ${sym(e.s)} +${e.v} · <span>koz değişti</span>`,2800)}}
+  if(M.phase==='give'&&pkSeen!==M.deal){pkSeen=M.deal;if(M.decl!==me)toast(`<b>${esc(pn(M.decl))}</b> <span>ihaleyi aldı:</span> ${M.bid}`)}
+  if(M.phase==='raise'&&M.decl!==me&&M.given&&pkSeen!=='r'+M.deal){pkSeen='r'+M.deal;const g=M.given.find(x=>x.to===me);if(g)toast('<span>Sana bir kart verildi</span>',1600)}
+  if(M.phase==='bid'&&M.turn===me)showBid();else if($('sheet').dataset.k==='bid')hideOv();
+  if(M.phase==='give'&&M.decl===me)showGive();else if($('sheet').dataset.k==='give')hideOv();
+  if(M.phase==='raise'&&M.decl===me)showRaise();else if($('sheet').dataset.k==='raise')hideOv();
+  if(M.phase==='dealEnd'||M.phase==='over')showDealEnd();else if(['dealEnd','over'].includes($('sheet').dataset.k))hideOv();
+  if(mode==='off'&&M.phase!=='over')ST.set('save',{M,names});
+  schedule()}
+let schedKey=null;
+function schedule(){if(!M||busy||mode==='guest'){clearTimeout(botT);schedKey=null;return}
+  const key=[ver,M.phase,M.turn,M.deal,(M.trick||[]).length,isBot(M.turn)].join();
+  if(key===schedKey)return;schedKey=key;clearTimeout(botT);
+  const ph=M.phase,t=M.turn;
+  const later=(ms,f)=>{botT=setTimeout(()=>{schedKey=null;if(M.phase===ph&&M.turn===t&&isBot(t))f()},ms/SPD)};
+  if(ph==='bid'&&isBot(t))later(1000,()=>act(t,{k:'bid',v:K.botBid(M,t,botLvl)}));
+  else if(ph==='give'&&isBot(t))later(1600,()=>{const g=K.botGive(M,t);act(t,{k:'give',a:g[0],b:g[1]})});
+  else if(ph==='raise'&&isBot(t))later(1000,()=>act(t,{k:'raise',v:K.botRaise(M,t)}));
+  else if(ph==='play'&&isBot(t))later(M.trick.length?700:950,()=>act(t,{k:'play',c:K.botPlay(M,t)}));
+  else if(ph==='dealEnd'&&mode==='host'){clearTimeout(endT);const d=M.deal;endT=setTimeout(()=>{if(M.phase==='dealEnd'&&M.deal===d)act(0,{k:'next'})},10000/SPD)}}
+function act(p,a){if(mode==='guest'){send({t:'act',uid:UID,a});return}
+  let e=null;
+  if(a.k==='bid'){e=K.bid(M,p,a.v);if(!e&&p!==me)toast(`<b>${esc(names[p])}</b>: ${a.v==='pas'?'<span>Pas</span>':a.v}`,1300)}
+  else if(a.k==='give'){e=K.give(M,p,a.a,a.b);if(!e)gsel=[]}
+  else if(a.k==='raise'){if(a.v==='ros'){e=K.concede(M,p)}else{const old=M.bid;e=K.raise(M,p,a.v);if(!e&&p!==me&&M.bid>old)toast(`<b>${esc(names[p])}</b>: <span>ihale</span> ${M.bid}`,1500)}}
+  else if(a.k==='play')e=K.play(M,p,a.c);
+  else if(a.k==='next'){if(M.phase!=='dealEnd')return;clearTimeout(endT);K.next(M)}
+  if(e){if(p===me)toast(e);return}
+  ver++;bcastState();sync()}
+function newMatch(){M=K.newMatch({});K.startDeal(M);shownTid=null;dealSeen=-1;marrSeen=0;pkSeen=null;gsel=[];sel=null;showDealEnd.counted=false;
+  if(mode==='off'){names=[myName(),...BOTN];human=[true,false,false];me=0}
+  ver++;bcastState();hideOv();sync()}
+
+/* ---------- el ile oynama: dokun seç, tekrar dokun ya da yukarı sürükle ---------- */
+(()=>{const h=$('hand');let st=null,drag=null;
+  h.addEventListener('pointerdown',e=>{const d=e.target.closest('.hc');if(!d||!M)return;st={c:d.dataset.c,x:e.clientX,y:e.clientY,el:d,moved:false};h.setPointerCapture(e.pointerId)});
+  h.addEventListener('pointermove',e=>{if(!st||M.phase==='give')return;const dx=e.clientX-st.x,dy=e.clientY-st.y;
+    if(!st.moved&&Math.hypot(dx,dy)>10){st.moved=true;drag=document.createElement('div');drag.className='drag';drag.appendChild(cardEl(st.c));document.body.appendChild(drag);st.el.style.opacity=.25}
+    if(drag){drag.style.left=e.clientX+'px';drag.style.top=e.clientY+'px'}});
+  const end=e=>{if(!st)return;const s=st;st=null;
+    if(M.phase==='give'&&M.decl===me){giveTap(s.c);return}
+    if(drag){drag.remove();drag=null;s.el.style.opacity='';const top=h.getBoundingClientRect().top;if(e.clientY<top-30)tryPlay(s.c);return}
+    if(sel===s.c){tryPlay(s.c)}else{sel=s.c;renderHand()}};
+  h.addEventListener('pointerup',end);h.addEventListener('pointercancel',()=>{if(drag){drag.remove();drag=null}if(st)st.el.style.opacity='';st=null});
+})();
+function giveTap(c){const i=gsel.indexOf(c);if(i>=0)gsel.splice(i,1);else if(gsel.length<2)gsel.push(c);else gsel[1]=c;renderHand();showGive(true)}
+function tryPlay(c){if(!M||M.phase!=='play'||busy)return;
+  if(M.turn!==me){toast('Sıra sende değil');return}
+  if(!K.legal(M,me).includes(c)){toast(whyNot(c));sel=null;renderHand();return}
+  sel=null;
+  if(mode==='guest'){const h=M.hands[me];h.splice(h.indexOf(c),1);M.trick.push({p:me,c});M.turn=-1;render()}
+  act(me,{k:'play',c})}
+function whyNot(c){const L=K.legal(M,me);
+  if(M.trick.length){const led=K.cs(M.trick[0].c);if(L.some(x=>K.cs(x)===led))return 'Yerdeki renkten atmak zorundasın';if(M.trump&&L.every(x=>K.cs(x)===M.trump))return 'Koz atmak zorundasın'}
+  return 'Bu kart atılamaz'}
+
+/* ---------- paneller ---------- */
+function ov(k,html){const o=$('ov');o.style.alignItems='';o.style.background='';o.classList.remove('thru');const s=$('sheet');s.dataset.k=k;s.innerHTML=html;o.hidden=false;return s}
+function hideOv(){$('ov').hidden=true;$('ov').classList.remove('thru');$('sheet').dataset.k=''}
+const top_=()=>{$('ov').style.alignItems='flex-start';$('ov').style.background='rgba(6,14,10,.2)';const t=$('toast');if(!t.hidden)t.style.top=($('sheet').getBoundingClientRect().bottom+10)+'px'};
+function showBid(){if($('sheet').dataset.k==='bid'&&!$('ov').hidden)return;const min=M.high.v+5,mar=K.marriages(M.hands[me]);
+  const vals=[];for(let v=min;vals.length<12;v+=5){if(v>120&&!mar.length)break;vals.push(v)}
+  const s=ov('bid',`<h2>İhale</h2><p><span>En yüksek:</span> <b>${esc(pn(M.high.p))}</b> ${M.high.v}.</p><p>Bu elde kaç puan toplarsın? Prikup'u ihaleyi alan alır. Tutturamazsan söylediğin kadar puan silinir.</p>
+    ${mar.length?`<p><span>Evliliğin var:</span> ${mar.map(s=>sym(s)+' '+K.MAR[s]).join(' · ')}</p>`:`<p style="font-size:12.5px">120'den fazlası için elinde evlilik (papaz + kız) olmalı.</p>`}
+    <div class="opts" style="grid-template-columns:repeat(4,1fr)">${vals.map(v=>`<button class="opt" data-v="${v}" style="align-items:center"><b>${v}</b></button>`).join('')}</div>
+    <div class="row"><button class="btn" id="bPas">Pas</button></div>`);
+  top_();
+  s.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{hideOv();act(me,{k:'bid',v:+b.dataset.v})});$('bPas').onclick=()=>{hideOv();act(me,{k:'bid',v:'pas'})}}
+function showGive(force){if(!force&&$('sheet').dataset.k==='give'&&!$('ov').hidden)return;const L=(me+1)%3,R=(me+2)%3;
+  ov('give',`<h2>İki kart ver</h2><p>Prikup senin. Elinden iki kart seç: ilki soldakine, ikincisi sağdakine gider. Aşağıdan kartlara dokun.</p>
+    <p><span>Soldaki</span> (<span>${esc(names[L])}</span>): <b>${gsel[0]?RN(K.cr(gsel[0]))+' '+SYM[K.cs(gsel[0])]:'—'}</b> · <span>Sağdaki</span> (<span>${esc(names[R])}</span>): <b>${gsel[1]?RN(K.cr(gsel[1]))+' '+SYM[K.cs(gsel[1])]:'—'}</b></p>
+    <div class="row"><button class="btn" id="gAuto">Otomatik seç</button><button class="btn pri" id="gGo" ${gsel.length<2?'disabled':''}>Ver</button></div>`);
+  top_();$('ov').classList.add('thru');
+  $('gAuto').onclick=()=>{gsel=K.botGive(M,me);renderHand();showGive(true)};
+  $('gGo').onclick=()=>{if(gsel.length<2)return;const [a,b]=gsel;hideOv();act(me,{k:'give',a,b})}}
+function showRaise(){if($('sheet').dataset.k==='raise'&&!$('ov').hidden)return;const mar=K.marriages(M.hands[me]);
+  const vals=[];for(let v=M.bid;vals.length<8;v+=5){if(v>120&&!mar.length)break;vals.push(v)}
+  const canRos=!M.barrel[me],rc=((M.ros||[0,0,0])[me]||0);
+  const s=ov('raise',`<h2>Son karar</h2><p><span>İhalen:</span> <b>${M.bid}</b></p><p>Kartlarını verdin. İhaleni aynı bırakabilir ya da yükseltebilirsin. İlk eli sen açarsın.</p>
+    <div class="opts" style="grid-template-columns:repeat(4,1fr)">${vals.map(v=>`<button class="opt${v===M.bid?' koz':''}" data-v="${v}" style="align-items:center"><b>${v}</b></button>`).join('')}</div>
+    ${canRos?`<div class="row"><button class="btn" id="rRos">Vazgeç (rakiplere 60'ar)</button></div><p style="font-size:12.5px">${rc%3===2?'Dikkat: bu 3. vazgeçmen olur, −120 yazılır.':'Oynamadan vazgeçersen sana puan yazılmaz.'}</p>`:''}`);
+  top_();
+  s.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{hideOv();act(me,{k:'raise',v:+b.dataset.v})});
+  if($('rRos'))$('rRos').onclick=()=>{hideOv();act(me,{k:'raise',v:'ros'})}}
+function showDealEnd(){const k=M.phase==='over'?'over':'dealEnd';if($('sheet').dataset.k===k&&!$('ov').hidden)return;
+  const l=M.log[M.log.length-1];
+  if(M.phase==='over'){const ord=[0,1,2].sort((a,b)=>M.score[b]-M.score[a]);ST.del('save');
+    const wins=ST.get('rec',[0,0]);if(!showDealEnd.counted){showDealEnd.counted=true;const iw=M.winner===me;KSfx.play(iw?'win':'lose');wins[iw?0:1]++;window.KH&&KH.stat('1000',iw);ST.set('rec',wins)}
+    ov('over',`<h2>${M.winner===me?'Tebrikler, 1000\'e ulaştın!':`${esc(names[M.winner])} kazandı`}</h2>
+      <ul class="rank">${ord.map(p=>`<li><span>${esc(pn(p))}</span><b>${M.score[p]}</b></li>`).join('')}</ul>
+      <div class="row">${mode==='guest'?'<p>Ev sahibi yeni maçı başlatabilir.</p>':`<button class="btn" id="eTab">Puan tablosu</button><button class="btn pri" id="eNew">${mode==='host'?'Rövanş':'Yeni maç'}</button>`}</div>`);
+    if(mode!=='guest'){$('eNew').onclick=()=>{showDealEnd.counted=false;newMatch()};$('eTab').onclick=showScore}return}
+  const D=l.decl;
+  ov('dealEnd',`<h2>${l.ros?`<span>${esc(pn(D))}</span> <span>vazgeçti</span>`:l.made?'İhale tuttu':'Battı!'}</h2>${l.ros?'':`<p>${esc(pn(D))} ${l.bid} demişti, ${l.raw[D]} puan topladı.</p>`}
+    ${l.marr&&l.marr.length?`<p><span>Evlilikler:</span> ${l.marr.map(x=>'<span>'+esc(pn(x.p))+'</span> '+sym(x.s)+' +'+x.v).join(' · ')}</p>`:''}
+    <table class="sc"><tr><th></th>${l.ros?'':'<th>Topladı</th>'}<th>Bu el</th><th>Toplam</th></tr>${[0,1,2].map(p=>`<tr><td><span>${esc(pn(p))}</span>${p===D?' ★':''}${l.note[p]?`<br><small style="color:#7a7365">${l.note[p]}</small>`:''}</td>${l.ros?'':`<td>${l.raw[p]}</td>`}<td class="${cls(l.s[p])}">${fmt(l.s[p])}</td><td class="${cls(M.score[p])}">${M.score[p]}</td></tr>`).join('')}</table>
+    <div class="row">${mode==='guest'?'<p>Sıradaki el birazdan başlıyor…</p>':'<button class="btn pri" id="eNext">Sonraki el</button>'}</div>`);
+  if(mode!=='guest')$('eNext').onclick=()=>{hideOv();act(0,{k:'next'})}}
+function showScore(){if(!M)return;
+  const rows=M.log.map(l=>`<tr><td><span>${esc(pn(l.decl))}</span> ${l.bid}${l.ros?' ✗':l.made?' ✓':''}</td>${l.s.map(v=>`<td class="${cls(v)}">${v}</td>`).join('')}</tr>`).join('');
+  ov('score',`<h2>Puan tablosu</h2><table class="sc"><tr><th></th>${[0,1,2].map(p=>`<th>${esc(pn(p))}</th>`).join('')}</tr>${rows||'<tr><td colspan=4>Henüz el oynanmadı</td></tr>'}
+    <tr class="tot"><td>Toplam</td>${M.score.map((v,p)=>`<td class="${cls(v)}">${v}${M.barrel[p]?' 🛢':''}</td>`).join('')}</tr></table>
+    <div class="row"><button class="btn pri" id="sOk">Tamam</button></div>`);
+  $('sOk').onclick=()=>{hideOv();afterRender()}}
+function showRules(){ov('rules',`<h2>1000 nasıl oynanır?</h2>
+  <p>3 kişi, 24 kart (9'dan asa). Herkese 7 kart, ortaya 3 kart <b>prikup</b>. Kartların gücü: A, 10, K, Q, J, 9. Puanları: A 11, 10 10, K 4, Q 3, J 2. Bir elde toplam 120 puan var.</p>
+  <p><b>İhale:</b> dağıtanın solundaki 100 ile açmak zorundadır. Teklifler 5'er artar; pas diyen geri dönemez. 120'den fazlası için elinde evlilik olmalı. İhaleyi alan prikup'u alır, iki rakibine birer kart verir ve isterse ihalesini yükseltir.</p>
+  <p><b>Oyun:</b> yerdeki renkten atmak zorunludur. Rengin yoksa koz varsa koz atmalısın. Başta koz yoktur.</p>
+  <p><b>Evlilik:</b> aynı renkten papaz ve kız elindeyse, el açarken birini oynayarak evlilik ilan edersin ve o renk koz olur: kupa 100, karo 80, sinek 60, maça 40. İlk elde ilan edilmez.</p>
+  <p><b>Puan:</b> ihaleyi alan söylediğini tutturursa ihale kadar yazar, tutturamazsa o kadar silinir. Diğerleri topladıkları puanı (5'e yuvarlanmış) yazar. Kartlara bakıp vazgeçebilirsin: rakiplere 60'ar yazılır, sana bir şey yazılmaz.</p>
+  <p><b>Varil:</b> 880'e gelen varile çıkar. Oradan sadece ihaleyi alıp tutturarak çıkılır; 3 elde çıkamazsan 120 silinir. Hiç el almadığın her 3. elde ve her 3. vazgeçmende de 120 silinir. 1000'e ilk ulaşan kazanır.</p>
+  <div class="row"><button class="btn pri" id="rOk">Tamam</button></div>`);$('rOk').onclick=()=>M&&M.phase!=='idle'?(hideOv(),afterRender()):showMenu()}
+function showMenu(){const sv=ST.get('save',null),rec=ST.get('rec',[0,0]);
+  const s=ov('menu',`<h2>1000</h2><p>Üç kişilik Rus kart oyunu. İhaleyi al, evliliklerini ilan et, 1000 puana ilk sen ulaş.</p>
+<p class="lbl">Bilgisayar</p><div class="seg" id="mL">${[["kolay","Kolay"],["normal","Normal"]].map(([k,v])=>`<button data-l="${k}" class="${botLvl===k?'on':''}">${v}</button>`).join('')}</div>
+    <div class="row" style="flex-direction:column">
+      ${M&&M.phase!=='over'&&mode!=='guest'?'<button class="btn pri" id="mBack">Oyuna dön</button>':''}
+      ${!M&&sv?'<button class="btn pri" id="mLoad">Kaldığın yerden devam et</button>':''}
+      <button class="btn ${M||sv?'':'pri'}" id="mBot">Bilgisayara karşı yeni oyun</button>
+      <button class="btn pri" id="mQuick">⚡ Hızlı oyun</button>
+      <button class="btn" id="mOn">Arkadaşlarla online</button>
+      <button class="btn" id="mRules">Kurallar</button>
+      <button class="btn" id="mSnd">${KSfx.on?'Ses: Açık':'Ses: Kapalı'}</button>
+      <a class="btn" href="../" style="text-align:center;text-decoration:none">Salona dön</a></div>
+    <p style="font-size:12.5px;margin-top:10px">Rekorun: ${rec[0]} galibiyet, ${rec[1]} mağlubiyet.</p>`);
+  s.querySelectorAll('#mL button').forEach(b=>b.onclick=()=>{botLvl=b.dataset.l;try{localStorage.setItem('kh_botlvl',JSON.stringify(botLvl))}catch(e){};s.querySelectorAll('#mL button').forEach(x=>x.classList.toggle('on',x===b))});
+  if($('mBack'))$('mBack').onclick=()=>{hideOv();afterRender()};
+  if($('mLoad'))$('mLoad').onclick=()=>{mode='off';M=sv.M;names=sv.names;names[0]=myName();human=[true,false,false];me=0;shownTid=M.last?M.last.id:null;dealSeen=M.deal;marrSeen=M.marrEv?M.marrEv.id:0;pkSeen=M.deal;hideOv();sync()};
+  $('mBot').onclick=()=>{if(mode!=='off')leaveOnline();mode='off';newMatch()};
+  $('mQuick').onclick=quickPlay;$('mOn').onclick=showOnline;$('mSnd').onclick=e=>{e.target.textContent=KSfx.toggle()?'Ses: Açık':'Ses: Kapalı'};$('mRules').onclick=showRules}
+$('bMenu').onclick=showMenu;$('bScore').onclick=showScore;
+$('bLast').onclick=()=>{if(!M||!M.last){toast('Henüz el alınmadı');return}const L=M.last;
+  ov('last',`<h2>Son el</h2><p><b>${esc(L.w===me?'Sen':names[L.w])}</b> <span>aldı</span>.</p><div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:10px">${L.trick.map(t=>`<div style="display:flex;flex-direction:column;align-items:center;gap:4px"><div style="width:62px;height:88px;--w:62px">${cardEl(t.c).outerHTML}</div><small style="color:#6a6458">${esc(t.p===me?'Sen':names[t.p])}</small></div>`).join('')}</div><div class="row"><button class="btn pri" id="lOk">Tamam</button></div>`);
+  $('lOk').onclick=()=>{hideOv();afterRender()}};
+$('ov').addEventListener('click',e=>{if(e.target===$('ov')&&['score','rules','last'].includes($('sheet').dataset.k)){hideOv();afterRender()}});
+
+/* ---------- online: ev sahibi oyunu yürütür, herkese durumu yollar ---------- */
+const PFX='kbn-';let peer=null,conn=null,conns={},seats=[null,null,null],lastSeen={},room=null,started=false,lastRx=0,hb=null;
+function away(p){const s=seats[p];if(!s)return true;return Date.now()-(lastSeen[s.uid]||0)>20000}
+function send(d){if(mode==='guest'&&conn&&conn.open)conn.send(d)}
+function bcast(d){if(mode!=='host')return;for(const u in conns){const c=conns[u];if(c.open)try{c.send(d)}catch(e){}}}
+function bcastState(){if(mode==='host'&&started)bcast({t:'state',ver,M,names,human,tl:KTimer.left()})}
+function lobbyNames(){return seats.map((s,i)=>s?s.name:null)}
+function showOnline(){const s=ov('online',`<h2>Arkadaşlarla online</h2><p>Masa kur, linki arkadaşlarına gönder. 2–3 kişi oynayabilirsiniz; boş yere bilgisayar oturur.</p>
+  <p class="lbl">Adın</p><input class="name" id="oName" maxlength="14" value="${myName()==='Sen'?'':esc(myName())}" placeholder="Adını yaz">
+  <div class="row"><button class="btn" id="oBack">Geri</button><button class="btn pri" id="oHost">Masa kur</button></div>`);
+  $('oBack').onclick=showMenu;$('oHost').onclick=()=>{ST.set('name',$('oName').value.trim().slice(0,14));hostRoom()}}
+function linkFor(c){const u=location.protocol.startsWith('http')?location.origin+location.pathname:'https://mihrali47.github.io/durak/bin/';return u+'#'+c}
+function hostRoom(){leaveOnline();mode='host';started=false;room=Math.random().toString(36).slice(2,7).toUpperCase();seats=[{uid:UID,name:myName()},null,null];
+  peer=new Peer(PFX+room);showLobby();
+  peer.on('open',()=>{history.replaceState(null,'','#'+room);showLobby()});
+  peer.on('connection',c=>{c.on('data',d=>hostRecv(c,d))});
+  peer.on('error',e=>{if(e.type==='superseded'){toast('Bu masa başka bir pencerede açıldı');mode='off'}else if(e.type==='network')toast('Sunucuya bağlanılamadı, tekrar deneniyor…')});
+  clearInterval(hb);hb=setInterval(()=>{if(mode!=='host')return;if(started)bcastState();else{bcast({t:'lobby',seats:lobbyNames()});quickTick()}schedule()},3000)}
+function hostRecv(c,d){if(!d||!d.uid)return;lastSeen[d.uid]=Date.now();
+  let s=seats.findIndex(x=>x&&x.uid===d.uid);
+  if(d.t==='hello'){conns[d.uid]=c;
+    if(s<0){s=seats.findIndex((x,i)=>i>0&&!x);if(s<0){c.send({t:'full'});return}seats[s]={uid:d.uid,name:(d.name||'Misafir').slice(0,14)};
+      if(started){human[s]=true;names[s]=seats[s].name;ver++}}
+    else seats[s].name=(d.name||seats[s].name).slice(0,14);
+    c.send({t:'welcome',seat:s,room});bcast({t:'lobby',seats:lobbyNames()});if(started){bcastState()}else showLobby();return}
+  if(s<0)return;
+  if(d.t==='act')act(s,d.a);
+  else if(d.t==='emo'){bcast({t:'emo',p:s,e:d.e});showEmo(s,d.e)}
+  else if(d.t==='chat'){const x=String(d.x||'').slice(0,140);const l=String(d.l||'').slice(0,2);bcast({t:'chat',p:s,x,l});addChat(s,x,l)}}
+function showLobby(){if(mode!=='host'&&mode!=='guest')return;const L=mode==='host'?lobbyNames():(showLobby.names||[]);const n=L.filter(Boolean).length;
+  ov('lobby',`<h2>${mode==='host'?'Masa hazır':'Masaya oturdun'}</h2>
+    ${mode==='host'?`<p>Bu linki arkadaşlarına gönder. Herkes gelince başlat; boş yere bilgisayar oturur.</p><div class="lnk"><input id="lk" readonly value="${linkFor(room||'')}"><button id="lkC">Kopyala</button></div>${window.KH?'<div class="row" style="margin-top:8px"><button class="btn" id="lkF">👥 Arkadaşlarını çağır</button></div>':''}`:'<p>Ev sahibi oyunu başlatınca kartlar dağıtılacak.</p>'}
+    ${quick&&mode==='host'?'<p><b>Oyuncu aranıyor…</b> Masa dolunca ya da 2. kişi geldikten 20 saniye sonra oyun kendiliğinden başlar.</p>':''}<p class="lbl">Oyuncular</p><ul class="rank seats4" style="margin-top:6px">${[0,1,2].map(i=>`<li><b>${esc(L[i]||'Boş')}</b><span>${i===0?'Ev sahibi':L[i]?'Hazır':'Bilgisayar oturacak'}</span></li>`).join('')}</ul>
+    <div class="row"><button class="btn" id="lBack">Çık</button>${mode==='host'?`<button class="btn pri" id="lGo" ${n<2?'disabled':''}>Başlat (${n} kişi)</button>`:''}</div>`);
+  if($('lkF'))$('lkF').onclick=()=>KH.invitePicker('1000',linkFor(room));
+  if($('lkC'))$('lkC').onclick=async()=>{const v=$('lk').value;try{if(navigator.share&&matchMedia('(pointer:coarse)').matches){await navigator.share({title:'1000',url:v});return}await navigator.clipboard.writeText(v);toast('Link kopyalandı')}catch(e){$('lk').select();document.execCommand&&document.execCommand('copy');toast('Link kopyalandı')}};
+  $('lBack').onclick=()=>{leaveOnline();mode='off';M=null;history.replaceState(null,'',location.pathname);showMenu()};
+  if($('lGo'))$('lGo').onclick=startOnline}
+function startOnline(){if(window.KQuick)KQuick.update({started:true});quick=false;started=true;me=0;let b=0;names=seats.map((s,i)=>s?s.name:BOTN[b++]);human=seats.map(s=>!!s);
+  M=K.newMatch({});K.startDeal(M);shownTid=null;dealSeen=-1;marrSeen=0;pkSeen=null;gsel=[];ver++;$('bEmo').hidden=false;hideOv();bcastState();sync()}
+function joinRoom(code){leaveOnline();mode='guest';room=code;started=false;M=null;
+  if(!ST.get('name','')&&!(window.KH&&KH.name())){ov('join',`<h2>1000 masasına davet</h2><p>Adını yaz ve masaya otur.</p><input class="name" id="jName" maxlength="14" placeholder="Adını yaz"><div class="row"><button class="btn pri" id="jGo">Masaya otur</button></div>`);
+    $('jGo').onclick=()=>{ST.set('name',($('jName').value.trim()||'Misafir').slice(0,14));joinRoom(code)};return}
+  ov('lobby','<h2>Bağlanılıyor…</h2><p>Masaya bağlanıyorsun, birkaç saniye sürebilir.</p>');
+  peer=new Peer();peer.on('open',connectHost);
+  peer.on('error',e=>{if(e.type==='peer-unavailable'){ov('lobby','<h2>Masa bulunamadı</h2><p>Ev sahibinin sayfası kapalı olabilir. Linki tekrar iste.</p><div class="row"><button class="btn pri" id="nf">Menüye dön</button></div>');$('nf').onclick=()=>{leaveOnline();mode='off';showMenu()}}});
+  clearInterval(hb);hb=setInterval(()=>{if(mode!=='guest')return;send({t:'ping',uid:UID});if(lastRx&&Date.now()-lastRx>9000){lastRx=Date.now();connectHost()}},3000)}
+function connectHost(){if(!peer)return;try{conn&&conn.close()}catch(e){}
+  conn=peer.connect(PFX+room);conn.on('open',()=>conn.send({t:'hello',uid:UID,name:myName()}));conn.on('data',guestRecv)}
+function guestRecv(d){lastRx=Date.now();if(!d)return;
+  if(d.t==='welcome'){me=d.seat}
+  else if(d.t==='full'){ov('lobby','<h2>Masa dolu</h2><p>Bu masada 3 kişi var.</p><div class="row"><button class="btn pri" id="nf">Menüye dön</button></div>');$('nf').onclick=()=>{leaveOnline();mode='off';showMenu()}}
+  else if(d.t==='lobby'){showLobby.names=d.seats;if(!started)showLobby()}
+  else if(d.t==='state'){if(d.ver<ver)return;const first=!started||!M;if(M&&d.M.deal===0&&M.deal>0&&d.M.phase==='bid'){shownTid=null;dealSeen=-1;marrSeen=0;pkSeen=null;showDealEnd.counted=false}
+    if(first)marrSeen=d.M.marrEv?d.M.marrEv.id:0;
+    ver=d.ver;M=d.M;names=d.names;human=d.human;started=true;KTimer.remote(tkey(),d.tl);$('bEmo').hidden=false;if(['lobby','join'].includes($('sheet').dataset.k))hideOv();sync(first?'first':true)}
+  else if(d.t==='emo')showEmo(d.p,d.e)
+  else if(d.t==='chat'&&d.p!==me)addChat(d.p,d.x,d.l)}
+function leaveOnline(){if(window.KQuick)KQuick.stop();quick=false;clearInterval(hb);try{peer&&peer.destroy()}catch(e){}peer=null;conn=null;conns={};started=false;$('bEmo').hidden=true}
+/* emoji */
+const EMO=['👍','😂','😮','😡','🙏','👏'];
+/* sohbet: herkes kendi dilinde yazar, gelen mesaj okuyanın diline çevrilir */
+const CHAT=[];const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const myL=()=>String(window.LANG||navigator.language||'tr').slice(0,2).toLowerCase();
+async function translate(text,hint){const L=myL();const sl='auto';
+  try{const r=await fetch('https://translate.googleapis.com/translate_a/single?client=gtx&sl='+sl+'&tl='+L+'&dt=t&q='+encodeURIComponent(text));const j=await r.json();
+    const out=(j[0]||[]).map(x=>x[0]).join(''),src=j[2];if(src&&src!==L&&out&&out.trim().toLowerCase()!==text.trim().toLowerCase())return out;return null}
+  catch(e){try{const r=await fetch('https://api.mymemory.translated.net/get?q='+encodeURIComponent(text)+'&langpair='+(hint&&hint!==L?hint:'autodetect')+'|'+L);const j=await r.json();const out=j&&j.responseData&&j.responseData.translatedText;
+    if(out&&out.trim().toLowerCase()!==text.trim().toLowerCase()&&!/INVALID|MYMEMORY/i.test(out))return out}catch(x){}return null}}
+function bubble(p,t){const v=V(p),el=v===0?$('meAv'):$('s'+v).querySelector('.av');if(!el)return;document.querySelectorAll('.bub[data-p="'+p+'"]').forEach(x=>x.remove());
+  const r=el.getBoundingClientRect(),b=document.createElement('div');b.className='bub';b.dataset.p=p;b.textContent=t.length>70?t.slice(0,68)+'…':t;document.body.appendChild(b);
+  const w=b.offsetWidth;b.style.left=Math.max(6,Math.min(innerWidth-w-6,r.left+r.width/2-w/2))+'px';b.style.top=(v===0?r.top-b.offsetHeight-8:r.bottom+6)+'px';setTimeout(()=>b.remove(),3800)}
+async function addChat(p,x,l){const it={p,x,tr:null};CHAT.push(it);if(CHAT.length>60)CHAT.shift();bubble(p,x);
+  if(p!==me&&!document.querySelector('.emobar'))$('bEmo').classList.add('new');drawChat();
+  if(p!==me){const t=await translate(x,l);if(t){it.tr=t;drawChat();bubble(p,t)}}}
+function drawChat(){const l=document.querySelector('.emobar .log');if(!l)return;
+  l.innerHTML=CHAT.map(c=>`<div><b>${esc(pn(c.p))}:</b> ${esc(c.x)}${c.tr?`<small>${esc(c.tr)}</small>`:''}</div>`).join('')||'<div style="color:#7a7365">Mesajlar karşı tarafın diline otomatik çevrilir.</div>';l.scrollTop=1e6}
+function sendChat(x){x=String(x||'').trim().slice(0,140);if(!x)return;const l=myL();if(mode==='host'){bcast({t:'chat',p:0,x,l});addChat(0,x,l)}else{send({t:'chat',uid:UID,x,l});addChat(me,x,l)}}
+$('bEmo').onclick=e=>{e.stopPropagation();let b=document.querySelector('.emobar');if(b){b.remove();return}$('bEmo').classList.remove('new');
+  b=document.createElement('div');b.className='emobar';b.innerHTML=`<div class="er">${EMO.map(x=>`<button type="button">${x}</button>`).join('')}</div><div class="log"></div><form><input maxlength="140" placeholder="Mesaj yaz…"><button>Gönder</button></form>`;
+  $('bEmo').parentNode.appendChild(b);drawChat();
+  b.querySelectorAll('.er button').forEach(x=>x.onclick=()=>{b.remove();if(mode==='host'){bcast({t:'emo',p:0,e:x.textContent});showEmo(0,x.textContent)}else send({t:'emo',uid:UID,e:x.textContent})});
+  b.querySelector('form').onsubmit=ev=>{ev.preventDefault();const i=b.querySelector('input');sendChat(i.value);i.value=''}};
+function showEmo(p,e){const v=V(p),el=v===0?$('meAv'):$('s'+v).querySelector('.av');if(!el)return;const r=el.getBoundingClientRect(),d=document.createElement('div');d.className='emo';d.textContent=e;
+  d.style.position='fixed';d.style.left=(r.left+r.width/2-15)+'px';d.style.top=(r.top-34)+'px';document.body.appendChild(d);setTimeout(()=>d.remove(),2300)}
+
+
+addEventListener('resize',()=>M&&renderHand());
+/* ---------- hızlı oyun: açık masaya otur ya da masa aç ---------- */
+let quick=false,quickAt=0,quick2=0;
+function quickPlay(){if(myName()==='Sen'){ov('qname',`<h2>⚡ Hızlı oyun</h2><p>Adını yaz, sana masa bulalım.</p><input class="name" id="qN" maxlength="14" placeholder="Adını yaz"><div class="row"><button class="btn" id="qB">Geri</button><button class="btn pri" id="qG">Masa bul</button></div>`);
+    $('qB').onclick=showMenu;$('qG').onclick=()=>{const v=$('qN').value.trim().slice(0,14);if(!v)return;ST.set('name',v);quickPlay()};return}
+  if(mode!=='off')leaveOnline();
+  ov('lobby','<h2>Masa aranıyor…</h2><p>Açık bir masa varsa oturtuyoruz, yoksa sana yeni masa açıyoruz.</p><div class="row"><button class="btn" id="qC">Vazgeç</button></div>');$('qC').onclick=()=>{leaveOnline();mode='off';showMenu()};
+  KQuick.find('bin',{onJoin:c=>joinRoom(c),onHost:()=>{hostRoom();quick=true;quickAt=Date.now();quick2=0;KQuick.advertise('bin',room,{n:1,max:3});showLobby()}})}
+function quickTick(){if(!quick||mode!=='host'||started)return;const n=lobbyNames().filter(Boolean).length;KQuick.update({n});
+  if(n>=2&&!quick2)quick2=Date.now();if(n<2)quick2=0;
+  if(n>=3||(n>=2&&Date.now()-quick2>20000)){startOnline();return}
+  if(n===1){const r=KQuick.rival('bin',room);if(r){leaveOnline();joinRoom(r)}}}
+/* online hamle süresi */
+const tkey=()=>M&&['play','bid','give','raise'].includes(M.phase)?[M.phase,M.turn,M.deal,M.tricks,(M.trick||[]).length].join(':'):null;
+KTimer.init({secs:()=>M&&M.phase==='give'?45:30,key:tkey,actor:()=>M.turn,isHuman:p=>!!human[p],name:p=>p===me?'Sen':names[p],mode:()=>started&&!busy?mode:'off',
+  onExpire:p=>{toast(`<b>${esc(p===me?'Sen':names[p])}</b>: <span>süre doldu</span>`);if(p===me)hideOv();
+    if(M.phase==='bid')act(p,{k:'bid',v:K.botBid(M,p)});
+    else if(M.phase==='give'){const g=K.botGive(M,p);act(p,{k:'give',a:g[0],b:g[1]})}
+    else if(M.phase==='raise')act(p,{k:'raise',v:M.bid});
+    else if(M.phase==='play')act(p,{k:'play',c:K.botPlay(M,p)})}});
+window.KH_HOST=()=>{mode='off';hostRoom();return linkFor(room)};
+const hc=(location.hash||'').slice(1).toUpperCase();
+if(/^[A-Z0-9]{5}$/.test(hc))joinRoom(hc);else showMenu();
+{const q=new URLSearchParams(location.search);if(q.get('hizli')){try{q.delete('hizli');history.replaceState(null,'',location.pathname+(q.toString()?'?'+q:'')+location.hash)}catch(e){}setTimeout(()=>{try{quickPlay()}catch(e){console.error(e)}},400)}}
+addEventListener('load',()=>window.KH&&KH.setPresence('1000'));
+</script>
+</body></html>
