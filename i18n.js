@@ -100,6 +100,7 @@ const T=[
 ];
 if(L==='ru')T.push(['Nuri','Нури',''],['Rıza','Рыза',''],['Hamdi','Хамди',''],['Cemil','Джемиль',''],['Kâzım','Казым','']);
 T.push(['@mavi','Синий','Blue'],['@yesil','Зелёный','Green'],['@bordo','Бордо','Burgundy'],['@gece','Ночь','Night']);
+T.push(...(window.I18N_EXTRA||[]));
 const I=L==='ru'?1:2,D0={},A0={};for(const r of T){if(r[0][0]==='@')A0[r[0].slice(1)]=r[I];else D0[r[0]]=r[I]}
 const SU={maça:['пики','spades'],kupa:['червы','hearts'],karo:['бубны','diamonds'],sinek:['трефы','clubs']},RK={vale:['валет','jack'],'kız':['дама','queen'],papaz:['король','king'],as:['туз','ace']};
 const J=I-1;
@@ -131,6 +132,7 @@ const R=L==='ru'?[
 [/^(.+) hepsini kesti, kartlar çıktı$/,'$1 beat everything, discarded'],[/^Hepsini kestin, kartlar çıktı$/,'You beat everything, discarded'],[/^Yeni el\. Koz (.+)\. (.*)$/,(m,a)=>'New hand. Trumps: '+(SU[a]?SU[a][1]:a)+'.'],
 [/^(.+) hileyi yakaladı$/,'$1 caught a cheat'],[/^(.+) hileyi yakaladı: (.+)$/,'$1 caught a cheat'],[/^Saldırı sende$/,'Your attack'],[/^Aktardın$/,'Transferred'],[/^Sana aktardı$/,'Transferred to you'],[/^Kurtuldun$/,'You escaped'],[/^Berabere$/,'Draw'],[/^(.+) aktardı$/,'$1 transferred'],
 ];
+R.unshift(...(((window.I18N_RULES||{})[L])||[]));
 function tr(s){const k=s.trim();if(!k)return null;let o=D0[k];
   if(o==null){for(const [re,to] of R){if(re.test(k)){o=k.replace(re,to);break}}}
   if(o==null&&/\b(maça|kupa|karo|sinek)\b/.test(k))o=card(k);

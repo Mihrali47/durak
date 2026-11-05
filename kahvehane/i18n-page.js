@@ -1,0 +1,22 @@
+/* Kahvehane Okey çevirileri: [tr, ru, en] */
+(()=>{
+const CO={'kırmızı':['красная','red'],mavi:['синяя','blue'],'sarı':['жёлтая','yellow'],siyah:['чёрная','black']};
+window.I18N_EXTRA=[
+['Kahvehane Okey','Окей-рогалик','Kahvehane Okey'],['Kahvehane','Кофейня','Kahvehane'],['Okey taşlarıyla rogue-lite','Рогалик с фишками окей','A roguelite with Okey tiles'],['Kahvehaneye hoş geldin','Добро пожаловать в кофейню','Welcome to the café'],
+['Her masada 4 el ve 3 atma hakkın var. Masa aralarında kazandığın lirayla tılsım al. Her kahvehanenin üçüncü masasında Patron bir kural koyar. 4 kahvehaneyi bitir, şampiyon ol.','За каждым столом 4 розыгрыша и 3 сброса. Между столами покупайте амулеты на выигранные лиры. За третьим столом каждой кофейни хозяин вводит правило. Пройдите 4 кофейни и станьте чемпионом.','Each table gives you 4 plays and 3 discards. Between tables, buy charms with the lira you won. At each café\'s third table the Boss adds a rule. Clear 4 cafés to become champion.'],
+['Masaya otur','Сесть за стол','Take a seat'],['Kurallar','Правила','Rules'],['Oyna','Сыграть','Play'],['Atma','Сбросить','Discard'],['At','Сбросить','Discard'],['Devam et','Продолжить','Continue'],['Yeniden oyna','Играть снова','Play again'],['Masadan kalktın','Вы встали из-за стола','You left the table'],
+['Istakandan en fazla 5 taş seç ve','Выберите до 5 фишек и нажмите','Pick up to 5 tiles from your rack and press'],['. Taşların oluşturduğu kombinasyon puan ve çarpan verir; sayılan her taşın değeri puana eklenir.','. Комбинация даёт очки и множитель; номинал каждой засчитанной фишки добавляется к очкам.','. The combination gives points and a multiplier; each counted tile\'s value is added.'],
+['masanın hedefini geçerse masayı kazanırsın.','превысит цель стола — стол ваш.','beats the table\'s target, you win the table.'],['Puan × Çarpan','Очки × Множитель','Points × Multiplier'],['Puan','Очки','Points'],['Hedef','Цель','Target'],['Kasa','Касса','Cash'],['El','Розыгрыш','Play'],['Tılsımlar','Амулеты','Charms'],
+['Bir tılsıma dokun, ne yaptığını burada gör.','Нажмите на амулет, чтобы узнать, что он делает.','Tap a charm to see what it does.'],['Taş seç','Выберите фишки','Select tiles'],['En fazla 5 taş seçebilirsin.','Можно выбрать не больше 5 фишек.','You can select at most 5 tiles.'],['Renge göre','По цвету','By colour'],['Sayıya göre','По числу','By number'],['Renk','Цвет','Colour'],['Boş','Пусто','Empty'],
+['Tek Taş','Одна фишка','High tile'],['Çift','Пара','Pair'],['İki Çift','Две пары','Two pairs'],['Üçlü Per','Тройка','Three of a kind'],['Dörtlü Per','Четвёрка','Four of a kind'],['Seri (3)','Серия (3)','Run (3)'],['Seri (4)','Серия (4)','Run (4)'],['Okey Serisi','Серия окей','Okey run'],['Renk','Цвет','Flush'],
+['En yüksek tek taş','Самая старшая фишка','Highest single tile'],['Aynı sayıdan 2 taş','2 фишки одного числа','2 tiles of the same number'],['İki ayrı çift','Две разные пары','Two different pairs'],['Aynı sayı, 3 farklı renk','Одно число, 3 разных цвета','Same number, 3 colours'],['Aynı sayı, 4 farklı renk','Одно число, 4 разных цвета','Same number, 4 colours'],
+['Aynı renk, art arda 3 sayı','Один цвет, 3 подряд','Same colour, 3 in a row'],['Aynı renk, art arda 4 sayı','Один цвет, 4 подряд','Same colour, 4 in a row'],['Aynı renk, art arda 5 sayı','Один цвет, 5 подряд','Same colour, 5 in a row'],['Aynı renkten 5 taş','5 фишек одного цвета','5 tiles of one colour'],
+['1 taş sayılır','считается 1 фишка','1 tile counts'],['2 taş sayılır','считаются 2 фишки','2 tiles count'],['4 taş sayılır','считаются 4 фишки','4 tiles count'],['Mahalle Kahvesi','Дворовая кофейня','Neighbourhood Café'],['en fazla 5','не больше 5','up to 5'],['@Durum','Статус','Status'],
+];
+const mk=j=>[
+[/^(kırmızı|mavi|sarı|siyah) (\d+)$/,(m,c,n)=>j?`${CO[c][1]} ${n}`:`${CO[c][0]} ${n}`],[/^Torba: (\d+)$/,(m,n)=>j?`Bag: ${n}`:`Мешок: ${n}`],[/^Masa (\d+) \/ (\d+) · (.+)$/,(m,a,b,c)=>j?`Table ${a} / ${b} · ${c}`:`Стол ${a} / ${b} · ${c}`],
+[/^En iyi: (\d+)\. masa$/,(m,n)=>j?`Best: table ${n}`:`Рекорд: стол ${n}`],[/^Ulaştığın masa: (\d+)\. En iyi: (\d+)\. masa\.$/,(m,a,b)=>j?`Reached table ${a}. Best: table ${b}.`:`Достигнут стол ${a}. Рекорд: стол ${b}.`],
+[/^(.+), (.+) masasında (\d+) puanda kaldın\. Hedef (\d+) idi\.$/,(m,a,b,c,d)=>j?`${a}, ${b}'s table: you stopped at ${c}. The target was ${d}.`:`${a}, стол «${b}»: вы набрали ${c}. Цель была ${d}.`],
+];
+window.I18N_RULES={ru:mk(0),en:mk(1)};
+})();

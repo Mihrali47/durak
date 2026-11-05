@@ -1,10 +1,10 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html><head><script src="i18n-page.js"></script><script src="../i18n.js"></script><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>Pişti</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Rubik:wght@400;500;700&display=swap">
 <style>
-/* Layout: bordo çuha masa yukarıdan; üstte Claude'un eli, ortada deste ve yer, altta senin elin; yanında el puanı ve olay günlüğü. Bilinçli olarak tek tema. */
+/* Layout: bordo çuha masa yukarıdan; üstte bilgisayarın eli, ortada deste ve yer, altta senin elin; yanında el puanı ve olay günlüğü. Bilinçli olarak tek tema. */
 :root{
   --room:#22080d; --felt:#6b1d29; --felt-deep:#3d0d16; --felt-line:#8d3443;
   --card:#fcf9f2; --card-edge:#d9cfbd; --red:#c41f2e; --black:#161616;
@@ -133,7 +133,7 @@ aside{display:flex;flex-direction:column;gap:14px;min-width:0}
   <main class="stage">
     <section class="table" id="table">
       <div class="seat opp" id="seatC">
-        <div class="who"><b>Claude</b><span id="infoC">0 kart · 0 pişti</span><span class="turn">Sırada</span></div>
+        <div class="who"><b>Bilgisayar</b><span id="infoC">0 kart · 0 pişti</span><span class="turn">Sırada</span></div>
         <div class="hand" id="handC"></div>
       </div>
 
@@ -156,7 +156,7 @@ aside{display:flex;flex-direction:column;gap:14px;min-width:0}
         <div class="score">
           <div><span class="n me" id="totP">0</span><small>Sen</small></div>
           <span class="vs">—</span>
-          <div><span class="n" id="totC">0</span><small>Claude</small></div>
+          <div><span class="n" id="totC">0</span><small>Bilgisayar</small></div>
         </div>
         <div class="prog" id="prog">Hedef 101 · 1. el</div>
       </div>
@@ -195,7 +195,7 @@ const CARDS=[];SUITS.forEach(s=>RANKS.forEach(r=>CARDS.push({id:CARDS.length,s,r
 const cname=c=>`${SNAME[c.s]} ${RNAME[c.r]||c.r}`;
 const pts=c=>(c.r==='A'||c.r==='J'?1:0)+(c.r==='2'&&c.s==='C'?2:0)+(c.r==='10'&&c.s==='D'?3:0);
 const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
-const NAME={p:'Sen',c:'Claude'};
+const NAME={p:'Sen',c:'Bilgisayar'};
 
 /* ---- ses ---- */
 let ac=null,soundOn=true;
@@ -248,7 +248,7 @@ function cardEl(c,tag='div'){
 }
 function render(dealt){
   const top=G.pile[G.pile.length-1];
-  // Claude
+  // Bilgisayar
   const hc=$('handC');hc.innerHTML='';G.hand.c.forEach(()=>{const e=cardEl(null);if(dealt)e.classList.add('deal');hc.appendChild(e)});
   // sen
   const hp=$('handP');hp.innerHTML='';hp.classList.toggle('wait',G.turn!=='p');
@@ -274,7 +274,7 @@ function render(dealt){
   const st=$('status');
   if(G.ended)st.textContent='';
   else if(G.turn==='p')st.innerHTML=top?`Sıra sende. Yerdeki <b>${cname(top)}</b>.`:'Sıra sende. Yer boş, bir kart at.';
-  else st.textContent='Claude düşünüyor…';
+  else st.textContent='Bilgisayar düşünüyor…';
 }
 function log(t,hit){const li=document.createElement('li');li.textContent=t;if(hit)li.className='hit';const l=$('log');l.prepend(li);while(l.children.length>7)l.lastChild.remove()}
 function burst(text){const b=document.createElement('div');b.className='burst';b.textContent=text;$('table').appendChild(b);setTimeout(()=>b.remove(),1400)}
@@ -336,7 +336,7 @@ async function resolve(who,c){
   if(G.turn==='c')botTurn();
 }
 
-/* ---- Claude'un aklı ---- */
+/* ---- bilgisayarın aklı ---- */
 function botChoose(){
   const H=G.hand.c,top=G.pile[G.pile.length-1],n=G.hand.p.length;
   const seenR=r=>CARDS.filter(x=>x.r===r&&G.seen.has(x.id)).length;
@@ -368,7 +368,7 @@ function tally(w){
     n:a.length,pisti:G.pisti[w].reduce((s,v)=>s+v,0)};
 }
 async function endHand(){
-  if(G.pile.length&&G.last){log(`Yerde kalan ${G.pile.length} kart son alan ${NAME[G.last]==='Sen'?'sana':'Claude\'a'} gitti.`);G.taken[G.last].push(...G.pile);G.pile=[]}
+  if(G.pile.length&&G.last){log(`Yerde kalan ${G.pile.length} kart son alan ${NAME[G.last]==='Sen'?'sana':'Bilgisayara'} gitti.`);G.taken[G.last].push(...G.pile);G.pile=[]}
   G.ended=true;G.busy=true;render();await wait(500);
   const p=tally('p'),c=tally('c');
   const majP=p.n>c.n?3:0,majC=c.n>p.n?3:0;
@@ -380,11 +380,11 @@ async function endHand(){
   if(done){
     const won=G.total.p>G.total.c;
     if(won)record.w++;else record.l++;try{localStorage.setItem('pisti_record',JSON.stringify(record))}catch(e){}
-    head=won?'Oyunu kazandın!':'Claude kazandı';
+    head=won?'Oyunu kazandın!':'Bilgisayar kazandı';
     sub=won?`${G.total.p}–${G.total.c}. Kahvede adın konuşulacak.`:`${G.total.c}–${G.total.p}. Bir el daha mı?`;
   }else{head=`${G.handNo}. el bitti`;sub=`Hedef ${target}. Sıradaki el başlıyor.`}
   open(`<h2>${head}</h2><p class="muted">${sub}</p>
-  <table class="tbl"><thead><tr><th>Bu el</th><th>Sen</th><th>Claude</th></tr></thead><tbody>
+  <table class="tbl"><thead><tr><th>Bu el</th><th>Sen</th><th>Bilgisayar</th></tr></thead><tbody>
   ${row('As',p.as,c.as)}${row('Vale',p.vale,c.vale)}${row('Sinek 2',p.s2,c.s2)}${row('Karo 10',p.k10,c.k10)}
   ${row(`Kart çoğunluğu (${p.n}–${c.n})`,majP,majC)}${row('Pişti',p.pisti,c.pisti)}
   <tr class="sum"><td>El puanı</td><td>${sp}</td><td>${sc}</td></tr>
@@ -402,7 +402,7 @@ function showMenu(){
   const inGame=G&&!G.ended&&G.handNo>0;
   open(`<h2>Pişti</h2>
   <p>Elindeki kartı yerdeki en üst kartla eşleştir ya da vale atıp yeri topla. Yerde tek kart varken eşleştirirsen <b>pişti</b>: 10 puan. Vale üstüne vale ise 20.</p>
-  <p class="muted">Claude'a karşı oynuyorsun. Kartlar 4'er dağıtılır, deste bitince el sayılır. Yerde kalanlar son toplayana gider.</p>
+  <p class="muted">Bilgisayara karşı oynuyorsun. Kartlar 4'er dağıtılır, deste bitince el sayılır. Yerde kalanlar son toplayana gider.</p>
   <div><p class="lbl">Kaç puana oynayalım?</p><div class="seg"><button data-t="51" aria-pressed="${target===51}">51</button><button data-t="101" aria-pressed="${target===101}">101</button></div></div>
   <div class="row"><button class="btn" id="start">${inGame?'Yeni oyuna başla':'Masaya otur'}</button>${inGame?'<button class="btn ghost" id="resume">Oyuna dön</button>':''}</div>
   <p class="muted">Rekorun: ${record.w} galibiyet, ${record.l} mağlubiyet.</p>`);
