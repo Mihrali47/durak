@@ -56,7 +56,7 @@ function connect(){if(started)return;started=true;loadMqtt(()=>{
     c.on('message',(t,b)=>onMsg(t,b.toString()));c.on('error',()=>{})}
   setInterval(()=>{if(P)pub('pres/'+P.uid,presBody(),true)},60000);
   addEventListener('pagehide',()=>{if(P)pub('pres/'+P.uid,{on:false,at:Date.now()},true)})})}
-function initProfile(c){if(!initProfile.m){initProfile.m=1;loadKey().then(mergeRemote)}c.subscribe([NS+'in/'+P.uid+'/#',...Object.keys(F).map(u=>NS+'pres/'+u)],{qos:1});
+function initProfile(c){if(!initProfile.m){initProfile.m=1;loadKey().then(mergeRemote);setTimeout(pubLB,3000)}c.subscribe([NS+'in/'+P.uid+'/#',...Object.keys(F).map(u=>NS+'pres/'+u)],{qos:1});
   pubOne(c,'pres/'+P.uid,presBody(),true);pubOne(c,'name/'+key(P.name,P.tag),{...me(),at:Date.now()},true)}
 const presBody=()=>({on:true,at:Date.now(),game:presInfo.game||null,name:P.name,tag:P.tag,av:P.av});
 function pubOne(c,path,obj,retain){try{c.publish(NS+path,obj==null?'':JSON.stringify(obj),{qos:1,retain:!!retain})}catch(e){}}
@@ -69,6 +69,7 @@ function lookup(path,ms=3500){return new Promise(res=>{let done=false;const fin=
 const lookups=new Map();
 function onMsg(t,s){if(!t.startsWith(NS))return;const path=t.slice(NS.length);let d=null;try{d=s?JSON.parse(s):null}catch(e){return}
   if(lookups.has(path)){if(d)lookups.get(path)(d);return}
+  if(path.startsWith('lb/')){if(lbHook)lbHook(path.slice(3),d);return}
   if(path.startsWith('pres/')){const u=path.slice(5);if(!F[u])return;const old=JSON.stringify(pres[u]);pres[u]=d;
     if(d&&d.name&&(d.name!==F[u].name||d.av!==F[u].av)){F[u].name=d.name;F[u].av=d.av;F[u].tag=d.tag||F[u].tag;save()}
     if(old!==JSON.stringify(d))changed();return}
@@ -117,7 +118,20 @@ function afterRegister(){const r=LS.get('kh_pendingref',null);if(!r||!P)return;L
 
 /* ---------- istatistik: her oyunun sonunda KH.stat(oyun, kazandı mı) ---------- */
 function mergeStats(a,b){const o={...a};for(const k in b){const x=o[k]||{g:0,w:0},y=b[k];o[k]={g:Math.max(x.g,y.g||0),w:Math.max(x.w,y.w||0),s:Math.max(x.s||0,y.s||0)}}return o}
-function stat(game,won){if(!game)return;const x=SS[game]||{g:0,w:0,s:0,c:0};x.g++;if(won){x.w++;x.c=(x.c||0)+1;x.s=Math.max(x.s||0,x.c)}else x.c=0;SS[game]=x;LS.set('kh_stats',SS);uploadSoon()}
+function stat(game,won){if(!game)return;const x=SS[game]||{g:0,w:0,s:0,c:0};x.g++;if(won){x.w++;x.c=(x.c||0)+1;x.s=Math.max(x.s||0,x.c)}else x.c=0;SS[game]=x;LS.set('kh_stats',SS);uploadSoon();pubLB()}
+/* liderlik tablosu: her profil kendi kartını yayınlar */
+function pubLB(){if(!P)return;const st={};for(const k in SS)st[k]={g:SS[k].g,w:SS[k].w};pub('lb/'+P.uid,{name:P.name,tag:P.tag,av:P.av,st,at:Date.now()},true)}
+function openLeaders(game){const rows=new Map();style();
+  const draw=()=>{const list=[...rows.values()].map(r=>{let g=0,w=0;for(const k in r.st){if(game&&k!==game)continue;g+=r.st[k].g;w+=r.st[k].w}return {...r,g,w}}).filter(r=>r.g>0).sort((a,b)=>b.w-a.w||a.g-b.g).slice(0,30);
+    const games=[...new Set([...rows.values()].flatMap(r=>Object.keys(r.st||{})))].sort();
+    const s=sheet('lb',`<h2>🏆 Liderler</h2><p>En çok kazananlar. Test sürümü: istatistikler oyuncuların kendi cihazından gelir.</p>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0">${['',...games].map(g=>`<button class="kh-b s ${g===(game||'')?'p':''}" data-g="${esc(g)}">${g?esc(g):'Hepsi'}</button>`).join('')}</div>
+      ${list.length?list.map((r,i)=>`<div class="kh-li"><b style="width:22px">${i+1}</b><span class="a">${esc(r.av||'🙂')}</span><div class="t"><b>${esc(r.name)}</b><small>#${esc(r.tag||'')}${P&&r.uid===P.uid?' · <span>sen</span>':''}</small></div><div style="text-align:right"><b>${r.w}</b> <small><span>galibiyet</span></small><br><small>${r.g} <span>oyun</span></small></div></div>`).join(''):'<p>Henüz kimse yok. Kayıt ol, oyna, listeye gir!</p>'}
+      <div class="kh-row"><button class="kh-b" id="khClose">Kapat</button></div>`);
+    s.querySelector('#khClose').onclick=()=>{closeSheet();unsub('lb/+')};s.querySelectorAll('[data-g]').forEach(b=>b.onclick=()=>{game=b.dataset.g||null;draw()})};
+  lbHook=(uid,d)=>{if(d&&d.st)rows.set(uid,{uid,...d});else rows.delete(uid);if(document.querySelector('.kh-sheet[data-k="lb"]'))draw()};
+  draw();loadMqtt(()=>{connect();const go=()=>sub('lb/+');if(clients.some(c=>c.connected))go();else setTimeout(go,2500)})}
+let lbHook=null;
 /* ---------- arayüz ---------- */
 const css=`.kh-ov{position:fixed;inset:0;z-index:9000;background:rgba(10,7,4,.6);display:flex;align-items:center;justify-content:center;padding:14px;font-family:"Rubik",system-ui,-apple-system,sans-serif}
 .kh-sheet{background:#f7f3ea;color:#22201b;border-radius:16px;width:min(420px,100%);max-height:calc(100% - 10px);overflow:auto;padding:18px 16px 16px;box-shadow:0 12px 40px rgba(0,0,0,.45);font-size:14.5px;line-height:1.4}
@@ -188,7 +202,7 @@ function openProfile(refresh){if(!P)return openRegister();
   const keep=document.getElementById('khCode')?.value||'';
   const s=sheet('prof',`<h2>Profilim</h2>
     <div class="kh-me"><span class="a">${esc(P.av)}</span><div style="flex:1;min-width:0"><b>${esc(P.name)}</b><small>#${esc(P.tag)}</small><br><small>Arkadaş kodun: ${esc(code(P))}</small></div><button class="kh-b s" id="khCp">Kopyala</button></div>
-    <div class="kh-row"><button class="kh-b p" id="khInv">Arkadaş davet et</button></div>
+    <div class="kh-row"><button class="kh-b p" id="khInv">Arkadaş davet et</button><button class="kh-b" id="khLb">🏆 Liderler</button></div>
     ${Object.keys(SS).length?`<div class="kh-l">İstatistiklerim</div><table style="width:100%;border-collapse:collapse;font-size:13.5px">${Object.entries(SS).sort((a,b)=>b[1].g-a[1].g).map(([k,v])=>`<tr style="border-bottom:1px solid #e6dfcf"><td style="padding:5px 2px">${esc(k)}</td><td style="text-align:right">${v.g} <span>oyun</span></td><td style="text-align:right">${v.w} <span>galibiyet</span></td><td style="text-align:right;color:#2f6b4f">%${v.g?Math.round(v.w*100/v.g):0}</td></tr>`).join('')}</table>`:''}
     <div class="kh-l">Kodla arkadaş ekle</div>
     <div class="kh-row" style="margin-top:0"><input class="kh-in" id="khCode" placeholder="Ad#1234" value="${esc(keep)}"><button class="kh-b p s" id="khAdd">Ekle</button></div><div class="kh-err" id="khErr"></div>
@@ -202,7 +216,7 @@ function openProfile(refresh){if(!P)return openRegister();
   s.querySelector('#khOut').onclick=e=>{if(!P.pw&&!e.target.dataset.sure){e.target.dataset.sure=1;e.target.textContent='Şifren yok, profil silinir. Emin misin?';return}logout()};
   if(s.querySelector('#khNpGo'))s.querySelector('#khNpGo').onclick=async()=>{const err=await setPassword(s.querySelector('#khNp').value);if(err){s.querySelector('#khNpErr').textContent=err;return}note('<span>Şifre kaydedildi.</span>');openProfile()};
   s.querySelector('#khCp').onclick=()=>copy(code(P),'Kod kopyalandı');
-  s.querySelector('#khInv').onclick=()=>share(inviteLink());
+  s.querySelector('#khInv').onclick=()=>share(inviteLink());s.querySelector('#khLb').onclick=()=>openLeaders();
   s.querySelector('#khAdd').onclick=async e=>{const b=e.target;b.disabled=true;s.querySelector('#khErr').textContent='Aranıyor…';const err=await addByCode(s.querySelector('#khCode').value);b.disabled=false;
     const el=document.getElementById('khErr');if(el)el.textContent=err||'';if(!err){const i=document.getElementById('khCode');if(i)i.value='';note('<span>İstek gönderildi.</span>')}};
   s.querySelectorAll('[data-ok]').forEach(b=>b.onclick=()=>accept(REQ[b.dataset.ok]));
@@ -225,7 +239,7 @@ function badge(){const b=document.querySelector('.kh-btn');if(!b)return;const n=
   b.innerHTML=P?`<span class="a">${esc(P.av)}</span><span>${esc(P.name)}</span>${n?`<span class="n">${n}</span>`:''}${on?`<span style="color:#86d49a;font-size:12px">● ${on}</span>`:''}`:'<span class="a">👤</span><span>Giriş / Kayıt</span>'}
 function mountButton(){style();if(document.querySelector('.kh-btn'))return;const b=document.createElement('button');b.className='kh-btn';b.onclick=()=>P?openProfile():openRegister();document.body.appendChild(b);badge()}
 
-window.KH={stat,get stats(){return {...SS}},get profile(){return P?{...P}:null},name:()=>P?P.name:null,code:()=>code(P),openProfile,openRegister,openLogin,invitePicker,mountButton,
+window.KH={stat,openLeaders,get stats(){return {...SS}},get profile(){return P?{...P}:null},name:()=>P?P.name:null,code:()=>code(P),openProfile,openRegister,openLogin,invitePicker,mountButton,
   setPresence(game){presInfo.game=game||null;if(P)pub('pres/'+P.uid,presBody(),true)},onChange(f){listeners.push(f)},friends:()=>Object.values(F),online,_dbg:()=>({c:clients.map(c=>c.connected),started,P:!!P,req:REQ,out:OUT})};
 const boot=()=>{if(window.KH_HUB)mountButton();if(P||LS.get('kh_pendingref',null))connect()};
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
