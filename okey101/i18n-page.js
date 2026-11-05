@@ -2,6 +2,7 @@
 (()=>{
 const CO={'kırmızı':['красная','red'],mavi:['синяя','blue'],'sarı':['жёлтая','yellow'],siyah:['чёрная','black']};
 window.I18N_EXTRA=[
+['Test ayarları','Тестовые настройки','Test settings'],
 ['Sıra sende: ortadan çek ya da soldan al. Istakaya sürükleyebilirsin.','Ваш ход: возьмите фишку из середины или слева. Можно перетащить на подставку.','Your turn: draw from the middle or take from the left. You can drag onto your rack.'],
 ['👥 Arkadaşlarla online','👥 Онлайн с друзьями','👥 Online with friends'],['Masa kuruldu','Стол создан','Table created'],['Linki arkadaşlarına gönder. En fazla 4 kişi; boş yerlere bilgisayar oturur.','Отправьте ссылку друзьям. До 4 игроков, свободные места займёт компьютер.','Send the link to your friends. Up to 4 players; the computer fills empty seats.'],
 ['Kopyala','Копировать','Copy'],['👥 Arkadaşlarını çağır','👥 Позвать друзей','👥 Invite friends'],['Bilgisayar oturacak','Сядет компьютер','Computer will sit'],['Vazgeç','Отмена','Cancel'],['Arkadaşın bekleniyor…','Ждём друга…','Waiting for your friend…'],

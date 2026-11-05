@@ -134,7 +134,7 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 .slot .tile{cursor:grab;touch-action:none;transition:transform .12s}
 .slot .tile.sel{transform:translateY(-10px);box-shadow:0 3px 0 #c4b9a2,0 0 0 3px #1b5fa3,0 10px 12px rgba(0,0,0,.4)}
 .slot .tile.new{box-shadow:0 3px 0 #c4b9a2,0 0 0 3px var(--good),0 4px 7px rgba(0,0,0,.35)}
-.slot .tile.isl::after{content:"İŞLEK";position:absolute;top:-8px;left:50%;transform:translateX(-50%);font:800 9px/1 var(--body);letter-spacing:.04em;background:var(--bad);color:#fff;padding:2px 4px;border-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,.4)}
+.slot .tile.isl::after{content:var(--isl,"İŞLEK");position:absolute;top:-8px;left:50%;transform:translateX(-50%);font:800 9px/1 var(--body);letter-spacing:.04em;background:var(--bad);color:#fff;padding:2px 4px;border-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,.4)}
 .slot .tile.warn{box-shadow:0 3px 0 #c4b9a2,0 0 0 3px var(--bad),0 4px 7px rgba(0,0,0,.35)}
 .slot .tile.dragging{opacity:.25}
 .dghost{position:absolute;z-index:1000;pointer-events:none;transform:rotate(-4deg) scale(1.06);filter:drop-shadow(0 10px 12px rgba(0,0,0,.45))}
@@ -1127,9 +1127,11 @@ function showMenu(){
   <div><p class="lbl">Kaç el?</p><div class="seg" id="segN">${[3,5,9].map(n=>`<button data-n="${n}" aria-pressed="${n===menuN}">${n} el</button>`).join('')}</div></div>
   <div><p class="lbl">Oyun türü</p><div class="seg" id="segO" style="grid-template-columns:repeat(2,1fr)"><button data-v="1" aria-pressed="${!!U.rising}">Katlamalı</button><button data-v="0" aria-pressed="${!U.rising}">Katlamasız</button></div></div>
   <div><p class="lbl">Yardım</p><div class="seg" id="segH" style="grid-template-columns:repeat(2,1fr)"><button data-v="1" aria-pressed="${U.help}">Yardımlı</button><button data-v="0" aria-pressed="${!U.help}">Yardımsız</button></div></div>
+  <details style="margin-top:6px"><summary class="lbl" style="cursor:pointer">Test ayarları</summary>
   <div><p class="lbl">Test · herkes açsın</p><div class="seg" id="segR" style="grid-template-columns:repeat(2,1fr)"><button data-v="0" aria-pressed="${!U.rig.all}">Kapalı</button><button data-v="1" aria-pressed="${!!U.rig.all}">Herkes açsın</button></div></div>
   <div><p class="lbl">Test · her el bana okey</p><div class="seg" id="segK"><button data-v="0" aria-pressed="${!U.rig.ok}">Yok</button><button data-v="1" aria-pressed="${U.rig.ok===1}">1 okey</button><button data-v="2" aria-pressed="${U.rig.ok===2}">Çift okey</button></div></div>
   <div><p class="lbl">Test · bir rakip hep çifte gitsin</p><div class="seg" id="segP" style="grid-template-columns:repeat(2,1fr)"><button data-v="0" aria-pressed="${!U.rig.pair}">Kapalı</button><button data-v="1" aria-pressed="${!!U.rig.pair}">Açık</button></div></div>
+  </details>
   <div><p class="lbl">Rakiplerin hızı</p><div class="seg" id="segS" style="grid-template-columns:repeat(2,1fr)"><button data-v="1" aria-pressed="${U.speed===1}">Normal</button><button data-v="0.5" aria-pressed="${U.speed!==1}">Hızlı</button></div></div>
   <div class="rowb"><button class="btn ghost" id="onl">👥 Arkadaşlarla online</button></div>
   <div class="rowb"><button class="btn green" id="go">${inGame?'Yeni oyun':'Masaya otur'}</button>${inGame?'<button class="btn ghost" id="back">Oyuna dön</button>':''}</div>
@@ -1275,6 +1277,7 @@ function guestEnd(){if(!S||!S.result||GM.hist.length<GM.handNo)return;const R=S.
   if(last){const order=[0,1,2,3].sort((a,b)=>GM.totals[a]-GM.totals[b]);h+=`<h2>${order[0]===0?'Masanın galibi sensin!':escK(NAMES[order[0]])+' kazandı'}</h2><p class="muted">${order.map((s,i)=>`${i+1}. ${escK(NAMES[s])} (${GM.totals[s]})`).join(' · ')}</p>`}
   h+=`<p class="muted">Ev sahibi ${last?'yeni oyunu':'sıradaki eli'} başlatınca devam edersiniz.</p>`;open(h)}
 
+{const L=String(window.LANG||'tr').slice(0,2);if(L!=='tr')document.documentElement.style.setProperty('--isl',L==='ru'?'"ДОКЛАД"':'"PLAYABLE"')}
 GM={total:5,handNo:1,totals:[0,0,0,0],hist:[],dealer:0};
 dealHand(0);sortSeri();render();
 {const hc=(location.hash||'').slice(1).toUpperCase();if(/^[A-Z0-9]{5}$/.test(hc))joinOnline(hc);else showMenu()}
