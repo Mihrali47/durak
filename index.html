@@ -93,6 +93,13 @@ h2{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute
           <div class="tags"><span class="tag">2 kişi</span><span class="tag">Linkle online</span><span class="tag">3 / 5 / 7 puan</span></div>
           <span class="play">Masaya otur →</span></div>
       </a>
+      <a class="game" href="batak/">
+        <div class="art pisti" style="background:radial-gradient(ellipse at 50% 40%,#1f4f6b,#0d2a3d)"><div class="cards"><span style="color:#161616">A</span><span style="color:#161616">♠&#xFE0E;</span><span style="color:#c41f2e">K</span></div></div>
+        <div class="body"><span class="new">Yeni · Arkadaşınla online</span><h3>Batak</h3>
+          <p>İhaleli, kozlu dört kişilik batak. Kaç el alacağını söyle, kozu seç, batmadan tuttur. Bilgisayara karşı ya da linkle arkadaşlarınla.</p>
+          <div class="tags"><span class="tag">4 kişi</span><span class="tag">Linkle online 2-4 kişi</span><span class="tag">5 / 11 / 21 el</span></div>
+          <span class="play">Masaya otur →</span></div>
+      </a>
       <a class="game" href="satranc/">
         <div class="art chess"><span class="badge">♞</span></div>
         <div class="body"><h3>Kavgacı Satranç</h3>
@@ -124,14 +131,8 @@ h2{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute
     </div>
   </section>
 
-  <section>
-    <h2>Yakında</h2>
-    <div class="soon">
-      <div><b>Batak</b><span>İhale ve koz ile 4 kişi</span></div>
-    </div>
-  </section>
 </div>
-<p class="foot"><span style="display:inline-flex;gap:6px;margin-bottom:10px"><button onclick="setLang('tr')" class="lg">Türkçe</button><button onclick="setLang('ru')" class="lg">Русский</button><button onclick="setLang('en')" class="lg">English</button></span><br>Ücretsiz · Kayıt yok · Reklamsız<br>Telefonunda uygulama gibi kullanmak için tarayıcı menüsünden <b>Ana ekrana ekle</b>'yi seç.<br><button class="inst" id="inst">📲 Telefona kur</button></p>
+<p class="foot"><span style="display:inline-flex;gap:6px;margin-bottom:10px"><button onclick="setLang('tr')" class="lg">Türkçe</button><button onclick="setLang('ru')" class="lg">Русский</button><button onclick="setLang('en')" class="lg">English</button></span><br>Ücretsiz · Kayıt şart değil · Reklamsız<br>Telefonunda uygulama gibi kullanmak için tarayıcı menüsünden <b>Ana ekrana ekle</b>'yi seç.<br><button class="inst" id="inst">📲 Telefona kur</button></p>
 <script>
 if('serviceWorker'in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
 let dp=null;addEventListener('beforeinstallprompt',e=>{e.preventDefault();dp=e;document.getElementById('inst').style.display='inline-block'});
