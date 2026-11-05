@@ -5,7 +5,7 @@
 <title>King</title>
 <script src="i18n-page.js"></script><script src="../i18n.js"></script>
 <script src="../mqtt.min.js"></script><script src="../relay.js"></script>
-<script src="engine.js"></script><script src="../account.js"></script><script src="../quick.js"></script>
+<script src="engine.js"></script><script src="../account.js"></script><script src="../quick.js"></script><script src="../ttimer.js"></script>
 <link rel="manifest" href="../manifest.webmanifest"><link rel="icon" href="../icon.svg" type="image/svg+xml">
 <meta name="theme-color" content="#1f3b2f">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -339,7 +339,7 @@ const PFX='khk-';let peer=null,conn=null,conns={},seats=[null,null,null,null],la
 function away(p){const s=seats[p];if(!s)return true;return Date.now()-(lastSeen[s.uid]||0)>20000}
 function send(d){if(mode==='guest'&&conn&&conn.open)conn.send(d)}
 function bcast(d){if(mode!=='host')return;for(const u in conns){const c=conns[u];if(c.open)try{c.send(d)}catch(e){}}}
-function bcastState(){if(mode==='host'&&started)bcast({t:'state',ver,M,names,human})}
+function bcastState(){if(mode==='host'&&started)bcast({t:'state',ver,M,names,human,tl:KTimer.left()})}
 function lobbyNames(){return seats.map((s,i)=>s?s.name:null)}
 function showOnline(){$('ov').style.alignItems='';const s=ov('online',`<h2>Arkadaşlarla online</h2><p>Masa kur, linki arkadaşlarına gönder. 2–4 kişi oynayabilirsiniz; boş yerlere bilgisayar oturur.</p>
   <p class="lbl">Adın</p><input class="name" id="oName" maxlength="14" value="${myName()==='Sen'?'':myName()}" placeholder="Adını yaz">
@@ -390,7 +390,7 @@ function guestRecv(d){lastRx=Date.now();if(!d)return;
   else if(d.t==='full'){ov('lobby','<h2>Masa dolu</h2><p>Bu masada 4 kişi var.</p><div class="row"><button class="btn pri" id="nf">Menüye dön</button></div>');$('nf').onclick=()=>{leaveOnline();mode='off';showMenu()}}
   else if(d.t==='lobby'){showLobby.names=d.seats;if(!started)showLobby()}
   else if(d.t==='state'){if(d.ver<ver)return;const first=!started||!M;if(M&&d.M.deal===0&&M.deal>0&&d.M.phase==='choose'){shownTid=null;dealSeen=-1;choiceSeen=null;showDealEnd.counted=false}
-    ver=d.ver;M=d.M;names=d.names;human=d.human;started=true;$('bEmo').hidden=false;if(['lobby','join'].includes($('sheet').dataset.k))hideOv();sync(first?'first':true)}
+    ver=d.ver;M=d.M;names=d.names;human=d.human;started=true;KTimer.remote(tkey(),d.tl);$('bEmo').hidden=false;if(['lobby','join'].includes($('sheet').dataset.k))hideOv();sync(first?'first':true)}
   else if(d.t==='emo')showEmo(d.p,d.e)
   else if(d.t==='chat'&&d.p!==me)addChat(d.p,d.x,d.l)}
 function leaveOnline(){if(window.KQuick)KQuick.stop();quick=false;clearInterval(hb);try{peer&&peer.destroy()}catch(e){}peer=null;conn=null;conns={};started=false;$('bEmo').hidden=true}
@@ -435,6 +435,10 @@ function quickTick(){if(!quick||mode!=='host'||started)return;const n=lobbyNames
   if(n>=2&&!quick2)quick2=Date.now();if(n<2)quick2=0;
   if(n>=4||(n>=2&&Date.now()-quick2>20000)){startOnline();return}
   if(n===1){const r=KQuick.rival('king',room);if(r){leaveOnline();joinRoom(r)}}}
+/* online hamle süresi */
+const tkey=()=>M&&['play','bid','trump','choose'].includes(M.phase)?[M.phase,M.turn,M.chooser,M.deal,M.tricks,(M.trick||[]).length].join(':'):null;
+KTimer.init({secs:()=>30,key:tkey,actor:()=>M.phase==='choose'?M.chooser:M.turn,isHuman:p=>!!human[p],name:p=>p===me?'Sen':names[p],mode:()=>started&&!busy?mode:'off',
+  onExpire:p=>{toast(`<b>${esc(p===me?'Sen':names[p])}</b>: <span>süre doldu</span>`);if(p===me)hideOv();if(M.phase==='choose'){const [x,t]=K.botChoose(M,p);act(p,{k:'choose',g:x,t})}else if(M.phase==='play')act(p,{k:'play',c:K.botPlay(M,p)})}});
 const hc=(location.hash||'').slice(1).toUpperCase();
 if(/^[A-Z0-9]{5}$/.test(hc))joinRoom(hc);else showMenu();
 addEventListener('load',()=>window.KH&&KH.setPresence('King'));

@@ -5,7 +5,7 @@
 <title>Tavla</title>
 <script src="i18n-page.js"></script><script src="../i18n.js"></script>
 <script src="../mqtt.min.js"></script><script src="../relay.js"></script><script src="../chat.js"></script>
-<script src="engine.js"></script><script src="../account.js"></script><script src="../quick.js"></script>
+<script src="engine.js"></script><script src="../account.js"></script><script src="../quick.js"></script><script src="../ttimer.js"></script>
 <link rel="manifest" href="../manifest.webmanifest"><link rel="icon" href="../icon.svg" type="image/svg+xml">
 <meta name="theme-color" content="#2b1b11">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -228,7 +228,7 @@ $('ov').addEventListener('click',e=>{if(e.target===$('ov')&&$('sheet').dataset.k
 const PFX='ktv-';let peer=null,conn=null,guest=null,lastSeen=0,room=null,started=false,lastRx=0,hb=null,gver=-1;
 function away(){return !guest||Date.now()-lastSeen>25000}
 function send(d){if(conn&&conn.open)try{conn.send(d)}catch(e){}}
-function bcastState(){if(mode==='host'&&started&&conn)send({t:'state',ver,G,names})}
+function bcastState(){if(mode==='host'&&started&&conn)send({t:'state',ver,G,names,tl:KTimer.left()})}
 function linkFor(c){return (location.protocol.startsWith('http')?location.origin+location.pathname:'https://mihrali47.github.io/durak/tavla/')+'#'+c}
 function showOnline(){ov('online',`<h2>Arkadaşınla online</h2><p>Masa kur, linki gönder. Arkadaşın girdiği an oyun başlar.</p>
   <p class="lbl">Adın</p><input class="name" id="oName" maxlength="14" value="${myName()==='Sen'?'':esc(myName())}" placeholder="Adını yaz">
@@ -269,7 +269,7 @@ function guestRecv(d){lastRx=Date.now();if(!d)return;
     if(G&&d.G.games===0&&d.G.mid===0&&(G.mid>0||G.games>0)){shownMid=0;showEnd.k=null}
     me=1;started=true;names=d.names;
     if(busy&&!sync.inner&&view){busy=false}
-    G=d.G;pre=[];sel=null;if(first)view0=TV.st(G);if(['lobby','join','end'].includes($('sheet').dataset.k)&&!['gameOver','over'].includes(G.phase))hideOv();sync(first?'first':0)}}
+    G=d.G;pre=[];sel=null;KTimer.remote(tkey(),d.tl);if(first)view0=TV.st(G);if(['lobby','join','end'].includes($('sheet').dataset.k)&&!['gameOver','over'].includes(G.phase))hideOv();sync(first?'first':0)}}
 function leaveOnline(){if(window.KQuick)KQuick.stop();quick=false;clearInterval(hb);try{peer&&peer.destroy()}catch(e){}peer=null;conn=null;guest=null;started=false;window.KChat&&KChat.unmount();try{history.replaceState(null,'',location.pathname)}catch(e){}}
 
 /* ---------- hızlı oyun: açık masaya otur ya da masa aç ---------- */
@@ -283,6 +283,10 @@ function quickTick(){if(!quick||mode!=='host'||started)return;const n=(guest?2:1
   if(n>=2&&!quick2)quick2=Date.now();if(n<2)quick2=0;
   if(2>2&&(n>=2||(n>=2&&Date.now()-quick2>20000))){startOnline();return}
   if(n===1){const r=KQuick.rival('tavla',room);if(r){leaveOnline();joinRoom(r)}}}
+/* online hamle süresi */
+const tkey=()=>G&&['roll','move'].includes(G.phase)?[G.phase,G.turn,G.rid,G.mid].join(':'):null;
+KTimer.init({secs:()=>45,key:tkey,actor:()=>G.turn,isHuman:p=>true,name:p=>p===me?'Sen':names[p],mode:()=>started&&!busy?mode:'off',
+  onExpire:p=>{toast(`<b>${esc(p===me?'Sen':names[p])}</b>: <span>süre doldu</span>`);if(p===me){pre=[];sel=null}if(G.phase==='roll')act(p,{k:'roll'});else if(G.phase==='move')act(p,{k:'play',moves:TV.botMoves(G)})}});
 const hc=(location.hash||'').slice(1).toUpperCase();
 if(/^[A-Z0-9]{5}$/.test(hc))joinRoom(hc);else showMenu();
 addEventListener('load',()=>window.KH&&KH.setPresence('Tavla'));

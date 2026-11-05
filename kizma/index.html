@@ -5,7 +5,7 @@
 <title>Kızma Birader</title>
 <script src="i18n-page.js"></script><script src="../i18n.js"></script>
 <script src="../mqtt.min.js"></script><script src="../relay.js"></script>
-<script src="engine.js"></script><script src="../account.js"></script><script src="../quick.js"></script>
+<script src="engine.js"></script><script src="../account.js"></script><script src="../quick.js"></script><script src="../ttimer.js"></script>
 <link rel="manifest" href="../manifest.webmanifest"><link rel="icon" href="../icon.svg" type="image/svg+xml">
 <meta name="theme-color" content="#2b1b11">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -225,7 +225,7 @@ const PFX='kkb-';let peer=null,conn=null,conns={},lob=[],seatOf={},lastSeen={},r
 function away(p){const u=Object.keys(seatOf).find(k=>seatOf[k]===p);if(!u)return true;return Date.now()-(lastSeen[u]||0)>20000}
 function send(d){if(mode==='guest'&&conn&&conn.open)conn.send(d)}
 function bcast(d){if(mode!=='host')return;for(const u in conns){const c=conns[u];if(c.open)try{c.send(d)}catch(e){}}}
-function bcastState(){if(mode==='host'&&started)bcast({t:'state',ver,G,names,human,seats:seatOf})}
+function bcastState(){if(mode==='host'&&started)bcast({t:'state',ver,G,names,human,seats:seatOf,tl:KTimer.left()})}
 function linkFor(c){const u=location.protocol.startsWith('http')?location.origin+location.pathname:'https://mihrali47.github.io/durak/kizma/';return u+'#'+c}
 function showOnline(){const s=ov('online',`<h2>Arkadaşlarla online</h2><p>Masa kur, linki gönder. 2–4 kişi oynayabilirsiniz.</p>
   <p class="lbl">Adın</p><input class="name" id="oName" maxlength="14" value="${myName()==='Sen'?'':myName()}" placeholder="Adını yaz">
@@ -274,7 +274,7 @@ function guestRecv(d){lastRx=Date.now();if(!d)return;
   else if(d.t==='lobby'){showLobby.names=d.names;if(!started)showLobby()}
   else if(d.t==='state'){if(d.ver<ver)return;const first=!started||!G;const s=d.seats[UID];if(s==null)return;
     if(G&&d.G.rid===0&&d.G.mid===0&&(G.rid>0)){shownRid=0;shownMid=0;showOver.done=false;if($('sheet').dataset.k==='over')hideOv()}
-    me=s;ver=d.ver;G=d.G;names=d.names;human=d.human;started=true;$('bChat').hidden=false;if(['lobby','join'].includes($('sheet').dataset.k))hideOv();sync(first?'first':0)}
+    me=s;ver=d.ver;G=d.G;names=d.names;human=d.human;started=true;KTimer.remote(tkey(),d.tl);$('bChat').hidden=false;if(['lobby','join'].includes($('sheet').dataset.k))hideOv();sync(first?'first':0)}
   else if(d.t==='emo')showEmo(d.p,d.e);else if(d.t==='chat'&&d.p!==me)addChat(d.p,d.x,d.l)}
 function leaveOnline(){if(window.KQuick)KQuick.stop();quick=false;clearInterval(hb);try{peer&&peer.destroy()}catch(e){}peer=null;conn=null;conns={};started=false;$('bChat').hidden=true}
 /* ---------- sohbet ve emoji (mesajlar okuyanın diline çevrilir) ---------- */
@@ -313,6 +313,10 @@ function quickTick(){if(!quick||mode!=='host'||started)return;const n=lob.length
   if(n>=2&&!quick2)quick2=Date.now();if(n<2)quick2=0;
   if(4>2&&(n>=4||(n>=2&&Date.now()-quick2>20000))){startOnline();return}
   if(n===1){const r=KQuick.rival('kizma',room);if(r){leaveOnline();joinRoom(r)}}}
+/* online hamle süresi */
+const tkey=()=>G&&['roll','move'].includes(G.phase)?[G.phase,G.turn,G.rid,G.mid].join(':'):null;
+KTimer.init({secs:()=>20,key:tkey,actor:()=>G.turn,isHuman:p=>!!human[p],name:p=>p===me?'Sen':names[p],mode:()=>started&&!busy?mode:'off',
+  onExpire:p=>{toast(`<b>${esc(p===me?'Sen':names[p])}</b>: <span>süre doldu</span>`);if(G.phase==='roll')act(p,{k:'roll'});else if(G.phase==='move')act(p,{k:'move',m:KB.botPick(G,p)})}});
 const hc=(location.hash||'').slice(1).toUpperCase();
 if(/^[A-Z0-9]{5}$/.test(hc))joinRoom(hc);else showMenu();
 addEventListener('load',()=>{fit();window.KH&&KH.setPresence('Kızma Birader')});
