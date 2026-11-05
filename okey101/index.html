@@ -748,6 +748,7 @@ let GM=null,toastT=0;
 let ac=null,soundOn=true;
 try{const v=localStorage.getItem('okey101_snd');if(v==='0')soundOn=false;const sp=localStorage.getItem('okey101_speed');if(sp)U.speed=+sp}catch(e){}
 if(!U.speed)U.speed=1;
+try{U.esli=localStorage.getItem('okey101_esli')==='1'}catch(e){}
 try{const c=localStorage.getItem('okey101_classic');U.classic=c==='1';if(/klasik/.test(location.search))U.classic=true}catch(e){}
 try{const k=localStorage.getItem('okey101_kat');if(k!==null)U.rising=k==='1'}catch(e){}
 try{const r=JSON.parse(localStorage.getItem('okey101_rig'));if(r&&typeof r==='object')U.rig={all:!!r.all,ok:+r.ok||0,pair:!!r.pair}}catch(e){}
@@ -1125,7 +1126,7 @@ async function run(){
   U.busy=false;render();if(S.ended)return setTimeout(handEnd,S.result&&S.result.fin!=null?1700:700*U.speed);
   if(S.turn===0){banner('SIRA SENDE','small');snd('tap')}
 }
-function startGame(n){RULES.rising=!!U.rising;RULES.classic=!!U.classic;GM={rig:U.rig,total:n,handNo:0,totals:[0,0,0,0],hist:[],dealer:Math.random()*4|0};U.logs=[];nextHand()}
+function startGame(n){RULES.rising=!!U.rising;RULES.classic=!!U.classic;GM={esli:!!U.esli,rig:U.rig,total:n,handNo:0,totals:[0,0,0,0],hist:[],dealer:Math.random()*4|0};U.logs=[];nextHand()}
 function nextHand(){
   GM.handNo++;GM.dealer=(GM.dealer+1)%4;dealHand(GM.dealer,GM.rig);
   U.sel.clear();U.slots=Array(COLS*ROWS).fill(null);U.newId=null;sortSeri();
@@ -1138,8 +1139,9 @@ function scoreTable(){
   const lead=Math.min(...GM.totals);
   return `<table class="res"><thead><tr><th>El</th>${NAMES.map(n=>`<th>${n}</th>`).join('')}</tr></thead><tbody>
   ${GM.hist.map((r,i)=>`<tr><td>${i+1}</td>${r.map(v=>`<td>${v}</td>`).join('')}</tr>`).join('')}
-  <tr class="tot"><td>Toplam</td>${GM.totals.map(v=>`<td class="${GM.hist.length&&v===lead?'win':''}">${v}</td>`).join('')}</tr></tbody></table>`;
+  <tr class="tot"><td>Toplam</td>${GM.totals.map(v=>`<td class="${GM.hist.length&&v===lead?'win':''}">${v}</td>`).join('')}</tr></tbody></table>${teamLine()}`;
 }
+function teamLine(){if(!GM||!GM.esli)return '';const a=GM.totals[0]+GM.totals[2],b=GM.totals[1]+GM.totals[3];return `<p class="muted"><b>Eşli</b> · <span>Biz</span> (${escK(NAMES[0])}+${escK(NAMES[2])}): <b>${a}</b> · <span>Onlar</span>: <b>${b}</b></p>`}
 function handStrip(s){const h=S.hands[s];if(!h.length)return '';
   const ts=h.slice().sort((a,b)=>{const x=wild(a)?9:eff(a).c,y=wild(b)?9:eff(b).c;return x-y||eff(a).n-eff(b).n});
   return '<span class="hstrip">'+ts.map(t=>{const e=tileEl(t,'xs');return e.outerHTML}).join('')+'</span>'}
@@ -1150,10 +1152,11 @@ function handEnd(){
   let h=`<h2>${R.fin==null?'Orta bitti':R.fin===0?'Bitirdin!':NAMES[R.fin]+' bitti'}</h2>
   ${notes.length?`<p class="muted">Katlama: ${notes.join(', ')}.</p>`:R.fin==null?'<p class="muted">Kimse bitiremedi, eldeki taşlar sayılıyor.</p>':''}
   <table class="res"><thead><tr><th>Oyuncu</th><th>Bu el</th><th>Ceza</th><th>Toplam</th></tr></thead><tbody>
-  ${R.rows.map((r,s)=>`<tr><td>${NAMES[s]}<small>${r.how}${S.penLog[s].length?' · '+S.penLog[s].join(', '):''}</small>${handStrip(s)}</td><td>${r.base}</td><td>${r.pen||'–'}</td><td class="${s===R.fin?'win':''}">${GM.totals[s]}</td></tr>`).join('')}</tbody></table>`;
-  if(last){const order=[0,1,2,3].sort((a,b)=>GM.totals[a]-GM.totals[b]),won=order[0]===0;
+  ${''}${R.rows.map((r,s)=>`<tr><td>${NAMES[s]}<small>${r.how}${S.penLog[s].length?' · '+S.penLog[s].join(', '):''}</small>${handStrip(s)}</td><td>${r.base}</td><td>${r.pen||'–'}</td><td class="${s===R.fin?'win':''}">${GM.totals[s]}</td></tr>`).join('')}</tbody></table>`;
+  if(GM.esli&&!last)h+=teamLine();
+  if(last){const order=[0,1,2,3].sort((a,b)=>GM.totals[a]-GM.totals[b]),tA=GM.totals[0]+GM.totals[2],tB=GM.totals[1]+GM.totals[3],won=GM.esli?tA<tB:order[0]===0;
     try{const rec=JSON.parse(localStorage.getItem('okey101_rec')||'{"w":0,"g":0}');rec.g++;if(won)rec.w++;window.KH&&KH.stat('101 Okey',won);localStorage.setItem('okey101_rec',JSON.stringify(rec))}catch(e){}
-    h+=`<h2>${won?'Masanın galibi sensin!':NAMES[order[0]]+' kazandı'}</h2><p class="muted">${order.map((s,i)=>`${i+1}. ${NAMES[s]} (${GM.totals[s]})`).join(' · ')}</p><div class="rowb"><button class="btn green" id="again">Yeni oyun</button></div>`}
+    h+=GM.esli?`<h2>${won?'Ortağınla kazandınız!':tA===tB?'Berabere':'Rakipler kazandı'}</h2>${teamLine()}<div class="rowb"><button class="btn green" id="again">Yeni oyun</button></div>`:`<h2>${won?'Masanın galibi sensin!':NAMES[order[0]]+' kazandı'}</h2><p class="muted">${order.map((s,i)=>`${i+1}. ${NAMES[s]} (${GM.totals[s]})`).join(' · ')}</p><div class="rowb"><button class="btn green" id="again">Yeni oyun</button></div>`}
   else h+=`<div class="rowb"><button class="btn green" id="nx">${GM.handNo+1}. ele geç</button></div>`;
   open(h);if(last)$('again').onclick=()=>{close();showMenu()};else $('nx').onclick=()=>{close();nextHand()};
 }
@@ -1182,6 +1185,7 @@ function showMenu(){
     <li>Yeşil yonca <b>sahte okey</b>, okeyin değerini alır. Okey ya da işlek taş atmak 101 ceza.</li>
   </ul>
   <div><p class="lbl">Kaç el?</p><div class="seg" id="segN">${[3,5,9].map(n=>`<button data-n="${n}" aria-pressed="${n===menuN}">${n} el</button>`).join('')}</div></div>
+  <div><p class="lbl">Oyun şekli</p><div class="seg" id="segE" style="grid-template-columns:repeat(2,1fr)"><button data-v="0" aria-pressed="${!U.esli}">Tekli</button><button data-v="1" aria-pressed="${!!U.esli}">Eşli</button></div></div>
   <div><p class="lbl">Okey türü</p><div class="seg" id="segC" style="grid-template-columns:repeat(2,1fr)"><button data-v="0" aria-pressed="${!U.classic}">101 Okey</button><button data-v="1" aria-pressed="${!!U.classic}">Klasik Okey</button></div></div>
   <div><p class="lbl">Oyun türü</p><div class="seg" id="segO" style="grid-template-columns:repeat(2,1fr)"><button data-v="1" aria-pressed="${!!U.rising}">Katlamalı</button><button data-v="0" aria-pressed="${!U.rising}">Katlamasız</button></div></div>
   <div><p class="lbl">Yardım</p><div class="seg" id="segH" style="grid-template-columns:repeat(2,1fr)"><button data-v="1" aria-pressed="${U.help}">Yardımlı</button><button data-v="0" aria-pressed="${!U.help}">Yardımsız</button></div></div>
@@ -1194,6 +1198,7 @@ function showMenu(){
   <div class="rowb"><button class="btn green" id="qk">⚡ Hızlı oyun</button><button class="btn ghost" id="onl">👥 Arkadaşlarla online</button></div>
   <div class="rowb"><button class="btn green" id="go">${inGame?'Yeni oyun':'Masaya otur'}</button>${inGame?'<button class="btn ghost" id="back">Oyuna dön</button>':''}</div>
   <p class="muted">${rec.g?`${rec.g} oyunda ${rec.w} galibiyet.`:'Yardımsızda okey ters dönmez, işlekler işaretlenmez.'}</p>`);
+  $('segE').querySelectorAll('button').forEach(b=>b.onclick=()=>{U.esli=b.dataset.v==='1';try{localStorage.setItem('okey101_esli',U.esli?'1':'0')}catch(e){}$('segE').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b))});
   $('segC').querySelectorAll('button').forEach(b=>b.onclick=()=>{U.classic=b.dataset.v==='1';try{localStorage.setItem('okey101_classic',U.classic?'1':'0')}catch(e){}$('segC').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b))});
   $('segO').querySelectorAll('button').forEach(b=>b.onclick=()=>{U.rising=b.dataset.v==='1';try{localStorage.setItem('okey101_kat',U.rising?'1':'0')}catch(e){}$('segO').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b))});
   $('segH').querySelectorAll('button').forEach(b=>b.onclick=()=>{U.help=b.dataset.v==='1';try{localStorage.setItem('okey101_help',U.help?'1':'0')}catch(e){}$('segH').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));if(S)render()});
@@ -1290,12 +1295,14 @@ function onlineMenu(){
       ${window.KH?'<div class="rowb"><button class="btn ghost" id="khK">👥 Arkadaşlarını çağır</button></div>':''}
       ${OK.quick?'<p class="muted"><b>Oyuncu aranıyor…</b> Masa dolunca ya da 2. kişi geldikten 20 saniye sonra oyun kendiliğinden başlar.</p>':''}<p class="lbl">Masadakiler (${n}/4)</p><ul class="loglist">${[0,1,2,3].map(i=>`<li>${OK.lob[i]?escK(OK.lob[i].name)+(i===0?' · ev sahibi':''):'Bilgisayar oturacak'}</li>`).join('')}</ul>
       <div><p class="lbl">Kaç el?</p><div class="seg" id="segNK">${[3,5,9].map(x=>`<button data-n="${x}" aria-pressed="${x===menuN}">${x} el</button>`).join('')}</div></div>
+      <div><p class="lbl">Oyun şekli</p><div class="seg" id="segEK" style="grid-template-columns:repeat(2,1fr)"><button data-v="0" aria-pressed="${!U.esli}">Tekli</button><button data-v="1" aria-pressed="${!!U.esli}">Eşli</button></div></div>
       <div><p class="lbl">Okey türü</p><div class="seg" id="segCK" style="grid-template-columns:repeat(2,1fr)"><button data-v="0" aria-pressed="${!U.classic}">101 Okey</button><button data-v="1" aria-pressed="${!!U.classic}">Klasik Okey</button></div></div>
       <div><p class="lbl">Oyun türü</p><div class="seg" id="segOK" style="grid-template-columns:repeat(2,1fr)"><button data-v="1" aria-pressed="${!!U.rising}">Katlamalı</button><button data-v="0" aria-pressed="${!U.rising}">Katlamasız</button></div></div>
       <div class="rowb"><button class="btn ghost" id="cancelK">Vazgeç</button><button class="btn green" id="startK" ${n<2?'disabled style="opacity:.5"':''}>${n<2?'Arkadaşın bekleniyor…':`Oyunu başlat (${n} kişi)`}</button></div>`);
     $('cpK').onclick=async()=>{try{if(navigator.share&&matchMedia('(pointer:coarse)').matches){await navigator.share({title:'101 Okey',url:link});return}await navigator.clipboard.writeText(link);toast('Link kopyalandı')}catch(e){$('lnkK').select()}};
     if($('khK'))$('khK').onclick=()=>KH.invitePicker('101 Okey',link);
     $('segNK').querySelectorAll('button').forEach(b=>b.onclick=()=>{menuN=+b.dataset.n;$('segNK').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b))});
+    $('segEK').querySelectorAll('button').forEach(b=>b.onclick=()=>{U.esli=b.dataset.v==='1';$('segEK').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b))});
     $('segCK').querySelectorAll('button').forEach(b=>b.onclick=()=>{U.classic=b.dataset.v==='1';$('segCK').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b))});
     $('segOK').querySelectorAll('button').forEach(b=>b.onclick=()=>{U.rising=b.dataset.v==='1';$('segOK').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b))});
     $('cancelK').onclick=()=>{leaveOnline();showMenu()};if(n>=2)$('startK').onclick=startOnline;return}
@@ -1344,7 +1351,8 @@ function guestEnd(){if(!S||!S.result||GM.hist.length<GM.handNo)return;const R=S.
   let h=`<h2>${R.fin==null?'Orta bitti':R.fin===0?'Bitirdin!':escK(NAMES[R.fin])+' bitti'}</h2>
   <table class="res"><thead><tr><th>Oyuncu</th><th>Bu el</th><th>Ceza</th><th>Toplam</th></tr></thead><tbody>
   ${R.rows.map((r,s)=>`<tr><td>${escK(NAMES[s])}<small>${r.how}</small></td><td>${r.base}</td><td>${r.pen||'–'}</td><td class="${s===R.fin?'win':''}">${GM.totals[s]}</td></tr>`).join('')}</tbody></table>`;
-  if(last){const order=[0,1,2,3].sort((a,b)=>GM.totals[a]-GM.totals[b]);window.KH&&KH.stat('101 Okey',order[0]===0);h+=`<h2>${order[0]===0?'Masanın galibi sensin!':escK(NAMES[order[0]])+' kazandı'}</h2><p class="muted">${order.map((s,i)=>`${i+1}. ${escK(NAMES[s])} (${GM.totals[s]})`).join(' · ')}</p>`}
+  if(last&&GM.esli){const tA=GM.totals[0]+GM.totals[2],tB=GM.totals[1]+GM.totals[3];window.KH&&KH.stat('101 Okey',tA<tB);h+=`<h2>${tA<tB?'Ortağınla kazandınız!':tA===tB?'Berabere':'Rakipler kazandı'}</h2>${teamLine()}`}
+  else if(last){const order=[0,1,2,3].sort((a,b)=>GM.totals[a]-GM.totals[b]);window.KH&&KH.stat('101 Okey',order[0]===0);h+=`<h2>${order[0]===0?'Masanın galibi sensin!':escK(NAMES[order[0]])+' kazandı'}</h2><p class="muted">${order.map((s,i)=>`${i+1}. ${escK(NAMES[s])} (${GM.totals[s]})`).join(' · ')}</p>`}
   h+=`<p class="muted">Ev sahibi ${last?'yeni oyunu':'sıradaki eli'} başlatınca devam edersiniz.</p>`;open(h)}
 
 {const L=String(window.LANG||'tr').slice(0,2);if(L!=='tr')document.documentElement.style.setProperty('--isl',L==='ru'?'"ДОКЛАД"':'"PLAYABLE"')}

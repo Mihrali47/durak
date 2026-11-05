@@ -2,6 +2,7 @@
 (()=>{
 const CO={'kırmızı':['красная','red'],mavi:['синяя','blue'],'sarı':['жёлтая','yellow'],siyah:['чёрная','black']};
 window.I18N_EXTRA=[
+['Oyun şekli','Режим','Mode'],['Tekli','Каждый за себя','Solo'],['Eşli','Парами','Partners'],['Biz','Мы','Us'],['Onlar','Они','Them'],['Ortağınla kazandınız!','Вы с партнёром победили!','You and your partner won!'],['Rakipler kazandı','Победили соперники','The opponents won'],['Berabere','Ничья','Draw'],
 ['Klasik Okey','Классический окей','Classic Okey'],['Okey türü','Вариант окея','Okey type'],['Bitir','Закончить','Go out'],['Çiftle bitirdi','Закончил парами','Went out with pairs'],['Bitirdi','Закончил','Went out'],['OKEY','ОКЕЙ','OKEY'],
 ['Elin bitmeye hazır değil: kalan 14 taş per, seri ya da 7 çift olmalı','Рука не готова: оставшиеся 14 фишек должны быть сериями, наборами или 7 парами','Your hand isn\'t ready: the other 14 tiles must form runs, sets or 7 pairs'],['Şu an bitemezsin','Сейчас нельзя закончить','You can\'t go out now'],
 ['Göstergeyi gösterdin: −1','Вы показали индикатор: −1','You showed the indicator: −1'],['Gösterge −1','Индикатор −1','Indicator −1'],
