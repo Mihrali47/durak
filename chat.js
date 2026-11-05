@@ -5,10 +5,11 @@ if(window.KChat)return;
 const EMO=['👍','😂','😮','😡','🙏','👏','☕','🔥'];
 const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const myL=()=>String(window.LANG||navigator.language||'tr').slice(0,2).toLowerCase();
-async function translate(text,sl){const L=myL();sl=/^(tr|ru|en)$/.test(sl||'')?sl:'auto';if(sl===L)return null;
+/* yazının dili otomatik bulunur: Türkçe arayüzde İngilizce ya da Rusça yazılsa da karşı taraf kendi dilinde görür */
+async function translate(text,hint){const L=myL();const sl='auto';
   try{const r=await fetch('https://translate.googleapis.com/translate_a/single?client=gtx&sl='+sl+'&tl='+L+'&dt=t&q='+encodeURIComponent(text));const j=await r.json();
-    const out=(j[0]||[]).map(x=>x[0]).join(''),src=j[2];if((sl!=='auto'||(src&&src!==L))&&out&&out.trim().toLowerCase()!==text.trim().toLowerCase())return out;return null}
-  catch(e){try{const r=await fetch('https://api.mymemory.translated.net/get?q='+encodeURIComponent(text)+'&langpair='+(sl==='auto'?'autodetect':sl)+'|'+L);const j=await r.json();const out=j&&j.responseData&&j.responseData.translatedText;
+    const out=(j[0]||[]).map(x=>x[0]).join(''),src=j[2];if(src&&src!==L&&out&&out.trim().toLowerCase()!==text.trim().toLowerCase())return out;return null}
+  catch(e){try{const r=await fetch('https://api.mymemory.translated.net/get?q='+encodeURIComponent(text)+'&langpair='+(hint&&hint!==L?hint:'autodetect')+'|'+L);const j=await r.json();const out=j&&j.responseData&&j.responseData.translatedText;
     if(out&&out.trim().toLowerCase()!==text.trim().toLowerCase()&&!/INVALID|MYMEMORY/i.test(out))return out}catch(x){}return null}}
 const css=`.kc-btn{position:fixed;right:max(12px,env(safe-area-inset-right));bottom:max(12px,env(safe-area-inset-bottom));z-index:70;width:48px;height:48px;border-radius:50%;border:1px solid #e7b54c;background:#2b1b11;color:#fff;font-size:22px;box-shadow:0 4px 14px rgba(0,0,0,.45);cursor:pointer}
 .kc-btn.new{box-shadow:0 0 0 3px #e7b54c,0 4px 14px rgba(0,0,0,.45)}

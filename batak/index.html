@@ -418,10 +418,10 @@ const EMO=['👍','😂','😮','😡','🙏','👏'];
 /* sohbet: herkes kendi dilinde yazar, gelen mesaj okuyanın diline çevrilir */
 const CHAT=[];const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const myL=()=>String(window.LANG||navigator.language||'tr').slice(0,2).toLowerCase();
-async function translate(text,sl){const L=myL();sl=/^(tr|ru|en)$/.test(sl||'')?sl:'auto';if(sl===L)return null;
+async function translate(text,hint){const L=myL();const sl='auto';
   try{const r=await fetch('https://translate.googleapis.com/translate_a/single?client=gtx&sl='+sl+'&tl='+L+'&dt=t&q='+encodeURIComponent(text));const j=await r.json();
-    const out=(j[0]||[]).map(x=>x[0]).join(''),src=j[2];if((sl!=='auto'||(src&&src!==L))&&out&&out.trim().toLowerCase()!==text.trim().toLowerCase())return out;return null}
-  catch(e){try{const r=await fetch('https://api.mymemory.translated.net/get?q='+encodeURIComponent(text)+'&langpair='+(sl==='auto'?'autodetect':sl)+'|'+L);const j=await r.json();const out=j&&j.responseData&&j.responseData.translatedText;
+    const out=(j[0]||[]).map(x=>x[0]).join(''),src=j[2];if(src&&src!==L&&out&&out.trim().toLowerCase()!==text.trim().toLowerCase())return out;return null}
+  catch(e){try{const r=await fetch('https://api.mymemory.translated.net/get?q='+encodeURIComponent(text)+'&langpair='+(hint&&hint!==L?hint:'autodetect')+'|'+L);const j=await r.json();const out=j&&j.responseData&&j.responseData.translatedText;
     if(out&&out.trim().toLowerCase()!==text.trim().toLowerCase()&&!/INVALID|MYMEMORY/i.test(out))return out}catch(x){}return null}}
 function bubble(p,t){const v=V(p),el=v===0?$('meAv'):$('s'+v).querySelector('.av');if(!el)return;document.querySelectorAll('.bub[data-p="'+p+'"]').forEach(x=>x.remove());
   const r=el.getBoundingClientRect(),b=document.createElement('div');b.className='bub';b.dataset.p=p;b.textContent=t.length>70?t.slice(0,68)+'…':t;document.body.appendChild(b);
