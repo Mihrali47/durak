@@ -115,6 +115,8 @@ input.name{width:100%;border:1px solid #d9d1bf;border-radius:10px;padding:11px;f
 <div class="toast" id="toast" hidden></div>
 <script>
 const KB=window.KB,$=id=>document.getElementById(id);
+let botLvl=(()=>{try{return JSON.parse(localStorage.getItem('kh_botlvl'))||'normal'}catch(e){return 'normal'}})();
+{const _pk=KB.botPick;KB.botPick=(G,p)=>botLvl==='kolay'&&Math.random()<.6?(Math.random()*G.moves.length|0):_pk(G,p)}
 const COL=['Kırmızı','Mavi','Yeşil','Sarı'],CV=['var(--c0)','var(--c1)','var(--c2)','var(--c3)'];
 const BOTN=['Nuri','Rıza','Hamdi'];
 const PATH=[[0,4],[1,4],[2,4],[3,4],[4,4],[4,3],[4,2],[4,1],[4,0],[5,0],[6,0],[6,1],[6,2],[6,3],[6,4],[7,4],[8,4],[9,4],[10,4],[10,5],[10,6],[9,6],[8,6],[7,6],[6,6],[6,7],[6,8],[6,9],[6,10],[5,10],[4,10],[4,9],[4,8],[4,7],[4,6],[3,6],[2,6],[1,6],[0,6],[0,5]];
@@ -212,6 +214,7 @@ function showRules(){ov('rules',`<h2>Kızma Birader nasıl oynanır?</h2>
   <div class="row"><button class="btn pri" id="rOk">Tamam</button></div>`);$('rOk').onclick=()=>G?(hideOv(),after()):showMenu()}
 function showMenu(){const sv=ST.get('save',null),rec=ST.get('rec',[0,0]);
   const s=ov('menu',`<h2>Kızma Birader</h2><p>Zar at, piyonlarını eve götür, rakibini kır. Bilgisayara karşı ya da linkle arkadaşlarınla.</p>
+    <p class="lbl">Bilgisayar</p><div class="seg" id="mL">${[["kolay","Kolay"],["normal","Normal"]].map(([k,v])=>`<button data-l="${k}" class="${botLvl===k?'on':''}">${v}</button>`).join('')}</div>
     <p class="lbl">Kaç kişi?</p><div class="seg" id="mN">${[2,3,4].map(n=>`<button data-n="${n}" class="${nPlayers===n?'on':''}">${n} kişi</button>`).join('')}</div>
     <div class="row" style="flex-direction:column">
       ${G&&G.phase!=='over'&&mode!=='guest'?'<button class="btn pri" id="mBack">Oyuna dön</button>':''}
@@ -223,6 +226,7 @@ function showMenu(){const sv=ST.get('save',null),rec=ST.get('rec',[0,0]);
       <button class="btn" id="mSnd">${KSfx.on?'Ses: Açık':'Ses: Kapalı'}</button>
       <a class="btn" href="../" style="text-align:center;text-decoration:none">Salona dön</a></div>
     <p style="font-size:12.5px;margin-top:10px">Rekorun: ${rec[0]} galibiyet, ${rec[1]} mağlubiyet.</p>`);
+  s.querySelectorAll('#mL button').forEach(b=>b.onclick=()=>{botLvl=b.dataset.l;try{localStorage.setItem('kh_botlvl',JSON.stringify(botLvl))}catch(e){};s.querySelectorAll('#mL button').forEach(x=>x.classList.toggle('on',x===b))});
   s.querySelectorAll('#mN button').forEach(b=>b.onclick=()=>{nPlayers=+b.dataset.n;ST.set('n',nPlayers);s.querySelectorAll('#mN button').forEach(x=>x.classList.toggle('on',x===b))});
   if($('mBack'))$('mBack').onclick=()=>{hideOv();after()};
   if($('mLoad'))$('mLoad').onclick=()=>{mode='off';me=0;G=sv.G;names=sv.names;names[0]=myName();human=[true,false,false,false];shownRid=G.rid;shownMid=G.mid;hideOv();sync()};

@@ -87,6 +87,8 @@ input.name{width:100%;border:1px solid #d9d1bf;border-radius:10px;padding:11px;f
 <div class="toast" id="toast" hidden></div>
 <script>
 const TV=window.TV,$=id=>document.getElementById(id);
+let botLvl=(()=>{try{return JSON.parse(localStorage.getItem('kh_botlvl'))||'normal'}catch(e){return 'normal'}})();
+{const _bm=TV.botMoves;TV.botMoves=G=>{if(botLvl==='kolay'&&Math.random()<.6){const S=TV.seqs(G);if(S.length)return S[Math.random()*S.length|0].map(m=>({f:m.f,t:m.t,d:m.d}))}return _bm(G)}}
 const ST={get(k,d){try{const v=localStorage.getItem('tv_'+k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem('tv_'+k,JSON.stringify(v))}catch(e){}},del(k){try{localStorage.removeItem('tv_'+k)}catch(e){}}};
 const UID=ST.get('uid',null)||(()=>{const u=Math.random().toString(36).slice(2,10);ST.set('uid',u);return u})();
 const SPD=+(new URLSearchParams(location.search).get('spd')||1);
@@ -223,6 +225,7 @@ function showRules(){ov('rules',`<h2>Tavla nasıl oynanır?</h2>
   <div class="row"><button class="btn pri" id="rOk">Tamam</button></div>`);$('rOk').onclick=()=>G&&G.phase!=='over'?(hideOv(),after()):showMenu()}
 function showMenu(){const sv=ST.get('save',null),rec=ST.get('rec',[0,0]);
   const s=ov('menu',`<h2>Tavla</h2><p>Zar at, kapı kur, rakibini kır, pullarını ilk sen topla. Bilgisayara karşı ya da linkle arkadaşınla.</p>
+    <p class="lbl">Bilgisayar</p><div class="seg" id="mL">${[["kolay","Kolay"],["normal","Normal"]].map(([k,v])=>`<button data-l="${k}" class="${botLvl===k?'on':''}">${v}</button>`).join('')}</div>
     <p class="lbl">Maç kaç puana?</p><div class="seg" id="mT">${[3,5,7].map(n=>`<button data-n="${n}" class="${target===n?'on':''}">${n} puan</button>`).join('')}</div>
     <div class="row" style="flex-direction:column">
       ${G&&G.phase!=='over'&&mode!=='guest'&&G.games+G.mid>0?'<button class="btn pri" id="mBack">Oyuna dön</button>':''}
@@ -234,6 +237,7 @@ function showMenu(){const sv=ST.get('save',null),rec=ST.get('rec',[0,0]);
       <button class="btn" id="mSnd">${KSfx.on?'Ses: Açık':'Ses: Kapalı'}</button>
       <a class="btn" href="../">Salona dön</a></div>
     <p style="font-size:12.5px;margin-top:10px">Rekorun: ${rec[0]} galibiyet, ${rec[1]} mağlubiyet.</p>`);
+  s.querySelectorAll('#mL button').forEach(b=>b.onclick=()=>{botLvl=b.dataset.l;try{localStorage.setItem('kh_botlvl',JSON.stringify(botLvl))}catch(e){};s.querySelectorAll('#mL button').forEach(x=>x.classList.toggle('on',x===b))});
   s.querySelectorAll('#mT button').forEach(b=>b.onclick=()=>{target=+b.dataset.n;ST.set('target',target);s.querySelectorAll('#mT button').forEach(x=>x.classList.toggle('on',x===b))});
   if($('mBack'))$('mBack').onclick=()=>{hideOv();after()};
   if($('mLoad'))$('mLoad').onclick=()=>{mode='off';me=0;G=sv.G;names=sv.names;names[0]=myName();pre=[];shownMid=G.mid;shownRid=G.rid;view0=TV.st(G);hideOv();sync()};

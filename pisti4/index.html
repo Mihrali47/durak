@@ -175,6 +175,8 @@ input.name{width:100%;border:1px solid #d9d1bf;border-radius:10px;padding:11px;f
 
 <script>
 const K=window.PISTI4,$=id=>document.getElementById(id);
+let botLvl=(()=>{try{return JSON.parse(localStorage.getItem('kh_botlvl'))||'normal'}catch(e){return 'normal'}})();
+{const _bp=K.botPlay;K.botPlay=(M,p)=>botLvl==='kolay'&&Math.random()<.6?M.hands[p][Math.random()*M.hands[p].length|0]:_bp(M,p)}
 const SYM={S:'♠',H:'♥',D:'♦',C:'♣'},SN={S:'Maça',H:'Kupa',D:'Karo',C:'Sinek'};
 const RN=r=>({11:'J',12:'Q',13:'K',14:'A'})[r]||String(r);
 const BOTN=['Nuri','Rıza','Hamdi'];
@@ -292,6 +294,7 @@ function showRules(){ov('rules',`<h2>Eşli Pişti nasıl oynanır?</h2>
   <div class="row"><button class="btn pri" id="rOk">Tamam</button></div>`);$('rOk').onclick=()=>M&&M.phase!=='idle'?(hideOv(),afterRender()):showMenu()}
 function showMenu(){const sv=ST.get('save',null),rec=ST.get('rec',[0,0]);
   const s=ov('menu',`<h2>Eşli Pişti</h2><p>Dört kişilik, karşılıklı ortaklı pişti. Ortağınla kartları topla, pişti yap.</p>
+    <p class="lbl">Bilgisayar</p><div class="seg" id="mL">${[["kolay","Kolay"],["normal","Normal"]].map(([k,v])=>`<button data-l="${k}" class="${botLvl===k?'on':''}">${v}</button>`).join('')}</div>
     <p class="lbl">Kaç puana?</p><div class="seg" id="mT">${[51,101,151].map(h=>`<button data-t="${h}" class="${target===h?'on':''}">${h}</button>`).join('')}</div>
     <div class="row" style="flex-direction:column">
       ${M&&M.phase!=='over'&&mode!=='guest'?'<button class="btn pri" id="mBack">Oyuna dön</button>':''}
@@ -304,6 +307,7 @@ function showMenu(){const sv=ST.get('save',null),rec=ST.get('rec',[0,0]);
       <a class="btn" href="../pisti/" style="text-align:center;text-decoration:none">İki kişilik Pişti</a>
       <a class="btn" href="../" style="text-align:center;text-decoration:none">Salona dön</a></div>
     <p style="font-size:12.5px;margin-top:10px">Rekorun: ${rec[0]} galibiyet, ${rec[1]} mağlubiyet.</p>`);
+  s.querySelectorAll('#mL button').forEach(b=>b.onclick=()=>{botLvl=b.dataset.l;try{localStorage.setItem('kh_botlvl',JSON.stringify(botLvl))}catch(e){};s.querySelectorAll('#mL button').forEach(x=>x.classList.toggle('on',x===b))});
   s.querySelectorAll('#mT button').forEach(b=>b.onclick=()=>{target=+b.dataset.t;ST.set('target',target);s.querySelectorAll('#mT button').forEach(x=>x.classList.toggle('on',x===b))});
   if($('mBack'))$('mBack').onclick=()=>{hideOv();afterRender()};
   if($('mLoad'))$('mLoad').onclick=()=>{mode='off';M=sv.M;names=sv.names;names[0]=myName();human=[true,false,false,false];me=0;shownEid=M.ev?M.ev.id:null;hideOv();sync()};
