@@ -6,7 +6,7 @@ function board(){const b=Array(26).fill(0);b[24]=2;b[13]=5;b[8]=3;b[6]=5;b[1]=-2
 function rnd(){return 1+((typeof crypto!=='undefined'&&crypto.getRandomValues)?crypto.getRandomValues(new Uint32Array(1))[0]%6:(Math.random()*6|0))}
 function newMatch(o={}){const G={target:o.target||5,score:[0,0],games:0,b:null,bar:[0,0],off:[0,0],turn:0,phase:'roll',dice:[],open:null,last:null,rid:0,mid:0,winner:null,matchWinner:null,pts:0,noMove:false};newGame(G);return G}
 function newGame(G){G.b=board();G.bar=[0,0];G.off=[0,0];G.winner=null;G.pts=0;G.last=null;G.noMove=false;
-  let a,c;do{a=rnd();c=rnd()}while(a===c);G.open=[a,c];G.turn=a>c?0:1;G.dice=[a,c];G.phase='move';G.rid++}
+  let a,c;do{a=rnd();c=rnd()}while(a===c);G.open=[a,c];G.turn=a>c?0:1;G.dice=[];G.phase='roll';G.rid++}   // Türk tavlası: tek zarda büyük atan başlar ve iki zarı yeniden atar
 const st=G=>({b:G.b.slice(),bar:G.bar.slice(),off:G.off.slice()});
 function allHome(s,p){if(s.bar[p])return false;for(let i=1;i<=24;i++)if(own(s.b,p,i)&&(p===0?i>6:i<19))return false;return true}
 function singles(s,p,d){const b=s.b,out=[],sg=p===0?1:-1;

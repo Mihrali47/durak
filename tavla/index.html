@@ -162,7 +162,7 @@ function render(){if(!G)return;if(!$('svg').firstChild||render.me!==me){drawBase
   if(G.phase==='gameOver'||G.phase==='over')m='';
   else if(G.turn===me){if(G.phase==='roll')m='Zar at';else if(G.noMove)m='Oynayacak hamlen yok';else if(done)m='Hamlen bitti, Tamam\'a bas';else m=sel==null?'Oynatacağın pula dokun':'Gideceği yere dokun'}
   else m=`${names[G.turn]} oynuyor…`;
-  if(G.open&&G.phase==='move'&&!pre.length)m=`Açılış zarı: ${pn(0)} ${G.open[0]} – ${pn(1)} ${G.open[1]}. ${m}`;
+  if(G.open&&G.phase==='roll')m=`Açılış zarı: ${pn(0)} ${G.open[0]} – ${pn(1)} ${G.open[1]}. ${m}`;
   $('msg').textContent=m}
 $('svg').addEventListener('click',e=>{const h=e.target.closest('[data-v]');if(!h||!G||busy||G.turn!==me||G.phase!=='move')return;
   let v=h.dataset.v;const opts=nextOpts();
@@ -220,7 +220,7 @@ function showRules(){ov('rules',`<h2>Tavla nasıl oynanır?</h2>
   <p>Her oyuncunun 15 pulu var. Zarları at, pulları zarlardaki sayılar kadar ilerlet. Çift gelirse dört kez oynarsın.</p>
   <p>İki ya da daha fazla rakip pulunun olduğu yere (kapıya) gidemezsin. Rakibin tek pulunun üstüne gelirsen onu kırarsın, pul ortadaki bara gider ve oyuna yeniden girmek zorundadır.</p>
   <p>Bütün pulların evine (sağ alttaki 6 haneye) gelince toplamaya başlarsın. Pullarını ilk toplayan kazanır. Rakip hiç pul toplayamadıysa <b>mars</b>: 2 puan.</p>
-  <p>Zarların ikisini de oynayabiliyorsan oynamak zorundasın; sadece birini oynayabiliyorsan büyük olanı oynarsın.</p>
+  <p>Başta herkes tek zar atar; büyük atan başlar ve iki zarı yeniden atar. Zarların ikisini de oynayabiliyorsan oynamak zorundasın; sadece birini oynayabiliyorsan büyük olanı oynarsın.</p>
   <p>Pula dokun, sarı işaretli yere dokun. Hamlen bitince <b>Tamam</b>'a bas; vazgeçersen <b>Geri al</b>.</p>
   <div class="row"><button class="btn pri" id="rOk">Tamam</button></div>`);$('rOk').onclick=()=>G&&G.phase!=='over'?(hideOv(),after()):showMenu()}
 function showMenu(){const sv=ST.get('save',null),rec=ST.get('rec',[0,0]);

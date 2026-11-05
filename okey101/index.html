@@ -658,6 +658,10 @@ function runOptions(t,rem,w){const e=eff(t),out=[];const c=e.c;
     for(let L=Math.max(3,lead+1);s0+L-1<=13;L++){const used=[t],pool=rem.slice();let need=lead,ok=true;
       for(let k=e.n+1;k<s0+L;k++){const i=pool.findIndex(x=>{const f=eff(x);return f.c===c&&f.n===k});if(i>=0){used.push(pool[i]);pool.splice(i,1)}else need++}
       if(need>w){if(need-w>1)break;continue}out.push({tiles:used,wilds:need})}}
+  /* Klasik Okey: 12-13-1 gibi 13'ten 1'e bir kez dönen seri geçerli (1 sadece sonda) */
+  if(RULES.classic&&e.n===1)for(let L=3;L<=13;L++){const used=[t],pool=rem.slice();let need=0;
+    for(let k=14-L+1;k<=13;k++){const i=pool.findIndex(x=>{const f=eff(x);return f.c===c&&f.n===k});if(i>=0){used.push(pool[i]);pool.splice(i,1)}else need++}
+    if(need<=w)out.push({tiles:used,wilds:need})}
   return out}
 function groupOptions(t,rem,w){const e=eff(t),others=[],seenC=new Set([e.c]),out=[];
   for(const x of rem){const f=eff(x);if(f.n===e.n&&!seenC.has(f.c)){seenC.add(f.c);others.push(x)}}
@@ -1227,6 +1231,7 @@ function showMenu(){
     <li>Istakandaki işlek taşların üstünde <b>"İŞLEK"</b> yazar. Elinde gerçek taşı varsa masadaki okeyin üstüne sürükleyip <b>okeyi alabilirsin</b>.</li>
     <li><b>Yardımlı</b> masada okey ters döner (sade beyaz), işlek taşlar işaretlenir ve <b>İşlek Diz</b> ile tek tuşla işlersin. <b>Yardımsız</b> masada okey ters dönmez, kendi rengi ve sayısıyla görünür; işlekler işaretlenmez, İşlek Diz olmaz. Gözün açık olsun.</li>
     <li>Yeşil yonca <b>sahte okey</b>, okeyin değerini alır. Okey ya da işlek taş atmak 101 ceza.</li>
+    <li><b>Klasik Okey</b>: 14 taşın hepsini per, seri ya da 7 çift yapıp 15. taşı ortaya atarak bitersin. 12-13-1 serisi geçerli, 13-1-2 geçmez.</li>
     <li>Ortadaki taşlar biterse el puansız biter; sadece elinde okey kalan her okey için 101 yazar.</li>
   </ul>
   <div><p class="lbl">Kaç el?</p><div class="seg" id="segN">${[3,5,9].map(n=>`<button data-n="${n}" aria-pressed="${n===menuN}">${n} el</button>`).join('')}</div></div>
