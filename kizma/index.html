@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="tr"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Kızma Birader</title>
+<script src="i18n-page.js"></script><script src="../i18n.js"></script>
+<script src="../mqtt.min.js"></script><script src="../relay.js"></script>
+<script src="engine.js"></script><script src="../account.js"></script>
+<link rel="manifest" href="../manifest.webmanifest"><link rel="icon" href="../icon.svg" type="image/svg+xml">
+<meta name="theme-color" content="#2b1b11">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700&display=swap">
+<style>
+/* Ahşap masa üstünde klasik 11x11 Kızma Birader tahtası. Sen hep alttasın (tahta senin rengine göre döner). Altta zar. Tek tema. */
+:root{--wall:#1c120c;--wood:#3a2617;--board:#f3e7cf;--line:#c9b48f;--ink:#f4ead8;--muted:#bfa88c;--brass:#e7b54c;
+  --c0:#d64541;--c1:#2f80d1;--c2:#2e9e5b;--c3:#e0ac16;--body:"Rubik",system-ui,-apple-system,"Segoe UI",sans-serif;color-scheme:dark}
+*,*::before,*::after{box-sizing:border-box}
+html,body{height:100%;margin:0;overflow:hidden}
+body{background:radial-gradient(ellipse at 50% 40%,#3a2617,#1c120c 75%);color:var(--ink);font:15px/1.35 var(--body);-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+button{font:inherit;color:inherit;cursor:pointer}
+[hidden]{display:none!important}
+.app{height:100%;max-width:640px;margin:0 auto;display:flex;flex-direction:column;align-items:center;gap:8px;
+  padding:max(6px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left))}
+header{display:flex;align-items:center;gap:8px;width:100%;min-height:40px}
+header .t{flex:1;min-width:0;text-align:center;font-weight:700;font-size:16px}
+.hb{background:rgba(0,0,0,.25);border:1px solid #4d3320;border-radius:10px;padding:7px 11px;font-size:13.5px}
+.players{display:grid;grid-template-columns:1fr 1fr;gap:6px;width:100%}
+.pl{display:flex;align-items:center;gap:8px;padding:6px 9px;border-radius:11px;background:rgba(0,0,0,.25);border:2px solid transparent;min-width:0;transition:border-color .2s}
+.pl.turn{border-color:var(--brass);background:rgba(231,181,76,.12)}
+.pl .dot{width:16px;height:16px;border-radius:50%;flex:none;box-shadow:inset 0 -3px 0 rgba(0,0,0,.25)}
+.pl .n{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:14px;font-weight:500}
+.pl .h{font-size:12px;color:var(--muted)}
+.wrapb{flex:1;min-height:0;width:100%;display:flex;align-items:center;justify-content:center}
+.board{position:relative;width:min(100%,var(--bs));aspect-ratio:1;background:var(--board);border-radius:18px;box-shadow:0 10px 30px rgba(0,0,0,.5),inset 0 0 0 6px #e6d4b0}
+.cell{position:absolute;width:7.6%;height:7.6%;margin:-3.8% 0 0 -3.8%;border-radius:50%;background:#fffaf0;border:2px solid var(--line)}
+.cell.st{border-width:3px}
+.cell.hm{opacity:.9}
+.cell.tg{box-shadow:0 0 0 4px rgba(231,181,76,.9)}
+.pawn{position:absolute;width:6.4%;height:6.4%;margin:-3.2% 0 0 -3.2%;border-radius:50%;z-index:2;transition:left .11s linear,top .11s linear,transform .15s;
+  box-shadow:0 3px 0 rgba(0,0,0,.35),inset 0 -4px 0 rgba(0,0,0,.25),inset 0 3px 0 rgba(255,255,255,.35);border:2px solid rgba(0,0,0,.25)}
+.pawn.can{z-index:4;animation:pulse .9s ease-in-out infinite;cursor:pointer}
+.pawn.can::after{content:"";position:absolute;inset:-7px;border-radius:50%;border:3px solid #fff;opacity:.9}
+.pawn.up{transform:translateY(-14%) scale(1.12);z-index:5}
+@keyframes pulse{50%{transform:scale(1.13)}}
+.center{position:absolute;left:50%;top:50%;width:16%;height:16%;transform:translate(-50%,-50%);border-radius:14px;display:grid;place-items:center;font-size:11px;color:#7a6440;text-align:center;line-height:1.1;font-weight:700}
+.bottom{display:flex;align-items:center;gap:12px;width:100%;justify-content:center;min-height:86px;position:relative}
+.die{width:74px;height:74px;border-radius:16px;background:#fff;border:0;box-shadow:0 5px 0 #b9a888,0 8px 18px rgba(0,0,0,.45);display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr);padding:11px;position:relative}
+.die i{width:13px;height:13px;border-radius:50%;background:#222;place-self:center;visibility:hidden}
+.die[data-v="1"] i:nth-child(5),.die[data-v="2"] i:nth-child(1),.die[data-v="2"] i:nth-child(9),.die[data-v="3"] i:nth-child(1),.die[data-v="3"] i:nth-child(5),.die[data-v="3"] i:nth-child(9),
+.die[data-v="4"] i:nth-child(1),.die[data-v="4"] i:nth-child(3),.die[data-v="4"] i:nth-child(7),.die[data-v="4"] i:nth-child(9),
+.die[data-v="5"] i:nth-child(1),.die[data-v="5"] i:nth-child(3),.die[data-v="5"] i:nth-child(5),.die[data-v="5"] i:nth-child(7),.die[data-v="5"] i:nth-child(9),
+.die[data-v="6"] i:nth-child(1),.die[data-v="6"] i:nth-child(3),.die[data-v="6"] i:nth-child(4),.die[data-v="6"] i:nth-child(6),.die[data-v="6"] i:nth-child(7),.die[data-v="6"] i:nth-child(9){visibility:visible}
+.die[data-v="6"] i,.die[data-v="1"] i{background:#c0302c}
+.die.go{animation:glow 1.1s ease-in-out infinite}
+@keyframes glow{50%{box-shadow:0 5px 0 #b9a888,0 0 0 6px rgba(231,181,76,.7)}}
+.die.spin{animation:spin .5s cubic-bezier(.3,.7,.4,1)}
+@keyframes spin{0%{transform:rotate(0) scale(.85)}60%{transform:rotate(300deg) scale(1.08)}100%{transform:rotate(360deg) scale(1)}}
+.die:disabled{opacity:.92}
+.msg{flex:1;max-width:260px;font-size:14.5px;color:var(--ink)}
+.msg small{display:block;color:var(--muted);font-size:12.5px}
+.chatb{position:absolute;right:0;bottom:6px}
+/* paneller (King ile aynı) */
+.ov{position:fixed;inset:0;z-index:40;background:rgba(10,7,4,.6);display:flex;align-items:center;justify-content:center;padding:14px}
+.sheet{background:#f7f3ea;color:#22201b;border-radius:16px;width:min(420px,100%);max-height:calc(100% - 10px);overflow:auto;padding:18px 16px 16px;box-shadow:0 12px 40px rgba(0,0,0,.45)}
+.sheet h2{margin:0 0 4px;font-size:21px}
+.sheet p{margin:6px 0;color:#4d483f;font-size:14px}
+.sheet .row{display:flex;gap:8px;margin-top:12px}
+.btn{flex:1;border:0;border-radius:11px;padding:12px 10px;background:#e7e0d1;color:#22201b;font-weight:500;font-size:15px}
+.btn.pri{background:#2f6b4f;color:#fff}.btn:disabled{opacity:.45}
+.seg{display:flex;background:#e7e0d1;border-radius:11px;padding:3px;margin-top:6px}
+.seg button{flex:1;border:0;background:none;border-radius:9px;padding:9px 6px;font-size:14px;color:#3b372f}
+.seg button.on{background:#fff;color:#16130e;font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.lbl{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#7a7365;margin-top:14px;font-weight:600}
+.rank{list-style:none;padding:0;margin:10px 0 0}
+.rank li{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 11px;border-radius:9px;background:#efe9dc;margin-bottom:5px;font-size:15px}
+.rank li span{color:#7a7365;font-size:13px}
+.lnk{display:flex;gap:6px;margin-top:8px}
+.lnk input{flex:1;min-width:0;border:1px solid #d9d1bf;border-radius:10px;padding:10px;font-size:13px;background:#fff;color:#222}
+.lnk button{border:0;border-radius:10px;background:#2f6b4f;color:#fff;padding:0 14px}
+input.name{width:100%;border:1px solid #d9d1bf;border-radius:10px;padding:11px;font-size:15px;margin-top:6px;background:#fff;color:#222}
+.toast{position:fixed;left:50%;top:60px;transform:translateX(-50%);z-index:60;background:rgba(20,12,6,.92);color:#fff;padding:9px 15px;border-radius:12px;font-size:14px;box-shadow:0 6px 20px rgba(0,0,0,.35);transition:opacity .3s;max-width:90vw;text-align:center}
+.emobar{position:absolute;right:0;bottom:calc(100% + 6px);width:min(340px,calc(100vw - 20px));background:#f7f3ea;color:#22201b;border-radius:14px;padding:8px;box-shadow:0 6px 18px rgba(0,0,0,.35);z-index:35}
+.emobar .er{display:flex;justify-content:space-between}.emobar .er button{border:0;background:none;font-size:24px;padding:4px}
+.emobar .log{max-height:180px;overflow:auto;font-size:13.5px;margin:4px 2px 6px}.emobar .log div{padding:3px 0;border-bottom:1px solid #e6dfcf}.emobar .log small{display:block;color:#2f6b4f}
+.emobar form{display:flex;gap:6px}.emobar input{flex:1;min-width:0;border:1px solid #d9d1bf;border-radius:10px;padding:9px;font-size:14px;background:#fff;color:#222}
+.emobar form button{border:0;border-radius:10px;background:#2f6b4f;color:#fff;padding:0 12px}
+#bChat.new{box-shadow:0 0 0 2px var(--brass)}
+.bub{position:fixed;z-index:31;max-width:170px;background:#fff;color:#222;border-radius:12px;padding:6px 9px;font-size:13px;box-shadow:0 4px 12px rgba(0,0,0,.3);pointer-events:none}
+.emo{position:fixed;font-size:30px;z-index:30;pointer-events:none;animation:emo 2.2s ease-out forwards}
+@keyframes emo{0%{opacity:0;transform:translateY(8px) scale(.6)}15%{opacity:1;transform:none}80%{opacity:1}100%{opacity:0;transform:translateY(-24px)}}
+@media (prefers-reduced-motion:reduce){.pawn{transition:none}.pawn.can{animation:none}.die.spin,.die.go{animation:none}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header><button class="hb" id="bMenu">Menü</button><div class="t">Kızma Birader</div><button class="hb" id="bRules">Kurallar</button></header>
+  <div class="players" id="players"></div>
+  <div class="wrapb" id="wrapb"><div class="board" id="board"><div class="center" id="center"></div></div></div>
+  <div class="bottom">
+    <div class="msg" id="msg"></div>
+    <button class="die" id="die" data-v="6" aria-label="Zar at"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></button>
+    <div class="msg" id="msg2" style="text-align:right"></div>
+    <button class="hb chatb" id="bChat" hidden>💬</button>
+  </div>
+</div>
+<div class="ov" id="ov" hidden><div class="sheet" id="sheet"></div></div>
+<div class="toast" id="toast" hidden></div>
+<script>
+const KB=window.KB,$=id=>document.getElementById(id);
+const COL=['Kırmızı','Mavi','Yeşil','Sarı'],CV=['var(--c0)','var(--c1)','var(--c2)','var(--c3)'];
+const BOTN=['Nuri','Rıza','Hamdi'];
+const PATH=[[0,4],[1,4],[2,4],[3,4],[4,4],[4,3],[4,2],[4,1],[4,0],[5,0],[6,0],[6,1],[6,2],[6,3],[6,4],[7,4],[8,4],[9,4],[10,4],[10,5],[10,6],[9,6],[8,6],[7,6],[6,6],[6,7],[6,8],[6,9],[6,10],[5,10],[4,10],[4,9],[4,8],[4,7],[4,6],[3,6],[2,6],[1,6],[0,6],[0,5]];
+const HOME=[[[5,9],[5,8],[5,7],[5,6]],[[1,5],[2,5],[3,5],[4,5]],[[5,1],[5,2],[5,3],[5,4]],[[9,5],[8,5],[7,5],[6,5]]];
+const BASE=[[[0,9],[1,9],[0,10],[1,10]],[[0,0],[1,0],[0,1],[1,1]],[[9,0],[10,0],[9,1],[10,1]],[[9,9],[10,9],[9,10],[10,10]]];
+const ST={get(k,d){try{const v=localStorage.getItem('kb_'+k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem('kb_'+k,JSON.stringify(v))}catch(e){}},del(k){try{localStorage.removeItem('kb_'+k)}catch(e){}}};
+const UID=ST.get('uid',null)||(()=>{const u=Math.random().toString(36).slice(2,10);ST.set('uid',u);return u})();
+const SPD=+(new URLSearchParams(location.search).get('spd')||1);
+let G=null,names=['Sen',...BOTN],me=0,mode='off',human=[true,false,false,false],ver=0,busy=false,shownRid=0,shownMid=0,botT=null,schedKey=null,nPlayers=ST.get('n',4),autoT=null;
+const myName=()=>(window.KH&&KH.name())||ST.get('name','')||'Sen';
+const pn=p=>p===me&&mode==='off'?'Sen':names[p];
+function toast(h,ms=2200){const t=$('toast');t.innerHTML=h;t.hidden=false;t.style.opacity=1;clearTimeout(toast.t);toast.t=setTimeout(()=>{t.style.opacity=0;setTimeout(()=>t.hidden=true,300)},ms)}
+/* tahta senin rengin altta kalacak şekilde döner */
+function rot([x,y]){for(let k=0;k<me;k++)[x,y]=[y,10-x];return [x,y]}
+const pct=v=>(4.55+v*9.09)+'%';
+function place(el,xy){const [x,y]=rot(xy);el.style.left=pct(x);el.style.top=pct(y)}
+function xyOf(p,i,d){return d<0?BASE[p][i]:d<40?PATH[KB.absPos(p,d)]:HOME[p][d-40]}
+function buildBoard(){const b=$('board');b.querySelectorAll('.cell,.pawn').forEach(x=>x.remove());
+  PATH.forEach((xy,k)=>{const c=document.createElement('div');c.className='cell';const s=KB.START.indexOf(k);if(s>=0&&G.act.includes(s)){c.classList.add('st');c.style.borderColor=CV[s];c.style.background=`color-mix(in srgb,${CV[s]} 35%,#fff)`}c.dataset.k=k;place(c,xy);b.appendChild(c)});
+  for(const p of [0,1,2,3]){const on=G.act.includes(p);
+    HOME[p].forEach(xy=>{const c=document.createElement('div');c.className='cell hm';c.style.background=on?`color-mix(in srgb,${CV[p]} 45%,#fff)`:'#eee3cc';c.style.borderColor=on?CV[p]:'var(--line)';place(c,xy);b.appendChild(c)});
+    BASE[p].forEach(xy=>{const c=document.createElement('div');c.className='cell';c.style.background=on?`color-mix(in srgb,${CV[p]} 25%,#fff)`:'#eee3cc';c.style.borderColor=on?CV[p]:'var(--line)';place(c,xy);b.appendChild(c)});
+    if(on)for(let i=0;i<4;i++){const e=document.createElement('div');e.className='pawn';e.id=`pw${p}${i}`;e.style.background=CV[p];e.onclick=()=>tapPawn(p,i);b.appendChild(e)}}
+  buildBoard.key=G.act.join()+':'+me}
+function render(){if(!G)return;if(buildBoard.key!==G.act.join()+':'+me)buildBoard();
+  for(const p of G.act)for(let i=0;i<4;i++){const e=$(`pw${p}${i}`);if(!e||e.dataset.anim)continue;place(e,xyOf(p,i,G.pawns[p][i]));e.classList.remove('can','up')}
+  const mine=!busy&&G.phase==='move'&&G.turn===me;
+  if(mine)G.moves.forEach(m=>$(`pw${me}${m.i}`)?.classList.add('can'));
+  // oyuncular
+  $('players').innerHTML=[0,1,2,3].filter(p=>G.act.includes(p)).map(p=>{const h=G.pawns[p].filter(d=>d>=40).length;
+    return `<div class="pl${G.turn===p&&G.phase!=='over'?' turn':''}" data-p="${p}"><span class="dot" style="background:${CV[p]}"></span><span class="n">${pn(p)}</span><span class="h">${h}/4</span></div>`}).join('');
+  const d=$('die');if(G.roll&&!d.classList.contains('spin'))d.dataset.v=G.roll;
+  const canRoll=!busy&&G.phase==='roll'&&G.turn===me;d.disabled=!canRoll;d.classList.toggle('go',canRoll);
+  d.style.outline=`3px solid ${CV[G.turn]}`;d.style.outlineOffset='3px';
+  let m='',s='';
+  if(G.phase==='over')m=G.winner===me?'Kazandın!':`${names[G.winner]} kazandı`;
+  else if(G.turn===me){if(G.phase==='roll'){m='Zar at';const base=!G.pawns[me].some(x=>x>=0&&x<40);if(G.tries>0&&base)s=`Kalan hak: ${3-G.tries}`;else if(G.roll===6&&G.last&&G.last.p===me)s='6 attın, tekrar at!'}
+    else{m='Piyonunu seç';s=`Zar: ${G.roll}`}}
+  else m=`${names[G.turn]} oynuyor…`;
+  $('msg').innerHTML=m?`<span>${m}</span>`:'';$('msg2').innerHTML=s?`<span>${s}</span>`:'';
+  $('center').innerHTML=`<span style="color:${CV[G.turn]}">●</span>`;
+}
+/* ---------- akış ---------- */
+function isBot(p){if(mode==='guest')return false;if(!human[p])return true;return mode==='host'&&p!==me&&away(p)}
+async function sync(first){if(!G)return;if(busy)return sync.again=true;
+  if(first==='first'){shownRid=G.rid;shownMid=G.mid}
+  if(G.last&&G.last.mid!==shownMid){busy=true;const L=G.last;shownMid=L.mid;markAnim(L,1);render();await animMove(L);busy=false;
+    if(L.hit)toast(`<b>${pn(L.p)}</b> <span>kırdı:</span> <b>${pn(L.hit.p)}</b>`,1800)}
+  if(G.rid!==shownRid){busy=true;shownRid=G.rid;render();await animDie(G.roll);busy=false;
+    if(G.rp===me&&G.phase==='roll'&&!(G.last&&G.last.mid===G.mid&&G.lastRid===G.rid)){if(G.turn===me&&G.roll!==6)toast('6 gelmedi, tekrar at',1400);else if(G.turn!==me)toast('Oynayacak piyon yok',1400)}}
+  render();if(sync.again){sync.again=false;return sync()}after()}
+function animDie(v){return new Promise(r=>{const d=$('die');d.classList.remove('spin');void d.offsetWidth;d.classList.add('spin');let n=0;
+  const iv=setInterval(()=>{d.dataset.v=1+(Math.random()*6|0);if(++n>5){clearInterval(iv);d.dataset.v=v}},70/SPD);setTimeout(()=>{d.classList.remove('spin');d.dataset.v=v;r()},560/SPD)})}
+function markAnim(L,on){for(const id of [`pw${L.p}${L.i}`,L.hit?`pw${L.hit.p}${L.hit.i}`:null]){const e=id&&$(id);if(e){if(on)e.dataset.anim=1;else delete e.dataset.anim}}}
+function animMove(L){return new Promise(async r=>{const e=$(`pw${L.p}${L.i}`);if(!e)return r();e.classList.add('up');
+  const steps=[];if(L.from<0)steps.push(xyOf(L.p,L.i,0));else for(let d=L.from+1;d<=L.to;d++)steps.push(xyOf(L.p,L.i,d));
+  for(const xy of steps){place(e,xy);await new Promise(z=>setTimeout(z,125/SPD))}
+  e.classList.remove('up');
+  if(L.hit){const h=$(`pw${L.hit.p}${L.hit.i}`);if(h){h.style.transition='left .35s,top .35s';place(h,BASE[L.hit.p][L.hit.i]);await new Promise(z=>setTimeout(z,380/SPD));h.style.transition=''}}
+  markAnim(L,0);r()})}
+function after(){if(!G||busy)return;
+  if(G.phase==='over'){showOver();return}
+  if(mode==='off')ST.set('save',{G,names});
+  // tek seçenek varsa kendiliğinden oynat
+  clearTimeout(autoT);if(G.phase==='move'&&G.turn===me&&G.moves.length===1&&!isBot(me))autoT=setTimeout(()=>{if(G.phase==='move'&&G.turn===me&&!busy)act(me,{k:'move',m:0})},650/SPD);
+  schedule()}
+function schedule(){if(!G||busy||mode==='guest'||G.phase==='over'){clearTimeout(botT);schedKey=null;return}
+  const key=[ver,G.phase,G.turn,G.rid,G.mid,isBot(G.turn)].join();if(key===schedKey)return;schedKey=key;clearTimeout(botT);
+  if(!isBot(G.turn))return;
+  botT=setTimeout(()=>{schedKey=null;if(busy||!isBot(G.turn))return;if(G.phase==='roll')act(G.turn,{k:'roll'});else if(G.phase==='move')act(G.turn,{k:'move',m:KB.botPick(G,G.turn)})},(G.phase==='roll'?650:500)/SPD)}
+function act(p,a){if(mode==='guest'){send({t:'act',uid:UID,a});return}
+  let e=null;if(a.k==='roll')e=KB.roll(G,p);else if(a.k==='move')e=KB.move(G,p,a.m);
+  if(e){if(p===me)toast(e);return}
+  ver++;bcastState();sync()}
+$('die').onclick=()=>{if(!G||busy||G.phase!=='roll'||G.turn!==me)return;$('die').disabled=true;act(me,{k:'roll'})};
+function tapPawn(p,i){if(!G||busy||p!==me||G.turn!==me||G.phase!=='move')return;const k=G.moves.findIndex(m=>m.i===i);if(k<0){toast('Bu piyon oynayamaz');return}clearTimeout(autoT);act(me,{k:'move',m:k})}
+function newGame(){const n=mode==='off'?nPlayers:null;
+  if(mode==='off'){me=0;G=KB.newGame({n});names=[myName(),...BOTN];human=[true,false,false,false]}
+  shownRid=0;shownMid=0;showOver.done=false;ver++;bcastState();hideOv();buildBoard.key=null;sync()}
+/* ---------- paneller ---------- */
+function ov(k,h){$('ov').style.alignItems='';const s=$('sheet');s.dataset.k=k;s.innerHTML=h;$('ov').hidden=false;return s}
+function hideOv(){$('ov').hidden=true;$('sheet').dataset.k=''}
+function showOver(){if($('sheet').dataset.k==='over'&&!$('ov').hidden)return;ST.del('save');
+  if(!showOver.done){showOver.done=true;const r=ST.get('rec',[0,0]);r[G.winner===me?0:1]++;ST.set('rec',r)}
+  const ord=G.act.slice().sort((a,b)=>G.pawns[b].filter(d=>d>=40).length-G.pawns[a].filter(d=>d>=40).length||G.pawns[b].reduce((x,y)=>x+y,0)-G.pawns[a].reduce((x,y)=>x+y,0));
+  ov('over',`<h2>${G.winner===me?'Tebrikler, kazandın!':`${names[G.winner]} kazandı`}</h2>
+    <ul class="rank">${ord.map(p=>`<li><b style="color:${CV[p]}">●</b><b style="flex:1">${pn(p)}</b><span>Evde: ${G.pawns[p].filter(d=>d>=40).length}/4</span></li>`).join('')}</ul>
+    <div class="row">${mode==='guest'?'<p>Ev sahibi yeni oyunu başlatabilir.</p>':`<button class="btn" id="oMenu">Menü</button><button class="btn pri" id="oNew">${mode==='host'?'Rövanş':'Yeni oyun'}</button>`}</div>`);
+  if(mode!=='guest'){$('oNew').onclick=()=>{if(mode==='host')startOnline(true);else newGame()};$('oMenu').onclick=showMenu}}
+function showRules(){ov('rules',`<h2>Kızma Birader nasıl oynanır?</h2>
+  <p>Herkesin 4 piyonu kulübede başlar. Piyonu kulübeden çıkarmak için <b>6</b> atmalısın. 6 atınca bir kez daha atarsın.</p>
+  <p>Piyonlar tahtanın etrafında bir tur döner ve kendi renginin ev yoluna girer. Dört piyonunu da eve ilk sokan kazanır.</p>
+  <p>Rakibin durduğu kareye gelirsen onu kırarsın, piyonu kulübesine döner. Kendi piyonunun üstüne gelemezsin.</p>
+  <p>Tahtada oynayacak piyonun yoksa 6 için 3 hakkın var. Kulübede piyon varken 6 atarsan çıkarmak zorundasın; başlangıç karesini de önce boşaltmalısın.</p>
+  <div class="row"><button class="btn pri" id="rOk">Tamam</button></div>`);$('rOk').onclick=()=>G?(hideOv(),after()):showMenu()}
+function showMenu(){const sv=ST.get('save',null),rec=ST.get('rec',[0,0]);
+  const s=ov('menu',`<h2>Kızma Birader</h2><p>Zar at, piyonlarını eve götür, rakibini kır. Bilgisayara karşı ya da linkle arkadaşlarınla.</p>
+    <p class="lbl">Kaç kişi?</p><div class="seg" id="mN">${[2,3,4].map(n=>`<button data-n="${n}" class="${nPlayers===n?'on':''}">${n} kişi</button>`).join('')}</div>
+    <div class="row" style="flex-direction:column">
+      ${G&&G.phase!=='over'&&mode!=='guest'?'<button class="btn pri" id="mBack">Oyuna dön</button>':''}
+      ${!G&&sv?'<button class="btn pri" id="mLoad">Kaldığın yerden devam et</button>':''}
+      <button class="btn ${G||sv?'':'pri'}" id="mBot">Bilgisayara karşı yeni oyun</button>
+      <button class="btn" id="mOn">Arkadaşlarla online</button>
+      <button class="btn" id="mRules">Kurallar</button>
+      <a class="btn" href="../" style="text-align:center;text-decoration:none">Salona dön</a></div>
+    <p style="font-size:12.5px;margin-top:10px">Rekorun: ${rec[0]} galibiyet, ${rec[1]} mağlubiyet.</p>`);
+  s.querySelectorAll('#mN button').forEach(b=>b.onclick=()=>{nPlayers=+b.dataset.n;ST.set('n',nPlayers);s.querySelectorAll('#mN button').forEach(x=>x.classList.toggle('on',x===b))});
+  if($('mBack'))$('mBack').onclick=()=>{hideOv();after()};
+  if($('mLoad'))$('mLoad').onclick=()=>{mode='off';me=0;G=sv.G;names=sv.names;names[0]=myName();human=[true,false,false,false];shownRid=G.rid;shownMid=G.mid;hideOv();sync()};
+  $('mBot').onclick=()=>{if(mode!=='off')leaveOnline();mode='off';newGame()};$('mOn').onclick=showOnline;$('mRules').onclick=showRules}
+$('bMenu').onclick=showMenu;$('bRules').onclick=showRules;
+$('ov').addEventListener('click',e=>{if(e.target===$('ov')&&$('sheet').dataset.k==='rules'&&G){hideOv();after()}});
+/* ---------- online ---------- */
+const PFX='kkb-';let peer=null,conn=null,conns={},lob=[],seatOf={},lastSeen={},room=null,started=false,lastRx=0,hb=null,fill=ST.get('fill',true);
+function away(p){const u=Object.keys(seatOf).find(k=>seatOf[k]===p);if(!u)return true;return Date.now()-(lastSeen[u]||0)>20000}
+function send(d){if(mode==='guest'&&conn&&conn.open)conn.send(d)}
+function bcast(d){if(mode!=='host')return;for(const u in conns){const c=conns[u];if(c.open)try{c.send(d)}catch(e){}}}
+function bcastState(){if(mode==='host'&&started)bcast({t:'state',ver,G,names,human,seats:seatOf})}
+function linkFor(c){const u=location.protocol.startsWith('http')?location.origin+location.pathname:'https://mihrali47.github.io/durak/kizma/';return u+'#'+c}
+function showOnline(){const s=ov('online',`<h2>Arkadaşlarla online</h2><p>Masa kur, linki gönder. 2–4 kişi oynayabilirsiniz.</p>
+  <p class="lbl">Adın</p><input class="name" id="oName" maxlength="14" value="${myName()==='Sen'?'':myName()}" placeholder="Adını yaz">
+  <div class="row"><button class="btn" id="oBack">Geri</button><button class="btn pri" id="oHost">Masa kur</button></div>`);
+  $('oBack').onclick=showMenu;$('oHost').onclick=()=>{ST.set('name',$('oName').value.trim().slice(0,14));hostRoom()}}
+function hostRoom(){leaveOnline();mode='host';started=false;room=Math.random().toString(36).slice(2,7).toUpperCase();lob=[{uid:UID,name:myName()}];seatOf={};
+  peer=new Peer(PFX+room);showLobby();peer.on('open',()=>{history.replaceState(null,'','#'+room);showLobby()});
+  peer.on('connection',c=>c.on('data',d=>hostRecv(c,d)));
+  peer.on('error',e=>{if(e.type==='superseded'){toast('Bu masa başka bir pencerede açıldı');mode='off'}else if(e.type==='network')toast('Sunucuya bağlanılamadı, tekrar deneniyor…')});
+  clearInterval(hb);hb=setInterval(()=>{if(mode!=='host')return;if(started)bcastState();else bcast({t:'lobby',names:lob.map(x=>x.name)});schedule()},3000)}
+function hostRecv(c,d){if(!d||!d.uid)return;lastSeen[d.uid]=Date.now();
+  if(d.t==='hello'){conns[d.uid]=c;const nm=String(d.name||'Misafir').slice(0,14);let L=lob.find(x=>x.uid===d.uid);
+    if(!L){if(!started){if(lob.length>=4){c.send({t:'full'});return}lob.push({uid:d.uid,name:nm})}
+      else{const s=G.act.find(p=>!human[p]);if(s==null){c.send({t:'full'});return}lob.push({uid:d.uid,name:nm});seatOf[d.uid]=s;human[s]=true;names[s]=nm;ver++}}
+    else L.name=nm;
+    if(started)bcastState();else{bcast({t:'lobby',names:lob.map(x=>x.name)});showLobby()}return}
+  const s=seatOf[d.uid];
+  if(d.t==='act'&&s!=null)act(s,d.a);
+  else if(d.t==='emo'&&s!=null){bcast({t:'emo',p:s,e:d.e});showEmo(s,d.e)}
+  else if(d.t==='chat'&&s!=null){const x=String(d.x||'').slice(0,140),l=String(d.l||'').slice(0,2);bcast({t:'chat',p:s,x,l});addChat(s,x,l)}}
+function showLobby(){if(mode!=='host'&&mode!=='guest')return;const L=mode==='host'?lob.map(x=>x.name):(showLobby.names||[]);
+  const s=ov('lobby',`<h2>${mode==='host'?'Masa hazır':'Masaya oturdun'}</h2>
+    ${mode==='host'?`<p>Bu linki arkadaşlarına gönder. Herkes gelince başlat.</p><div class="lnk"><input id="lk" readonly value="${linkFor(room||'')}"><button id="lkC">Kopyala</button></div>
+      ${window.KH?'<div class="row" style="margin-top:8px"><button class="btn" id="lkF">👥 Arkadaşlarını çağır</button></div>':''}
+      <p class="lbl">Boş yerler</p><div class="seg" id="lF"><button data-f="1" class="${fill?'on':''}">Bilgisayar otursun</button><button data-f="0" class="${fill?'':'on'}">Boş kalsın</button></div>`:'<p>Ev sahibi oyunu başlatınca oyun açılacak.</p>'}
+    <p class="lbl">Oyuncular</p><ul class="rank">${[0,1,2,3].map(i=>`<li><b>${L[i]||'Boş'}</b><span>${i===0?'Ev sahibi':L[i]?'Hazır':''}</span></li>`).join('')}</ul>
+    <div class="row"><button class="btn" id="lBack">Çık</button>${mode==='host'?`<button class="btn pri" id="lGo" ${L.length<2?'disabled':''}>Başlat (${L.length} kişi)</button>`:''}</div>`);
+  if($('lkF'))$('lkF').onclick=()=>KH.invitePicker('Kızma Birader',linkFor(room));
+  if($('lkC'))$('lkC').onclick=async()=>{const v=$('lk').value;try{if(navigator.share&&matchMedia('(pointer:coarse)').matches){await navigator.share({title:'Kızma Birader',url:v});return}await navigator.clipboard.writeText(v);toast('Link kopyalandı')}catch(e){toast('Linki seçip kopyala')}};
+  s.querySelectorAll('#lF button').forEach(b=>b.onclick=()=>{fill=b.dataset.f==='1';ST.set('fill',fill);s.querySelectorAll('#lF button').forEach(x=>x.classList.toggle('on',x===b))});
+  $('lBack').onclick=()=>{leaveOnline();mode='off';G=null;history.replaceState(null,'',location.pathname);showMenu()};
+  if($('lGo'))$('lGo').onclick=()=>startOnline()}
+function startOnline(again){started=true;me=0;const n=lob.length;const act=fill?[0,1,2,3]:KB.seatsFor(n);seatOf={};names=[null,null,null,null];human=[false,false,false,false];
+  lob.forEach((x,k)=>{const s=fill?k:act[k];seatOf[x.uid]=s;names[s]=x.name;human[s]=true});let b=0;act.forEach(p=>{if(!names[p])names[p]=BOTN[b++]});
+  G=KB.newGame({seats:act});$('bChat').hidden=false;newGame()}
+function joinRoom(code){leaveOnline();mode='guest';room=code;started=false;G=null;
+  if(myName()==='Sen'){const s=ov('join',`<h2>Kızma Birader masasına davet</h2><p>Adını yaz ve masaya otur.</p><input class="name" id="jName" maxlength="14" placeholder="Adını yaz"><div class="row"><button class="btn pri" id="jGo">Masaya otur</button></div>`);
+    $('jGo').onclick=()=>{ST.set('name',($('jName').value.trim()||'Misafir').slice(0,14));joinRoom(code)};return}
+  ov('lobby','<h2>Bağlanılıyor…</h2><p>Masaya bağlanıyorsun, birkaç saniye sürebilir.</p>');
+  peer=new Peer();peer.on('open',connectHost);
+  peer.on('error',e=>{if(e.type==='peer-unavailable'){ov('lobby','<h2>Masa bulunamadı</h2><p>Ev sahibinin sayfası kapalı olabilir. Linki tekrar iste.</p><div class="row"><button class="btn pri" id="nf">Menüye dön</button></div>');$('nf').onclick=()=>{leaveOnline();mode='off';showMenu()}}});
+  clearInterval(hb);hb=setInterval(()=>{if(mode!=='guest')return;send({t:'ping',uid:UID});if(lastRx&&Date.now()-lastRx>9000){lastRx=Date.now();connectHost()}},3000)}
+function connectHost(){if(!peer)return;try{conn&&conn.close()}catch(e){}conn=peer.connect(PFX+room);conn.on('open',()=>conn.send({t:'hello',uid:UID,name:myName()}));conn.on('data',guestRecv)}
+function guestRecv(d){lastRx=Date.now();if(!d)return;
+  if(d.t==='full'){ov('lobby','<h2>Masa dolu</h2><p>Bu masada 4 kişi var.</p><div class="row"><button class="btn pri" id="nf">Menüye dön</button></div>');$('nf').onclick=()=>{leaveOnline();mode='off';showMenu()}}
+  else if(d.t==='lobby'){showLobby.names=d.names;if(!started)showLobby()}
+  else if(d.t==='state'){if(d.ver<ver)return;const first=!started||!G;const s=d.seats[UID];if(s==null)return;
+    if(G&&d.G.rid===0&&d.G.mid===0&&(G.rid>0)){shownRid=0;shownMid=0;showOver.done=false;if($('sheet').dataset.k==='over')hideOv()}
+    me=s;ver=d.ver;G=d.G;names=d.names;human=d.human;started=true;$('bChat').hidden=false;if(['lobby','join'].includes($('sheet').dataset.k))hideOv();sync(first?'first':0)}
+  else if(d.t==='emo')showEmo(d.p,d.e);else if(d.t==='chat'&&d.p!==me)addChat(d.p,d.x,d.l)}
+function leaveOnline(){clearInterval(hb);try{peer&&peer.destroy()}catch(e){}peer=null;conn=null;conns={};started=false;$('bChat').hidden=true}
+/* ---------- sohbet ve emoji (mesajlar okuyanın diline çevrilir) ---------- */
+const EMO=['👍','😂','😮','😡','🙏','👏'],CHAT=[];const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const myL=()=>String(window.LANG||navigator.language||'tr').slice(0,2).toLowerCase();
+async function translate(text,sl){const L=myL();sl=/^(tr|ru|en)$/.test(sl||'')?sl:'auto';if(sl===L)return null;
+  try{const r=await fetch('https://translate.googleapis.com/translate_a/single?client=gtx&sl='+sl+'&tl='+L+'&dt=t&q='+encodeURIComponent(text));const j=await r.json();
+    const out=(j[0]||[]).map(x=>x[0]).join(''),src=j[2];if((sl!=='auto'||(src&&src!==L))&&out&&out.trim().toLowerCase()!==text.trim().toLowerCase())return out;return null}
+  catch(e){try{const r=await fetch('https://api.mymemory.translated.net/get?q='+encodeURIComponent(text)+'&langpair='+(sl==='auto'?'autodetect':sl)+'|'+L);const j=await r.json();const out=j&&j.responseData&&j.responseData.translatedText;
+    if(out&&out.trim().toLowerCase()!==text.trim().toLowerCase()&&!/INVALID|MYMEMORY/i.test(out))return out}catch(x){}return null}}
+function anchor(p){return document.querySelector(`.pl[data-p="${p}"] .dot`)}
+function bubble(p,t){const el=anchor(p);if(!el)return;document.querySelectorAll('.bub[data-p="'+p+'"]').forEach(x=>x.remove());const r=el.getBoundingClientRect(),b=document.createElement('div');b.className='bub';b.dataset.p=p;
+  b.textContent=t.length>70?t.slice(0,68)+'…':t;document.body.appendChild(b);const w=b.offsetWidth;b.style.left=Math.max(6,Math.min(innerWidth-w-6,r.left))+'px';b.style.top=(r.bottom+8)+'px';setTimeout(()=>b.remove(),3800)}
+async function addChat(p,x,l){const it={p,x,tr:null};CHAT.push(it);if(CHAT.length>60)CHAT.shift();bubble(p,x);if(p!==me&&!document.querySelector('.emobar'))$('bChat').classList.add('new');drawChat();
+  if(p!==me){const t=await translate(x,l);if(t){it.tr=t;drawChat();bubble(p,t)}}}
+function drawChat(){const l=document.querySelector('.emobar .log');if(!l)return;l.innerHTML=CHAT.map(c=>`<div><b style="color:${CV[c.p]}">${esc(pn(c.p))}:</b> ${esc(c.x)}${c.tr?`<small>${esc(c.tr)}</small>`:''}</div>`).join('')||'<div style="color:#7a7365">Mesajlar karşı tarafın diline otomatik çevrilir.</div>';l.scrollTop=1e6}
+function sendChat(x){x=String(x||'').trim().slice(0,140);if(!x)return;const l=myL();if(mode==='host'){bcast({t:'chat',p:me,x,l});addChat(me,x,l)}else{send({t:'chat',uid:UID,x,l});addChat(me,x,l)}}
+function showEmo(p,e){const el=anchor(p);if(!el)return;const r=el.getBoundingClientRect(),d=document.createElement('div');d.className='emo';d.textContent=e;d.style.left=(r.left-6)+'px';d.style.top=(r.top-30)+'px';document.body.appendChild(d);setTimeout(()=>d.remove(),2300)}
+$('bChat').onclick=e=>{e.stopPropagation();let b=document.querySelector('.emobar');if(b){b.remove();return}$('bChat').classList.remove('new');
+  b=document.createElement('div');b.className='emobar';b.innerHTML=`<div class="er">${EMO.map(x=>`<button type="button">${x}</button>`).join('')}</div><div class="log"></div><form><input maxlength="140" placeholder="Mesaj yaz…"><button>Gönder</button></form>`;
+  $('bChat').parentNode.appendChild(b);drawChat();
+  b.querySelectorAll('.er button').forEach(x=>x.onclick=()=>{b.remove();if(mode==='host'){bcast({t:'emo',p:me,e:x.textContent});showEmo(me,x.textContent)}else send({t:'emo',uid:UID,e:x.textContent})});
+  b.querySelector('form').onsubmit=ev=>{ev.preventDefault();const i=b.querySelector('input');sendChat(i.value);i.value=''}};
+/* tahta boyutu */
+function fit(){const w=$('wrapb');document.documentElement.style.setProperty('--bs',Math.min(w.clientWidth,w.clientHeight)+'px')}
+addEventListener('resize',fit);fit();
+const hc=(location.hash||'').slice(1).toUpperCase();
+if(/^[A-Z0-9]{5}$/.test(hc))joinRoom(hc);else showMenu();
+addEventListener('load',()=>{fit();window.KH&&KH.setPresence('Kızma Birader')});
+</script>
+</body></html>
