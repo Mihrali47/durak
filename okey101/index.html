@@ -129,6 +129,11 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 .rack{left:178px;top:532px;width:924px;height:176px;border-radius:12px;
   background:linear-gradient(180deg,var(--wood-hi) 0%,var(--wood) 18%,#c97a12 50%,var(--wood-hi) 52%,var(--wood) 70%,var(--wood-lo) 100%);
   box-shadow:inset 0 2px 0 rgba(255,255,255,.4),inset 0 -3px 0 rgba(0,0,0,.25),0 10px 26px rgba(0,0,0,.5);touch-action:none}
+.rack.myturn{background:linear-gradient(180deg,#7fe0a0 0%,#2f9d5c 18%,#1f7a44 50%,#7fe0a0 52%,#2f9d5c 70%,#165a32 100%);
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.45),inset 0 -3px 0 rgba(0,0,0,.25),0 0 0 4px rgba(120,230,160,.55),0 0 34px rgba(80,220,130,.55),0 10px 26px rgba(0,0,0,.5);transition:background .3s,box-shadow .3s}
+.rack.myturn::before,.rack.myturn::after{background:linear-gradient(90deg,#3f8a5c,#bff0cf,#3f8a5c)}
+.pl.on{background:linear-gradient(180deg,rgba(47,157,92,.95),rgba(26,110,62,.95))!important;border-color:#8ff0b3!important}
+.pl.on .nm b::after{content:var(--sirada," · SIRADA");color:#fff4c2;font-size:.8em}
 .rack::before,.rack::after{content:"";position:absolute;top:8px;bottom:8px;width:10px;border-radius:4px;background:linear-gradient(90deg,#8c8c8c,#e6e6e6,#8c8c8c)}
 .rack::before{left:4px}.rack::after{right:4px}
 .slot{position:absolute;width:56px;height:76px;border-radius:8px}
@@ -925,7 +930,7 @@ function render(){
   $('tagOpen').textContent=RULES.rising?'Baraj '+S.minOpen:'101';$('tagKat').textContent=RULES.rising?'Katlamalı':'Katlamasız';$('tagKat').classList.toggle('hot',!!RULES.rising);$('tagHelp').textContent=U.help?'Yardımlı':'Yardımsız';$('elChip').textContent=`${GM.handNo}. el / ${GM.total}${GM.rig&&(GM.rig.all||GM.rig.ok||GM.rig.pair)?' · TEST':''}`;$('elTag').textContent=`${GM.total} El`;
   for(const s of[0,1,2,3]){
     const p=$('pl'+s),vert=s===1||s===3;
-    const key=`${S.turn===s&&!S.ended}`;p.innerHTML=plHTML(s,vert);p.classList.toggle('on',S.turn===s&&!S.ended);
+    const key=`${S.turn===s&&!S.ended}`;p.innerHTML=plHTML(s,vert);p.classList.toggle('on',S.turn===s&&!S.ended);if(s===0)$('rack').classList.toggle('myturn',S.turn===0&&!S.ended);
     const b=$('bub'+s);
     if(s===0)continue;
     if(S.opened[s]){b.hidden=false;b.className='bub abs'+(S.opened[s]==='pairs'?' pair':'');b.textContent=S.opened[s]==='pairs'?S.openVal[s]+' çift':S.openVal[s]}else b.hidden=true;
@@ -1356,7 +1361,7 @@ function guestEnd(){if(!S||!S.result||GM.hist.length<GM.handNo)return;const R=S.
   else if(last){const order=[0,1,2,3].sort((a,b)=>GM.totals[a]-GM.totals[b]);window.KH&&KH.stat('101 Okey',order[0]===0);h+=`<h2>${order[0]===0?'Masanın galibi sensin!':escK(NAMES[order[0]])+' kazandı'}</h2><p class="muted">${order.map((s,i)=>`${i+1}. ${escK(NAMES[s])} (${GM.totals[s]})`).join(' · ')}</p>`}
   h+=`<p class="muted">Ev sahibi ${last?'yeni oyunu':'sıradaki eli'} başlatınca devam edersiniz.</p>`;open(h)}
 
-{const L=String(window.LANG||'tr').slice(0,2);if(L!=='tr')document.documentElement.style.setProperty('--isl',L==='ru'?'"ДОКЛАД"':'"PLAYABLE"')}
+{const L=String(window.LANG||'tr').slice(0,2);if(L!=='tr')document.documentElement.style.setProperty('--isl',L==='ru'?'"ДОКЛАД"':'"PLAYABLE"');if(L!=='tr')document.documentElement.style.setProperty('--sirada',L==='ru'?'" · ХОДИТ"':'" · TO PLAY"')}
 GM={total:5,handNo:1,totals:[0,0,0,0],hist:[],dealer:0};
 dealHand(0);sortSeri();render();
 {const hc=(location.hash||'').slice(1).toUpperCase();if(/^[A-Z0-9]{5}$/.test(hc))joinOnline(hc);else showMenu()}
