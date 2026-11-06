@@ -183,7 +183,7 @@ const BOTN=['Nuri','Rıza'];
 const ST={get(k,d){try{const v=localStorage.getItem('bin_'+k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem('bin_'+k,JSON.stringify(v))}catch(e){}},del(k){try{localStorage.removeItem('bin_'+k)}catch(e){}}};
 const UID=ST.get('uid',null)||(()=>{const u=Math.random().toString(36).slice(2,10);ST.set('uid',u);return u})();
 let M=null,names=['Sen',...BOTN],me=0,mode='off',human=[true,false,false];
-let busy=false,shownTid=null,showing=null,sel=null,botT=null,dealSeen=-1,endT=null,ver=0,marrSeen=0,pkSeen=null,gsel=[];
+let ninesSeen=null,busy=false,shownTid=null,showing=null,sel=null,botT=null,dealSeen=-1,endT=null,ver=0,marrSeen=0,pkSeen=null,gsel=[];
 const SPD=+(new URLSearchParams(location.search).get('spd')||1);
 const myName=()=>(window.KH&&KH.name())||ST.get('name','')||'Sen';
 const V=p=>(p-me+3)%3;
@@ -253,6 +253,7 @@ let sfxK=null;
 function afterRender(){if(busy)return;{const ck=M.deal*1000+(M.tricks||0)*5+(M.trick||[]).length;if(sfxK!=null&&ck>sfxK&&(M.trick||[]).length)KSfx.play('card');sfxK=ck}
   if(M.marrEv&&marrSeen!==M.marrEv.id){marrSeen=M.marrEv.id;const e=M.marrEv;
     if(M.phase==='play'||M.phase==='dealEnd'||M.phase==='over'){KSfx.play('win');toast(`<b>${esc(pn(e.p))}</b> <span>evlilik ilan etti!</span> ${sym(e.s)} +${e.v} · <span>koz değişti</span>`,2800)}}
+  if(M.ninesEv&&ninesSeen!==M.ninesEv.id){if(ninesSeen!==null)toast(`<b>${esc(pn(M.ninesEv.p))}</b>: <span>dört dokuz! El yeniden dağıtıldı.</span>`,2600);ninesSeen=M.ninesEv.id}
   if(M.phase==='give'&&pkSeen!==M.deal){pkSeen=M.deal;if(M.decl!==me)toast(`<b>${esc(pn(M.decl))}</b> <span>ihaleyi aldı:</span> ${M.bid}`)}
   if(M.phase==='raise'&&M.decl!==me&&M.given&&pkSeen!=='r'+M.deal){pkSeen='r'+M.deal;const g=M.given.find(x=>x.to===me);if(g)toast('<span>Sana bir kart verildi</span>',1600)}
   if(M.phase==='bid'&&M.turn===me)showBid();else if($('sheet').dataset.k==='bid')hideOv();
@@ -358,11 +359,11 @@ function showScore(){if(!M)return;
   $('sOk').onclick=()=>{hideOv();afterRender()}}
 function showRules(){ov('rules',`<h2>1000 nasıl oynanır?</h2>
   <p>3 kişi, 24 kart (9'dan asa). Herkese 7 kart, ortaya 3 kart <b>prikup</b>. Kartların gücü: A, 10, K, Q, J, 9. Puanları: A 11, 10 10, K 4, Q 3, J 2. Bir elde toplam 120 puan var.</p>
-  <p><b>İhale:</b> dağıtanın solundaki 100 ile açmak zorundadır. Teklifler 5'er artar; pas diyen geri dönemez. 120'den fazlası için elinde evlilik olmalı. İhaleyi alan prikup'u alır, iki rakibine birer kart verir ve isterse ihalesini yükseltir.</p>
+  <p><b>İhale:</b> dağıtanın solundaki 100 ile açmak zorundadır. Teklifler 5'er artar; pas diyen geri dönemez. 120'den fazlası için elinde evlilik olmalı. İhaleyi alan prikup'u alır, iki rakibine birer kart verir ve isterse ihalesini yükseltir. Kartlar verildikten sonra elinde dört dokuz olan varsa el yeniden dağıtılır.</p>
   <p><b>Oyun:</b> yerdeki renkten atmak zorunludur. Rengin yoksa koz varsa koz atmalısın. Başta koz yoktur.</p>
   <p><b>Evlilik:</b> aynı renkten papaz ve kız elindeyse, el açarken birini oynayarak evlilik ilan edersin ve o renk koz olur: kupa 100, karo 80, sinek 60, maça 40. İlk elde ilan edilmez.</p>
   <p><b>Puan:</b> ihaleyi alan söylediğini tutturursa ihale kadar yazar, tutturamazsa o kadar silinir. Diğerleri topladıkları puanı (5'e yuvarlanmış) yazar. Kartlara bakıp vazgeçebilirsin: rakiplere 60'ar yazılır, sana bir şey yazılmaz.</p>
-  <p><b>Varil:</b> 880'e gelen varile çıkar. Oradan sadece ihaleyi alıp tutturarak çıkılır; 3 elde çıkamazsan 120 silinir. Hiç el almadığın her 3. elde ve her 3. vazgeçmende de 120 silinir. 1000'e ilk ulaşan kazanır.</p>
+  <p><b>Varil:</b> 880'e gelen varile çıkar. Oradan sadece en az 120'lik ihaleyi alıp tutturarak çıkılır; 3 elde çıkamazsan 120 silinir. Hiç el almadığın her 3. elde ve her 3. vazgeçmende de 120 silinir. 1000'e ilk ulaşan kazanır.</p>
   <div class="row"><button class="btn pri" id="rOk">Tamam</button></div>`);$('rOk').onclick=()=>M&&M.phase!=='idle'?(hideOv(),afterRender()):showMenu()}
 function showMenu(){const sv=ST.get('save',null),rec=ST.get('rec',[0,0]);
   const s=ov('menu',`<h2>1000</h2><p>Üç kişilik Rus kart oyunu. İhaleyi al, evliliklerini ilan et, 1000 puana ilk sen ulaş.</p>

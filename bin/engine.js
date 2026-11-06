@@ -34,7 +34,9 @@ function bid(M,p,v){if(M.phase!=='bid')return 'İhale bitti';if(p!==M.turn)retur
 function give(M,p,a,b){if(M.phase!=='give'||p!==M.decl)return 'Şu an kart veremezsin';const h=M.hands[p];
   if(a===b||!h.includes(a)||!h.includes(b))return 'İki farklı kart seç';
   h.splice(h.indexOf(a),1);h.splice(h.indexOf(b),1);const L=(p+1)%N,R=(p+2)%N;M.hands[L]=sortHand(M.hands[L].concat([a]));M.hands[R]=sortHand(M.hands[R].concat([b]));
-  M.given=[{to:L},{to:R}];M.phase='raise';return null}
+  M.given=[{to:L},{to:R}];M.phase='raise';
+  const n9=[0,1,2].find(q=>SU.every(x=>M.hands[q].includes(x+'9')));if(n9!=null){M.ninesEv={p:n9,id:(M.ninesEv?M.ninesEv.id:0)+1};M.seed=(M.seed+104729)%1e9;startDeal(M)}
+  return null}
 function raise(M,p,v){if(M.phase!=='raise'||p!==M.decl)return 'Şu an olmaz';v=+v;
   if(v%5!==0||v<M.bid)return 'Bu teklif olmaz';if(v>120&&!marriages(M.hands[p]).length)return '120\'den fazlası için elinde evlilik olmalı';
   M.bid=v;M.phase='play';M.turn=p;M.leader=p;M.trick=[];return null}
@@ -66,14 +68,14 @@ function finishDeal(M){const D=M.decl,raw=[0,1,2].map(p=>pts(M.taken[p])+M.marr[
   const made=raw[D]>=M.bid;
   for(let p=0;p<N;p++){
     if(p===D){
-      if(M.barrel[p]>0){if(made){s[p]=1000-M.score[p];note[p]='Varilden çıktı'}else{s[p]=-M.bid;note[p]='Varilden düştü'}}
+      if(M.barrel[p]>0){if(made&&M.bid>=120){s[p]=M.bid;note[p]='Varilden çıktı'}else if(made){s[p]=0;note[p]='Varilde'}else{s[p]=-M.bid;note[p]='Varilden düştü'}}
       else s[p]=made?M.bid:-M.bid}
     else{
       if(M.barrel[p]>0){s[p]=0;note[p]='Varilde'}
-      else{s[p]=round5(raw[p]);if(!M.taken[p].length){M.zeros[p]++;note[p]='Sıfır';if(M.zeros[p]%3===0){s[p]-=120;note[p]='3. sıfır −120'}}}}}
+      else{s[p]=round5(raw[p]);if(pts(M.taken[p])===0){M.zeros[p]++;note[p]='Sıfır';if(M.zeros[p]%3===0){s[p]-=120;note[p]='3. sıfır −120'}}}}}
   for(let p=0;p<N;p++){
     const wasBarrel=M.barrel[p]>0;M.score[p]+=s[p];
-    if(wasBarrel){if(p===D){M.barrel[p]=0}else{M.barrel[p]++;if(M.barrel[p]>3){M.score[p]-=120;s[p]-=120;M.barrel[p]=0;note[p]='Varilde 3 el −120'}}}
+    if(wasBarrel){if(p===D&&(M.score[p]>=1000||s[p]<0)){M.barrel[p]=0}else{M.barrel[p]++;if(M.barrel[p]>3){M.score[p]-=120;s[p]-=120;M.barrel[p]=0;note[p]='Varilde 3 el −120'}}}
     if(M.score[p]>=880&&M.score[p]<1000&&!M.barrel[p]){s[p]-=M.score[p]-880;M.score[p]=880;M.barrel[p]=1;note[p]=(note[p]?note[p]+' · ':'')+'Varile çıktı'}}
   M.log.push({deal:M.deal,decl:D,bid:M.bid,made,raw,s,note,marr:M.marrLog.slice()});
   M.deal++;M.dealer=(M.dealer+1)%N;
@@ -94,7 +96,7 @@ function botGive(M,p){const h=M.hands[p],ms=marriages(h);const keep=c=>ms.includ
   const o=h.slice().sort((a,b)=>val(a)-val(b));return [o[0],o[1]]}
 function botRaise(M,p){const est=handEst(M.hands[p],false);let v=M.bid;
   if(est<M.bid-25&&!M.barrel[p]&&((M.ros||[0,0,0])[p]%3)!==2)return 'ros';
-  const target=Math.floor((est-10)/5)*5;if(target>v)v=Math.min(target,marriages(M.hands[p]).length?300:120);return Math.max(v,M.bid)}
+  const target=Math.floor((est-10)/5)*5;if(target>v)v=Math.min(target,marriages(M.hands[p]).length?300:120);if(M.barrel[p]&&v<120&&est>=130)v=120;return Math.max(v,M.bid)}
 function botPlay(M,p){const L=legal(M,p),h=M.hands[p],T=M.trump,D=M.decl,isDecl=p===D;
   const lo=a=>a.slice().sort((x,y)=>PT[cr(x)]-PT[cr(y)]||STR[cr(x)]-STR[cr(y)]);
   const hi=a=>a.slice().sort((x,y)=>STR[cr(y)]-STR[cr(x)]);
