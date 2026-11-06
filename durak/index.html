@@ -319,6 +319,7 @@ if(document.body)go();else addEventListener('DOMContentLoaded',go);
 }
 *,*::before,*::after{box-sizing:border-box}
 html,body{height:100%;overflow:hidden}
+@supports (height:100svh){html,body{height:100svh}}
 body{background:var(--felt);color:var(--ink);font-family:var(--body);font-size:15px;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
 .app{position:relative;height:100%;max-width:980px;margin:0 auto;display:flex;flex-direction:column;
   padding-block:6px max(8px,env(safe-area-inset-bottom,0px));padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px));
@@ -415,8 +416,8 @@ button.card:focus-visible,.btn:focus-visible,.chip:focus-visible,.pair:focus-vis
 .btn.take{background:var(--take);color:#2b1612}
 .btn.ghost{background:rgba(0,0,0,.2);color:var(--ink);border:1px solid var(--line);box-shadow:none}
 .btn[hidden]{display:none}
-.hand{position:relative;height:calc(var(--cw)*1.22);touch-action:manipulation;margin-bottom:calc(-1*max(8px,env(safe-area-inset-bottom,0px)))}
-.hand .card{bottom:calc(var(--cw)*-.3)!important}
+.hand{position:relative;height:calc(var(--cw)*1.46);touch-action:manipulation;margin:0 12px}
+.hand .card{bottom:2px!important}
 .app{overflow:hidden}
 .hand .card{position:absolute;bottom:0;transform-origin:50% 140%}
 .hand .card.dim{filter:saturate(.6) brightness(.86)}

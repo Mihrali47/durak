@@ -20,6 +20,7 @@
 }
 *,*::before,*::after{box-sizing:border-box}
 html,body{height:100%;overflow-x:clip}
+@supports (height:100svh){html,body{height:100svh}}
 body{background:var(--felt-deep);color:var(--ink);font-family:var(--body);-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
 .app{padding-block:8px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));min-height:100%}
 .rot{display:none;text-align:center;font-size:14px;color:var(--muted);padding:6px 0 10px}

@@ -17,6 +17,7 @@
   --body:"Rubik",system-ui,-apple-system,"Segoe UI",sans-serif;--suit:"DejaVu Sans","Segoe UI Symbol","Apple Symbols",serif;color-scheme:dark}
 *,*::before,*::after{box-sizing:border-box}
 html,body{height:100%;margin:0;overflow:hidden}
+@supports (height:100svh){html,body{height:100svh}}
 body{background:radial-gradient(ellipse at 50% 45%,var(--felt) 0%,var(--felt2) 65%,var(--room) 100%);color:var(--ink);font:15px/1.35 var(--body);
   -webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
 button{font:inherit;color:inherit;cursor:pointer}
