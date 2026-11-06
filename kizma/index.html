@@ -99,7 +99,7 @@ input.name{width:100%;border:1px solid #d9d1bf;border-radius:10px;padding:11px;f
 .bub{position:fixed;z-index:31;max-width:170px;background:#fff;color:#222;border-radius:12px;padding:6px 9px;font-size:13px;box-shadow:0 4px 12px rgba(0,0,0,.3);pointer-events:none}
 .emo{position:fixed;font-size:30px;z-index:30;pointer-events:none;animation:emo 2.2s ease-out forwards}
 @keyframes emo{0%{opacity:0;transform:translateY(8px) scale(.6)}15%{opacity:1;transform:none}80%{opacity:1}100%{opacity:0;transform:translateY(-24px)}}
-@media (prefers-reduced-motion:reduce){.pawn{transition:none}.pawn.can{animation:none}.pawn svg,.pawn g{animation:none!important}.boom{display:none}.die.spin,.die.go{animation:none}}
+
 
 @media (orientation:landscape) and (max-height:560px){
   .app{display:grid;grid-template-columns:1fr minmax(180px,32vw);grid-template-rows:auto 1fr auto;column-gap:12px;max-width:none;align-items:center}
@@ -203,7 +203,7 @@ function stride(el,a,b,n=2,stepMs=150){return new Promise(res=>{
   const len=Math.hypot(b.x-a.x,b.y-a.y)||1,ux=(b.x-a.x)/len,sw=Math.abs(ux)>.2?Math.sign(ux):0,AMP=14+22*Math.abs(ux),T=stepMs/SPD;
   const body=el.querySelector('.body'),L=[...el.querySelectorAll('.lg')],AR=[...el.querySelectorAll('.arm')],t0=performance.now();let lastK=0;
   const ease=q=>.4*q+.6*(q*q*(3-2*q));
-  if(document.hidden||matchMedia('(prefers-reduced-motion:reduce)').matches){setP(el,b);return res()}
+  if(document.hidden){setP(el,b);return res()}
   function frame(now){const tt=Math.max(0,Math.min((now-t0)/T,n)),k=Math.min(Math.floor(tt),n-1),q=tt-k;
     const pos=lerp(a,b,(k+ease(q))/n);setP(el,pos);
     const swI=k%2,stI=1-swI,si=Math.sin(Math.PI*q),side=stI===0?-1:1,co=Math.cos(Math.PI*q);
