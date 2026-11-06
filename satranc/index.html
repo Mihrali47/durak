@@ -251,7 +251,7 @@ h1,.menu-card h2,.bubble,.over h2{text-transform:uppercase}
       <div class="onl" id="onl" hidden>
         <p class="onlmsg" id="onlMsg"></p>
         <button class="btn big" id="hostBtn">Yeni online oyun kur</button>
-        <div class="linkbox" id="linkBox" hidden><input id="linkIn" readonly aria-label="Davet linki"><button class="btn" id="copyBtn">Kopyala</button></div>
+        <div class="linkbox" id="linkBox" hidden><input id="linkIn" readonly aria-label="Davet linki"><button class="btn" id="copyBtn">Kopyala</button></div><button class="btn" id="invBtn" hidden style="margin-top:8px;width:100%">👥 Arkadaşlarını çağır</button>
         <button class="btn big" id="enterBtn" hidden>Oyuna gir</button>
         <div class="linkbox" id="joinRow"><input id="codeIn" placeholder="Oyun kodu" maxlength="7" autocapitalize="characters" autocomplete="off" aria-label="Oyun kodu"><button class="btn" id="joinBtn">Katıl</button></div>
         <button class="mclose" id="onlBack">Geri</button>
@@ -607,10 +607,10 @@ function showOnlPanel(on){$('modes').hidden=on;$('onl').hidden=!on;$('sndrow').h
 function linkFor(c){return (location.protocol.startsWith('http')&&!/claude\.ai/.test(location.host)?location.href.split('#')[0]:ART)+'#'+c}
 function copyText(inp,btn){const v=inp.value,done=()=>{const o=btn.textContent;btn.textContent='Kopyalandı ✓';setTimeout(()=>btn.textContent=o,1500)};
   try{navigator.clipboard.writeText(v).then(done,()=>{inp.focus();inp.select()})}catch(e){inp.focus();inp.select()}}
-async function hostGame(){onlMsg('Oyun kuruluyor…');const[db,user]=await caps();if(!db||!user){onlMsg(NOACCESS,1);return}
+async function hostGame(code0){onlMsg('Oyun kuruluyor…');const[db,user]=await caps();if(!db||!user){onlMsg(NOACCESS,1);return}
   const me=await user.id();if(!me){onlMsg(NOACCESS,1);return}
-  const code=newCode();try{await db.doc('games/'+code).set({white:me,black:null,moves:[],n:0,t:Date.now(),emoji:null})}catch(e){onlMsg(NOACCESS,1);return}
-  $('linkIn').value=linkFor(code);$('linkBox').hidden=false;$('hostBtn').hidden=true;$('joinRow').hidden=true;$('enterBtn').hidden=false;$('enterBtn').dataset.code=code;
+  const code=typeof code0==='string'?code0:newCode();try{await db.doc('games/'+code).set({white:me,black:null,moves:[],n:0,t:Date.now(),emoji:null})}catch(e){onlMsg(NOACCESS,1);return}
+  $('linkIn').value=linkFor(code);$('linkBox').hidden=false;$('invBtn').hidden=!window.KH;$('hostBtn').hidden=true;$('joinRow').hidden=true;$('enterBtn').hidden=false;$('enterBtn').dataset.code=code;
   onlMsg('Oyun hazır. Bu linki arkadaşına gönder, sonra oyuna gir. Sen mavisin, o katılınca başlarsınız.')}
 function leaveOnline(){if(mode!=='online')return;window.KChat&&KChat.unmount();if(online.unsub)try{online.unsub()}catch(e){}online=freshOnline();flip=false;buildGrid();$('onlInfo').hidden=true}
 async function enterOnline(code){code=(code||'').toUpperCase().replace(/[^A-Z0-9]/g,'');let want=null;if(code.length===7&&/[MS]$/.test(code)){want=code.endsWith('M')?'w':'b';code=code.slice(0,6)}if(code.length!==6){onlMsg('Oyun kodu 6 karakter olmalı.',1);return}
@@ -700,6 +700,7 @@ $('onlineBtn').onclick=()=>{actx();SFX.pop();showOnlPanel(true);onlMsg('Bir oyun
 $('onlBack').onclick=()=>{showOnlPanel(false);$('linkBox').hidden=true;$('hostBtn').hidden=false;$('joinRow').hidden=false;$('enterBtn').hidden=true};
 $('hostBtn').onclick=hostGame;$('enterBtn').onclick=()=>enterOnline($('enterBtn').dataset.code);
 $('joinBtn').onclick=()=>{actx();enterOnline($('codeIn').value)};$('codeIn').addEventListener('keydown',e=>{if(e.key==='Enter')enterOnline($('codeIn').value)});
+$('invBtn').onclick=()=>window.KH&&KH.invitePicker('Satranç',$('linkIn').value);window.KH_HOST=()=>{const code=newCode();hostGame(code).then(()=>{if($('enterBtn').dataset.code===code)enterOnline(code)});return linkFor(code)};
 $('copyBtn').onclick=()=>copyText($('linkIn'),$('copyBtn'));$('onlCopy').onclick=()=>copyText($('onlLink'),$('onlCopy'));
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('menu').hidden&&started)closeMenu()});
 for(const e of EMO){const b=document.createElement('button');b.textContent=e;b.setAttribute('aria-label',e+' gönder');

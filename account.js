@@ -231,7 +231,12 @@ async function share(url){const text='Kahvehane\'de benimle oyna! Linke tıkla, 
   try{if(navigator.share&&matchMedia('(pointer:coarse)').matches){await navigator.share({title:'Kahvehane',text,url});return}}catch(e){return}
   copy(url,'Davet linki kopyalandı')}
 /* profilden arkadaşı bir oyuna davet et: oyun sayfası masayı kurar, davet kendiliğinden gider */
-const GAMES=[['Durak','durak/'],['King','king/'],['Batak','batak/'],['1000','bin/'],['Okey','okey101/?klasik=1'],['101 Okey','okey101/'],['Pişti','pisti/'],['Eşli Pişti','pisti4/'],['Tavla','tavla/'],['Kızma Birader','kizma/'],['Dama','dama/']];
+let GAMES=[['Durak','durak/'],['King','king/'],['Batak','batak/'],['1000','bin/'],['Okey','okey101/?klasik=1'],['101 Okey','okey101/'],['Pişti','pisti/'],['Eşli Pişti','pisti4/'],['Tavla','tavla/'],['Kızma Birader','kizma/'],['Dama','dama/'],['Satranç','satranc/']];
+/* davet listesi ana sayfadaki oyun kartlarından okunur: "🌐 Online" yazan her oyun kendiliğinden listeye girer (yeni oyun eklense de) */
+(()=>{try{const c=JSON.parse(localStorage.getItem('kh_games')||'null');if(Array.isArray(c)&&c.length)GAMES=c}catch(e){}
+  fetch(ROOT+'index.html',{cache:'no-cache'}).then(r=>r.ok?r.text():null).then(t=>{if(!t)return;const d=new DOMParser().parseFromString(t,'text/html');
+    const L=[...d.querySelectorAll('a.game')].filter(a=>/Online/.test((a.querySelector('.meta')||{}).textContent||'')).map(a=>[(a.querySelector('h3')||{}).textContent.trim(),a.getAttribute('href')]).filter(x=>x[0]&&x[1]);
+    if(L.length){GAMES=L;try{localStorage.setItem('kh_games',JSON.stringify(L))}catch(e){}}}).catch(()=>{})})();
 function pickGame(uid){const f=F[uid];if(!f)return;
   const s=sheet('pick',`<h2>${esc(f.name)} <span>ile oyna</span></h2><p>Oyunu seç. Masa kurulur ve arkadaşına davet gider; o gelince başlatırsın.${online(uid)?'':' <b>Arkadaşın şu an çevrimdışı</b>, davet yine de 15 dakika bekler; istersen linki WhatsApp\'tan da gönder.'}</p>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">${GAMES.map(([n,p])=>`<button class="kh-b" data-p="${esc(p)}">${esc(n)}</button>`).join('')}</div>
