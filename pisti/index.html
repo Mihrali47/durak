@@ -414,12 +414,12 @@ function showMenu(){
   <p>Elindeki kartı yerdeki en üst kartla eşleştir ya da vale atıp yeri topla. Yerde tek kart varken eşleştirirsen <b>pişti</b>: 10 puan. Vale üstüne vale ise 20. Elin en son kartıyla yapılan pişti sayılmaz.</p>
   <p class="muted">Bilgisayara karşı oynuyorsun. Kartlar 4'er dağıtılır, deste bitince el sayılır. Yerde kalanlar son toplayana gider.</p>
   <div><p class="lbl">Kaç puana oynayalım?</p><div class="seg"><button data-t="51" aria-pressed="${target===51}">51</button><button data-t="101" aria-pressed="${target===101}">101</button><button data-t="151" aria-pressed="${target===151}">151</button></div></div>
-  <div class="row"><button class="btn" id="start">${inGame?'Yeni oyuna başla':'Masaya otur'}</button>${inGame?'<button class="btn ghost" id="resume">Oyuna dön</button>':''}</div>
+  <div class="row"><button class="btn" id="start">${inGame?'Yeni oyuna başla':'Masaya otur'}</button>${inGame?'<button class="btn ghost" id="resume">Oyuna dön</button>':''}</div><div class="row"><button class="btn ghost" id="quitB">🚪 Oyundan çık · Salona dön</button></div>
   <div class="row"><button class="btn" id="qk">⚡ Hızlı oyun</button><button class="btn ghost" id="onl">Arkadaşınla online</button></div>
   <div class="row"><a class="btn ghost" href="../pisti4/" style="text-decoration:none;display:grid;place-items:center">👥 Eşli Pişti (4 kişi)</a></div>
   <p class="muted">Rekorun: ${record.w} galibiyet, ${record.l} mağlubiyet.</p>`);
   $('sheet').querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{target=+b.dataset.t;$('sheet').querySelectorAll('[data-t]').forEach(x=>x.setAttribute('aria-pressed',x===b))});
-  $('start').onclick=()=>{leaveOnline();close();paused=false;newGame()};
+  $('start').onclick=()=>{leaveOnline();close();paused=false;newGame()};$('quitB').onclick=()=>{try{leaveOnline()}catch(e){}location.href='../'};
   if(inGame)$('resume').onclick=()=>{close();paused=false;render();if(G.turn==='c'&&!G.busy)oppTurn()};
   $('onl').onclick=hostOnline;$('qk').onclick=quickPlay;
 }

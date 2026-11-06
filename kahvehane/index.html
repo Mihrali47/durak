@@ -384,7 +384,7 @@ function showIntro(first){
   <p>Istakandan en fazla 5 taş seç ve <b>Oyna</b>. Taşların oluşturduğu kombinasyon puan ve çarpan verir; sayılan her taşın değeri puana eklenir. <b>Puan × Çarpan</b> masanın hedefini geçerse masayı kazanırsın.</p>
   <p class="muted">Her masada 4 el ve 3 atma hakkın var. Masa aralarında kazandığın lirayla tılsım al. Her kahvehanenin üçüncü masasında Patron bir kural koyar. 4 kahvehaneyi bitir, şampiyon ol.</p>
   ${rulesHTML()}
-  <div class="row"><button class="btn play" id="go">${first?'Masaya otur':'Devam et'}</button>${best?`<span class="muted">En iyi: ${best}. masa</span>`:''}</div>`);
+  <div class="row"><button class="btn play" id="go">${first?'Masaya otur':'Devam et'}</button>${best?`<span class="muted">En iyi: ${best}. masa</span>`:''}</div><div class="row"><a class="btn" href="../" style="text-decoration:none;text-align:center">🚪 Oyundan çık · Salona dön</a></div>`);
   $('go').onclick=close;
 }
 function roundWon(){
