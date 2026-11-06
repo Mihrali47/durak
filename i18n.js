@@ -223,7 +223,7 @@ function fixText(n){const v=n.nodeValue;if(SEEN.get(n)===v)return;const o=tr(v);
 function fixAttrs(e){for(const a of ['placeholder','aria-label','title']){const v=e.getAttribute&&e.getAttribute(a);if(!v)continue;let o=A0[v];if(o==null){const t=tr(v);if(t)o=t}if(o!=null&&o!==v)e.setAttribute(a,o)}}
 function walk(root){if(!root)return;if(root.nodeType===3)return fixText(root);if(root.nodeType!==1)return;const tg=root.tagName;if(tg==='SCRIPT'||tg==='STYLE')return;
   fixAttrs(root);root.querySelectorAll&&root.querySelectorAll('[placeholder],[aria-label],[title]').forEach(fixAttrs);
-  const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);let n;while(n=w.nextNode()){const p=n.parentElement;if(p&&(p.tagName==='SCRIPT'||p.tagName==='STYLE'||p.closest('.msg')))continue;fixText(n)}}
+  const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);let n;while(n=w.nextNode()){const p=n.parentElement;if(p&&(p.tagName==='SCRIPT'||p.tagName==='STYLE'||p.closest('.msgs')))continue;fixText(n)}}
 const mo=new MutationObserver(ms=>{for(const m of ms){if(m.type==='characterData')fixText(m.target);else if(m.type==='attributes')fixAttrs(m.target);else m.addedNodes.forEach(walk)}});
 const go=()=>{walk(document.body);mo.observe(document.body,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['placeholder','aria-label','title']});if(D0[document.title])document.title=D0[document.title]};
 if(document.body)go();else addEventListener('DOMContentLoaded',go);
