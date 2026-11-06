@@ -85,7 +85,7 @@ const mk=j=>[
 [/^(\d+) ile açtın!$/i,(m,n)=>j?`You opened with ${n}!`:`Вы открылись на ${n}!`],[/^(\d+) İLE AÇTIN$/,(m,n)=>j?`OPENED WITH ${n}`:`ОТКРЫЛИСЬ НА ${n}`],[/^Açtın · (\d+)$/,(m,n)=>j?`Opened · ${n}`:`Открыто · ${n}`],[/^(\d+) taş$/,(m,n)=>j?`${n} tiles`:`${n} фишек`],[/^(.+)'nin taşına$/,(m,a)=>j?`on ${a}'s tile`:`на фишку ${a}`],
 [/^(kırmızı|mavi|sarı|siyah) (\d+)$/,(m,c,n)=>j?`${CO[c][1]} ${n}`:`${CO[c][0]} ${n}`],
 [/^Açmak için 101 lazım, (\d+) var$/,(m,n)=>j?`Need 101 to open, you have ${n}`:`Для открытия нужно 101, у вас ${n}`],[/^Çiftle açmak için 5 çift lazım, (\d+) var$/,(m,n)=>j?`Need 5 pairs to open, you have ${n}`:`Нужно 5 пар, у вас ${n}`],
-[/^Çifte gitmek için 5 çift lazım, ıstakanda (\d+) var\.$/,(m,n)=>j?`You need 5 pairs; you have ${n}.`:`Нужно 5 пар, у вас ${n}.`],[/^(\d+)\. el \/ (\d+)$/,(m,a,b)=>j?`Hand ${a} / ${b}`:`Партия ${a} / ${b}`],
+[/^Çifte gitmek için 5 çift lazım, ıstakanda (\d+) var\.$/,(m,n)=>j?`You need 5 pairs; you have ${n}.`:`Нужно 5 пар, у вас ${n}.`],[/^(\d+) çift$/,(m,n)=>j?`${n} pairs`:`пар: ${n}`],[/^(\d+)\. el \/ (\d+)$/,(m,a,b)=>j?`Hand ${a} / ${b}`:`Партия ${a} / ${b}`],
 ];
 window.I18N_RULES={ru:mk(0),en:mk(1)};
 })();

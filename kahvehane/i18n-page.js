@@ -14,7 +14,7 @@ window.I18N_EXTRA=[
 ['1 taş sayılır','считается 1 фишка','1 tile counts'],['2 taş sayılır','считаются 2 фишки','2 tiles count'],['4 taş sayılır','считаются 4 фишки','4 tiles count'],['Mahalle Kahvesi','Дворовая кофейня','Neighbourhood Café'],['en fazla 5','не больше 5','up to 5'],['@Durum','Статус','Status'],
 ];
 const mk=j=>[
-[/^(kırmızı|mavi|sarı|siyah) (\d+)$/,(m,c,n)=>j?`${CO[c][1]} ${n}`:`${CO[c][0]} ${n}`],[/^Torba: (\d+)$/,(m,n)=>j?`Bag: ${n}`:`Мешок: ${n}`],[/^Masa (\d+) \/ (\d+) · (.+)$/,(m,a,b,c)=>j?`Table ${a} / ${b} · ${c}`:`Стол ${a} / ${b} · ${c}`],
+[/^(kırmızı|mavi|sarı|siyah) (\d+)$/,(m,c,n)=>j?`${CO[c][1]} ${n}`:`${CO[c][0]} ${n}`],[/^Torba: (\d+)$/,(m,n)=>j?`Bag: ${n}`:`Мешок: ${n}`],[/^Masa (\d+) \/ (\d+) · (.+)$/,(m,a,b,c)=>{const R={'Çaycı Rıza':['Чайханщик Рыза','Rıza the tea man'],'Emekli Hamdi':['Пенсионер Хамди','Retired Hamdi'],'Patron':['Хозяин','The Boss']}[c];return j?`Table ${a} / ${b} · ${R?R[1]:c}`:`Стол ${a} / ${b} · ${R?R[0]:c}`}],
 [/^En iyi: (\d+)\. masa$/,(m,n)=>j?`Best: table ${n}`:`Рекорд: стол ${n}`],[/^Ulaştığın masa: (\d+)\. En iyi: (\d+)\. masa\.$/,(m,a,b)=>j?`Reached table ${a}. Best: table ${b}.`:`Достигнут стол ${a}. Рекорд: стол ${b}.`],
 [/^(.+), (.+) masasında (\d+) puanda kaldın\. Hedef (\d+) idi\.$/,(m,a,b,c,d)=>j?`${a}, ${b}'s table: you stopped at ${c}. The target was ${d}.`:`${a}, стол «${b}»: вы набрали ${c}. Цель была ${d}.`],
 ];
