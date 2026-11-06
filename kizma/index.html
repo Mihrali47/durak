@@ -357,7 +357,7 @@ $('bChat').onclick=e=>{e.stopPropagation();let b=document.querySelector('.emobar
   b.querySelector('form').onsubmit=ev=>{ev.preventDefault();const i=b.querySelector('input');sendChat(i.value);i.value=''}};
 /* tahta boyutu */
 function fit(){const w=$('wrapb');document.documentElement.style.setProperty('--bs',Math.min(w.clientWidth,w.clientHeight)+'px')}
-addEventListener('resize',fit);fit();
+addEventListener('resize',fit);fit();try{new ResizeObserver(fit).observe($('wrapb'))}catch(e){}
 
 /* ---------- hızlı oyun: açık masaya otur ya da masa aç ---------- */
 let quick=false,quick2=0;
