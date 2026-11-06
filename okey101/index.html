@@ -1048,8 +1048,16 @@ addEventListener('pointermove',e=>{
   document.querySelectorAll('.over,.hot').forEach(x=>x.classList.remove('over','hot'));
   const t=dropTarget(e);if(t){if(t.dataset.slot!=null)t.classList.add('over');else t.classList.add('hot')}
 });
-function dropTarget(e){const el=document.elementFromPoint(e.clientX,e.clientY);if(!el)return null;
-  return el.closest('[data-slot]')||el.closest('[data-set]')||el.closest('[data-drop]')||null}
+function dropTarget(e){const at=(x,y)=>{const el=document.elementFromPoint(x,y);return el&&(el.closest('[data-slot]')||el.closest('[data-set]')||el.closest('[data-drop]'))||null};
+  let t=at(e.clientX,e.clientY);if(t&&(t.dataset.slot!=null||t.dataset.set!=null||t.id==='cr0'||t.id==='cr3'))return t;
+  /* parmak köşeyi tam tutturamasa da taş atma köşesine yakınsa oraya say */
+  const g=drag&&drag.g||e.g,r=g?g.getBoundingClientRect():null;
+  let best=null,bd=1e9;document.querySelectorAll('#cr0,#cr3').forEach(el=>{const c=el.getBoundingClientRect();if(!c.width)return;const pad=c.width*.7;
+    const inP=e.clientX>c.left-pad&&e.clientX<c.right+pad&&e.clientY>c.top-pad&&e.clientY<c.bottom+pad;
+    const inG=r&&Math.min(r.right,c.right)-Math.max(r.left,c.left)>c.width*.35&&Math.min(r.bottom,c.bottom)-Math.max(r.top,c.top)>c.height*.35;
+    if(!(t&&t.dataset.drop!=='pairs'?inG:(inP||inG)))return;const d=Math.hypot(e.clientX-(c.left+c.width/2),e.clientY-(c.top+c.height/2));if(d<bd){bd=d;best=el}});
+  if(best)return best;if(t)return t;
+  return r?at(r.left+r.width/2,r.top+r.height/2):null}
 addEventListener('pointerup',e=>{
   if(!drag)return;const d=drag;drag=null;
   document.querySelectorAll('.over,.hot').forEach(x=>x.classList.remove('over','hot'));
@@ -1057,8 +1065,7 @@ addEventListener('pointerup',e=>{
     if(d.kind==='tile'){const now=Date.now();
       if(U.lastTap&&U.lastTap.id===d.id&&now-U.lastTap.t<380){U.lastTap=null;if(S.turn===0&&S.phase==='act'&&!S.ended&&!U.busy){pDiscard(d.id)}else{toast(S.turn===0&&S.phase==='draw'?'Önce taş çek, sonra çift tıklayıp at.':'Sıra sende olunca çift tıklayıp atabilirsin.');}return}
       U.lastTap={id:d.id,t:now};toggle(d.id)}else pDraw(d.kind);return}
-  d.g.remove();d.el.classList.remove('dragging');
-  const t=dropTarget(e);if(!t){render();return}
+  const t=dropTarget({clientX:e.clientX,clientY:e.clientY,g:d.g});d.g.remove();d.el.classList.remove('dragging');if(!t){render();return}
   if(d.kind==='tile'){
     if(t.dataset.slot!=null){const j=+t.dataset.slot,i=U.slots.indexOf(d.id);if(i>=0&&i!==j){U.slots[i]=U.slots[j];U.slots[j]=d.id}render()}
     else if(t.dataset.drop==='discard'){U.dropping=true;pDiscard(d.id)}
