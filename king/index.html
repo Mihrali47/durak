@@ -184,7 +184,7 @@ const pn=p=>p===me?'Sen':names[p];
 /* ---------- kart çizimi ---------- */
 function cardEl(c,cls=''){const s=K.cs(c),r=K.cr(c),d=document.createElement('div');d.className='card'+(s==='H'||s==='D'?' r':'')+(cls?' '+cls:'');
   d.innerHTML=`<div class="ix">${RN(r)}<i>${SYM[s]}&#xFE0E;</i></div>`+(r>=11?`<div class="fc">${RN(r)}<i>${SYM[s]}&#xFE0E;</i></div>`:`<div class="big">${SYM[s]}&#xFE0E;</div>`);return d}
-function toast(html,ms=2200){const t=$('toast');t.innerHTML=html;t.hidden=false;t.style.opacity=1;clearTimeout(toast.t);toast.t=setTimeout(()=>{t.style.opacity=0;setTimeout(()=>t.hidden=true,300)},ms)}
+function toast(html,ms=2200){const t=$('toast');t.innerHTML=html;t.hidden=false;{const o=$('ov');t.style.top=o&&!o.hidden&&o.style.alignItems==='flex-start'?($('sheet').getBoundingClientRect().bottom+10)+'px':''}t.style.opacity=1;clearTimeout(toast.t);toast.t=setTimeout(()=>{t.style.opacity=0;setTimeout(()=>t.hidden=true,300)},ms)}
 function fmt(n){return (n>0?'+':'')+n}
 function cls(n){return n<0?'neg':n>0?'pos':''}
 
@@ -283,7 +283,7 @@ function whyNot(c){const g=M.game,L=K.legal(M,me);
   if(g==='koz')return 'Koz kırılmadan kozla açamazsın';return 'Kupa kırılmadan kupayla açamazsın'}
 
 /* ---------- paneller ---------- */
-function ov(k,html){$('ov').style.alignItems='';$('ov').style.background='';const s=$('sheet');s.dataset.k=k;s.innerHTML=html;$('ov').hidden=false;return s}
+function ov(k,html){$('ov').style.alignItems='';$('ov').style.background='';const s=$('sheet');s.dataset.k=k;s.innerHTML=html;$('ov').hidden=false;requestAnimationFrame(()=>{const t=$('toast');if(t&&!t.hidden&&$('ov').style.alignItems==='flex-start')t.style.top=($('sheet').getBoundingClientRect().bottom+10)+'px'});return s}
 function hideOv(){$('ov').hidden=true;$('sheet').dataset.k=''}
 function showChoose(step){const o=K.options(M,me),pk=M.picks[me];
   if(step==='koz'){const s=ov('choose',`<h2>Koz rengini seç</h2><p>Elindeki kartlara bak, en güçlü rengini koz yap. Bu eli sen açarsın.</p><div class="mini">${''}</div>

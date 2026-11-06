@@ -192,7 +192,7 @@ const tm=p=>p%2;
 /* ---------- kart çizimi ---------- */
 function cardEl(c,cls=''){const s=K.cs(c),r=K.cr(c),d=document.createElement('div');d.className='card'+(s==='H'||s==='D'?' r':'')+(cls?' '+cls:'');
   d.innerHTML=`<div class="ix">${RN(r)}<i>${SYM[s]}&#xFE0E;</i></div>`+(r>=11?`<div class="fc">${RN(r)}<i>${SYM[s]}&#xFE0E;</i></div>`:`<div class="big">${SYM[s]}&#xFE0E;</div>`);return d}
-function toast(html,ms=2200){const t=$('toast');t.innerHTML=html;t.hidden=false;t.style.opacity=1;clearTimeout(toast.t);toast.t=setTimeout(()=>{t.style.opacity=0;setTimeout(()=>t.hidden=true,300)},ms)}
+function toast(html,ms=2200){const t=$('toast');t.innerHTML=html;t.hidden=false;{const o=$('ov');t.style.top=o&&!o.hidden&&o.style.alignItems==='flex-start'?($('sheet').getBoundingClientRect().bottom+10)+'px':''}t.style.opacity=1;clearTimeout(toast.t);toast.t=setTimeout(()=>{t.style.opacity=0;setTimeout(()=>t.hidden=true,300)},ms)}
 function fmt(n){return (n>0?'+':'')+n}
 function cls(n){return n<0?'neg':n>0?'pos':''}
 
@@ -269,7 +269,7 @@ function tryPlay(c){if(!M||M.phase!=='play'||busy)return;if(M.turn!==me){toast('
   act(me,{k:'play',c})}
 
 /* ---------- paneller ---------- */
-function ov(k,html){$('ov').style.alignItems='';$('ov').style.background='';const s=$('sheet');s.dataset.k=k;s.innerHTML=html;$('ov').hidden=false;return s}
+function ov(k,html){$('ov').style.alignItems='';$('ov').style.background='';const s=$('sheet');s.dataset.k=k;s.innerHTML=html;$('ov').hidden=false;requestAnimationFrame(()=>{const t=$('toast');if(t&&!t.hidden&&$('ov').style.alignItems==='flex-start')t.style.top=($('sheet').getBoundingClientRect().bottom+10)+'px'});return s}
 function hideOv(){$('ov').hidden=true;$('sheet').dataset.k=''}
 function showHandEnd(){const k=M.phase==='over'?'over':'handEnd';if($('sheet').dataset.k===k&&!$('ov').hidden)return;
   const l=M.log[M.log.length-1],a=tm(me),b=1-a,T=l.T;const row=(n,x,y)=>`<tr><td>${n}</td><td>${x}</td><td>${y}</td></tr>`;

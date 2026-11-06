@@ -184,7 +184,7 @@ const pn=p=>p===me?'Sen':names[p];
 /* ---------- kart çizimi ---------- */
 function cardEl(c,cls=''){const s=K.cs(c),r=K.cr(c),d=document.createElement('div');d.className='card'+(s==='H'||s==='D'?' r':'')+(cls?' '+cls:'');
   d.innerHTML=`<div class="ix">${RN(r)}<i>${SYM[s]}&#xFE0E;</i></div>`+(r>=11?`<div class="fc">${RN(r)}<i>${SYM[s]}&#xFE0E;</i></div>`:`<div class="big">${SYM[s]}&#xFE0E;</div>`);return d}
-function toast(html,ms=2200){const t=$('toast');t.innerHTML=html;t.hidden=false;t.style.opacity=1;clearTimeout(toast.t);toast.t=setTimeout(()=>{t.style.opacity=0;setTimeout(()=>t.hidden=true,300)},ms)}
+function toast(html,ms=2200){const t=$('toast');t.innerHTML=html;t.hidden=false;{const o=$('ov');t.style.top=o&&!o.hidden&&o.style.alignItems==='flex-start'?($('sheet').getBoundingClientRect().bottom+10)+'px':''}t.style.opacity=1;clearTimeout(toast.t);toast.t=setTimeout(()=>{t.style.opacity=0;setTimeout(()=>t.hidden=true,300)},ms)}
 function fmt(n){return (n>0?'+':'')+n}
 function cls(n){return n<0?'neg':n>0?'pos':''}
 
@@ -283,7 +283,7 @@ function whyNot(c){const L=K.legal(M,me);
   return 'Koz kırılmadan kozla açamazsın'}
 
 /* ---------- paneller ---------- */
-function ov(k,html){$('ov').style.alignItems='';$('ov').style.background='';const s=$('sheet');s.dataset.k=k;s.innerHTML=html;$('ov').hidden=false;return s}
+function ov(k,html){$('ov').style.alignItems='';$('ov').style.background='';const s=$('sheet');s.dataset.k=k;s.innerHTML=html;$('ov').hidden=false;requestAnimationFrame(()=>{const t=$('toast');if(t&&!t.hidden&&$('ov').style.alignItems==='flex-start')t.style.top=($('sheet').getBoundingClientRect().bottom+10)+'px'});return s}
 function hideOv(){$('ov').hidden=true;$('sheet').dataset.k=''}
 function showBid(){if($('sheet').dataset.k==='bid'&&!$('ov').hidden)return;const min=M.high?M.high.v+1:M.minBid;
   const s=ov('bid',`<h2>İhale</h2><p>${M.high?`En yüksek: <b>${esc(pn(M.high.p))}</b> ${M.high.v}.`:'Henüz kimse söylemedi.'} Kaç el alırsın? Aldığın el sayısını tutturamazsan söylediğin kadar puan silinir.</p>
