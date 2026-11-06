@@ -118,7 +118,6 @@ aside{display:flex;flex-direction:column;gap:14px;min-width:0}
 .tbl tr.tot td{font-family:var(--display);font-size:18px;color:var(--ink)}
 .row{display:flex;gap:8px;flex-wrap:wrap}
 .row .btn{flex:1 1 160px}
-@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
 /* Bungee küçük i'yi noktasız I çizer; büyük harfe dili bilerek çevir (tr: i→İ) */
 h1,.sheet h2{text-transform:uppercase}
@@ -187,7 +186,7 @@ h1,.sheet h2{text-transform:uppercase}
 <script>
 (()=>{
 const $=id=>document.getElementById(id);
-const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const reduce=false;
 const wait=ms=>new Promise(r=>setTimeout(r,reduce?Math.min(ms,120):ms));
 const SUITS=['S','H','D','C'];
 const SYM={S:'♠︎',H:'♥︎',D:'♦︎',C:'♣︎'};

@@ -103,7 +103,6 @@ button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 #codeIn{text-transform:uppercase;letter-spacing:.2em;font-weight:700}
 .onlinfo{margin-bottom:12px}
 .onlinfo .lbl span{color:var(--accent);letter-spacing:.15em}
-@media (prefers-reduced-motion:reduce){.cast .piece .body{animation:none}}
 @media(max-width:520px){.pbar{min-height:46px;padding:4px 8px}.av{width:30px;height:30px;font-size:18px}.emobar button{height:42px;font-size:20px}.top{margin-bottom:10px}}
 
 .frame{background:var(--frame);padding:clamp(6px,1.4vw,12px);border-radius:14px;box-shadow:0 12px 30px rgba(10,20,50,.25)}
@@ -161,7 +160,6 @@ svg.ch{position:absolute;left:-3%;top:-4%;width:106%;height:106%;overflow:visibl
 .mad .ch .brow{opacity:1}.mad .ch .mh{display:none}.mad .ch .mm{display:inline}
 .scared .ch .mh,.scared .ch .mm{display:none}.scared .ch .mo{display:inline}.scared .ch .eye{animation:none;transform:scale(1.25)}
 @keyframes blink{0%,95%,100%{transform:scaleY(1)}97.5%{transform:scaleY(.1)}}
-@media (prefers-reduced-motion:reduce){.ch .eye{animation:none}}
 .fx{position:absolute;transform:translate(-50%,-50%);font-size:calc(var(--sq)*.62);line-height:1;z-index:55;pointer-events:none}
 .bubble{position:absolute;z-index:60;pointer-events:none;font-family:var(--display);font-size:calc(var(--sq)*.3);white-space:nowrap;background:var(--accent);color:var(--accent-ink);padding:.25em .55em .15em;border-radius:.45em;border:2px solid var(--fg);box-shadow:0 3px 0 var(--fg)}
 .bubble.small{font-size:calc(var(--sq)*.22);background:var(--panel);color:var(--fg)}
@@ -328,7 +326,7 @@ function score(st,m,agg){let s=m.cap?VAL[m.cap.t]*10:0;if(m.promo)s+=80;
 let state,moves,last=null,sel=-1,busy=false,over=false,hist=[],logItems=[];
 let mode='watch',started=false;const BOT='b';let kills={},restartT=0;
 const autoTurn=()=>mode==='watch'||(mode==='bot'&&state.turn===BOT)||(mode==='online'&&(online.color!==state.turn||!online.data||!online.data.black||!online.data.white));
-let SPEED=matchMedia('(prefers-reduced-motion: reduce)').matches?.45:1;let fast=false;
+let SPEED=1;let fast=false;
 const els=new Map();
 const $=id=>document.getElementById(id);
 const board=$('board'),grid=$('grid'),layer=$('layer');

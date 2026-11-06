@@ -213,7 +213,6 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 .rack.myturn{animation:rackBlink 1s ease-in-out infinite}
 @keyframes turnBlink{50%{filter:brightness(1.35);box-shadow:0 0 0 6px rgba(143,240,179,.55),0 0 28px rgba(143,240,179,.7)}}
 @keyframes rackBlink{50%{filter:brightness(1.18);box-shadow:0 0 0 5px rgba(143,240,179,.6),0 0 30px rgba(143,240,179,.6)}}
-@media (prefers-reduced-motion:reduce){.pl.on,.rack.myturn{animation:none}}
 
 @keyframes bob{to{transform:translateY(-3px) scale(1.06)}}
 .deck .tile:last-of-type{transition:transform .15s}
@@ -237,7 +236,6 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 .slot .tile.joker::before,.dghost.joker::before{top:auto;right:auto;bottom:4px;left:4px}
 .tile.okeyb{background:linear-gradient(180deg,#fff 0%,#fbf8f1 60%,#ece6d8 100%)}
 .tile.okeyb::before,.tile.okeyb::after{display:none!important}
-@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
 /* Bungee küçük i'yi noktasız I çizer; büyük harfe dili bilerek çevir (tr: i→İ) */
 .chip.logo,.sheet h2{text-transform:uppercase}
@@ -757,7 +755,7 @@ function* botTurn(s){
 <script>
 (()=>{
 const $=id=>document.getElementById(id);
-const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const reduce=false;
 /* sekme arka plandayken tarayıcı zamanlayıcıları ve animasyonları durdurur; masa sahibinde botlar beklemesin diye o zaman beklemeden geçeriz */
 const hid=()=>document.hidden;
 const tick=()=>new Promise(r=>{const c=new MessageChannel();c.port1.onmessage=()=>r();c.port2.postMessage(0)});

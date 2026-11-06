@@ -523,7 +523,6 @@ button.card:focus-visible,.btn:focus-visible,.chip:focus-visible,.pair:focus-vis
 .sec{border-top:1px solid #d7dee5;padding-top:12px;display:flex;flex-direction:column;gap:12px}
 details.more summary{cursor:pointer;font-weight:700;color:#3f6584;list-style:none}
 details.more[open] summary{margin-bottom:10px}
-@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 
 <div class="app" id="app">
@@ -857,7 +856,7 @@ function botStep(isBot){
 <script>
 (()=>{
 const $=id=>document.getElementById(id);
-const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const reduce=false;
 /* güvenlik: bir animasyon herhangi bir sebeple (arka plan, donan ekran) bitmezse süresi dolunca zorla bitirilir; kartlar masada takılı kalmaz */
 {const _an=Element.prototype.animate;Element.prototype.animate=function(k,o){const a=_an.call(this,k,o);const d=(typeof o==='number'?o:((o&&o.duration)||0)+((o&&o.delay)||0));
   const t=setTimeout(()=>{try{if(a.playState!=='finished')a.finish()}catch(e){try{a.cancel()}catch(x){}}},d+900);a.finished.then(()=>clearTimeout(t),()=>clearTimeout(t));return a}}
