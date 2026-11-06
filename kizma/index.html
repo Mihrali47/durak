@@ -302,13 +302,16 @@ const PFX='kkb-';let peer=null,conn=null,conns={},lob=[],seatOf={},lastSeen={},r
 function away(p){const u=Object.keys(seatOf).find(k=>seatOf[k]===p);if(!u)return true;return Date.now()-(lastSeen[u]||0)>20000}
 function send(d){if(mode==='guest'&&conn&&conn.open)conn.send(d)}
 function bcast(d){if(mode!=='host')return;for(const u in conns){const c=conns[u];if(c.open)try{c.send(d)}catch(e){}}}
-function bcastState(){if(mode==='host'&&started)bcast({t:'state',ver,G,names,human,seats:seatOf,tl:KTimer.left()})}
+function bcastState(){if(mode==='host'&&started)bcast({t:'state',ver,G,names,human,seats:seatOf,tl:KTimer.left()});if(mode==='host'&&started)ST.set('host',{room,G,names,human,seatOf,lob,ver,t:Date.now()})}
+/* sayfa arka planda kapanıp yeniden açılırsa (telefonda başka uygulamaya geçince) ev sahibi masasını kaldığı yerden sürdürür */
+function resumeHost(sv){hostRoom.rs=sv;hostRoom();hostRoom.rs=null;for(const u of Object.keys(sv.seatOf||{}))lastSeen[u]=Date.now();lob=sv.lob||lob;seatOf=sv.seatOf||{};started=true;G=sv.G;names=sv.names;human=sv.human;ver=(sv.ver||0)+1;me=0;shownRid=G.rid;shownMid=G.mid;if($('bEmo'))$('bEmo').hidden=false;hideOv();bcastState();sync()}
+
 function linkFor(c){const u=location.protocol.startsWith('http')?location.origin+location.pathname:'https://mihrali47.github.io/durak/kizma/';return u+'#'+c}
 function showOnline(){const s=ov('online',`<h2>Arkadaşlarla online</h2><p>Masa kur, linki gönder. 2–4 kişi oynayabilirsiniz.</p>
   <p class="lbl">Adın</p><input class="name" id="oName" maxlength="14" value="${myName()==='Sen'?'':myName()}" placeholder="Adını yaz">
   <div class="row"><button class="btn" id="oBack">Geri</button><button class="btn pri" id="oHost">Masa kur</button></div>`);
   $('oBack').onclick=showMenu;$('oHost').onclick=()=>{ST.set('name',$('oName').value.trim().slice(0,14));hostRoom()}}
-function hostRoom(){leaveOnline();mode='host';started=false;room=Math.random().toString(36).slice(2,7).toUpperCase();lob=[{uid:UID,name:myName()}];seatOf={};
+function hostRoom(){leaveOnline();mode='host';started=false;room=hostRoom.rs?hostRoom.rs.room:Math.random().toString(36).slice(2,7).toUpperCase();lob=[{uid:UID,name:myName()}];seatOf={};
   peer=new Peer(PFX+room);showLobby();peer.on('open',()=>{history.replaceState(null,'','#'+room);showLobby()});
   peer.on('connection',c=>c.on('data',d=>hostRecv(c,d)));
   peer.on('error',e=>{if(e.type==='superseded'){toast('Bu masa başka bir pencerede açıldı');mode='off'}else if(e.type==='network')toast('Sunucuya bağlanılamadı, tekrar deneniyor…')});
@@ -323,7 +326,7 @@ function hostRecv(c,d){if(!d||!d.uid)return;lastSeen[d.uid]=Date.now();
   if(d.t==='act'&&s!=null)act(s,d.a);
   else if(d.t==='emo'&&s!=null){bcast({t:'emo',p:s,e:d.e});showEmo(s,d.e)}
   else if(d.t==='chat'&&s!=null){const x=String(d.x||'').slice(0,140),l=String(d.l||'').slice(0,2);bcast({t:'chat',p:s,x,l});addChat(s,x,l)}}
-function showLobby(){if(mode!=='host'&&mode!=='guest')return;const L=mode==='host'?lob.map(x=>x.name):(showLobby.names||[]);
+function showLobby(){if(mode==='host'&&started)return;if(mode!=='host'&&mode!=='guest')return;const L=mode==='host'?lob.map(x=>x.name):(showLobby.names||[]);
   const s=ov('lobby',`<h2>${mode==='host'?'Masa hazır':'Masaya oturdun'}</h2>
     ${mode==='host'?`<p>Bu linki arkadaşlarına gönder. Herkes gelince başlat.</p><div class="lnk"><input id="lk" readonly value="${linkFor(room||'')}"><button id="lkC">Kopyala</button></div>
       ${window.KH?'<div class="row" style="margin-top:8px"><button class="btn" id="lkF">👥 Arkadaşlarını çağır</button></div>':''}
@@ -396,7 +399,7 @@ KTimer.init({secs:()=>20,key:tkey,actor:()=>G.turn,isHuman:p=>!!human[p],name:p=
   onExpire:p=>{toast(`<b>${esc(p===me?'Sen':names[p])}</b>: <span>süre doldu</span>`);if(G.phase==='roll')act(p,{k:'roll'});else if(G.phase==='move')act(p,{k:'move',m:KB.botPick(G,p)})}});
 window.KH_HOST=()=>{mode='off';hostRoom();return linkFor(room)};
 const hc=(location.hash||'').slice(1).toUpperCase();
-if(/^[A-Z0-9]{5}$/.test(hc))joinRoom(hc);else showMenu();
+if(/^[A-Z0-9]{5}$/.test(hc)){const sv=ST.get('host',null);if(sv&&sv.room===hc&&Date.now()-sv.t<36e5)resumeHost(sv);else joinRoom(hc)}else showMenu();
 {const q=new URLSearchParams(location.search);if(q.get('hizli')){try{q.delete('hizli');history.replaceState(null,'',location.pathname+(q.toString()?'?'+q:'')+location.hash)}catch(e){}setTimeout(()=>{try{quickPlay()}catch(e){console.error(e)}},400)}}
 addEventListener('load',()=>{fit();window.KH&&KH.setPresence('Kızma Birader')});
 </script>

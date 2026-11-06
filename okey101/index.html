@@ -1286,13 +1286,14 @@ function viewNames(k){return [0,1,2,3].map(i=>i===0?'Sen':OK.names[(i+k)%4])}
 function bcastK(d){for(const u in OK.conns){const c=OK.conns[u];if(c.open)try{c.send(d)}catch(e){}}}
 function schedB(){if(!(OK.on&&OK.host&&OK.started))return;clearTimeout(schedB.t);schedB.t=setTimeout(sendAll,70)}
 function sendAll(){if(!(OK.on&&OK.host&&OK.started&&S&&GM))return;OK.ver++;
+  try{localStorage.setItem('okey101_host',JSON.stringify({code:OK.code,S,GM,lob:OK.lob,names:OK.names,human:OK.human,rising:RULES.rising,classic:!!RULES.classic,slots:U.slots,ver:OK.ver,t:Date.now()}))}catch(e){}
   for(const l of OK.lob){if(l.seat===0)continue;const c=OK.conns[l.uid];if(!c||!c.open)continue;
     try{c.send({t:'st',v:OK.ver,S:rotS(S,l.seat),GM:rotGM(GM,l.seat),names:viewNames(l.seat),rising:RULES.rising,classic:!!RULES.classic,total:GM.total})}catch(e){}}}
 {const r0=render;render=function(){r0();schedB();const l1=$('lb1'),l2=$('lb2'),l3=$('lb3'),t1=`${NAMES[1]} attı`,t2=`${NAMES[2]} attı`,t3=`${NAMES[3]} attı · al`;
   if(l1&&l1.dataset.v!==t1){l1.dataset.v=t1;l1.textContent=t1}if(l2&&l2.dataset.v!==t2){l2.dataset.v=t2;l2.textContent=t2}if(l3&&l3.dataset.v!==t3){l3.dataset.v=t3;l3.textContent=t3}}}
 {const h0=handEnd;handEnd=function(){if(OK.on&&!OK.host){guestEnd();return}h0();schedB();
   if(OK.on&&OK.host&&$('again'))$('again').onclick=()=>{close();startOnline()}}}
-function hostOnline(){leaveOnline();const code=Math.random().toString(36).slice(2,7).toUpperCase();
+function hostOnline(code0){leaveOnline();const code=typeof code0==='string'?code0:Math.random().toString(36).slice(2,7).toUpperCase();
   Object.assign(OK,{on:true,host:true,code,peer:new Peer(PFXK+code),conns:{},lob:[{uid:UIDK,name:myNameK()||'Ev sahibi',seat:0}],seen:{},started:false,ver:0});
   OK.peer.on('open',()=>{try{history.replaceState(null,'','#'+code)}catch(e){}});
   OK.peer.on('error',e=>{if(e.type==='network')toast('Sunucuya bağlanılamadı, tekrar deneniyor…')});
@@ -1392,7 +1393,10 @@ function guestEnd(){if(!S||!S.result||GM.hist.length<GM.handNo)return;const R=S.
 {const L=String(window.LANG||'tr').slice(0,2);if(L!=='tr')document.documentElement.style.setProperty('--isl',L==='ru'?'"ДОКЛАД"':'"PLAYABLE"');if(L!=='tr')document.documentElement.style.setProperty('--sirada',L==='ru'?'" · ХОДИТ"':'" · TO PLAY"')}
 GM={total:5,handNo:1,totals:[0,0,0,0],hist:[],dealer:0};
 dealHand(0);sortSeri();render();
-{const hc=(location.hash||'').slice(1).toUpperCase();if(/^[A-Z0-9]{5}$/.test(hc))joinOnline(hc);else showMenu()}
+/* telefonda başka uygulamaya geçip dönünce sayfa yeniden açılırsa ev sahibi masasını kaldığı yerden sürdürür */
+function resumeOK(sv){hostOnline(sv.code);Object.assign(OK,{lob:sv.lob,names:sv.names,human:sv.human,started:true,ver:(sv.ver||0)+1});for(const l of OK.lob)OK.seen[l.uid]=Date.now();
+  RULES.rising=!!sv.rising;RULES.classic=!!sv.classic;S=sv.S;GM=sv.GM;if(Array.isArray(sv.slots))U.slots=sv.slots;setNames(viewNames(0));close();render();sendAll()}
+{const hc=(location.hash||'').slice(1).toUpperCase();if(/^[A-Z0-9]{5}$/.test(hc)){let sv=null;try{sv=JSON.parse(localStorage.getItem('okey101_host')||'null')}catch(e){}if(sv&&sv.code===hc&&Date.now()-sv.t<36e5)resumeOK(sv);else joinOnline(hc)}else showMenu()}
 {const q=new URLSearchParams(location.search);if(q.get('hizli')){try{q.delete('hizli');history.replaceState(null,'',location.pathname+(q.toString()?'?'+q:'')+location.hash)}catch(e){}setTimeout(()=>{try{quickPlay()}catch(e){console.error(e)}},400)}}
 })();
 </script>

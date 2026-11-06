@@ -5,12 +5,19 @@
 if(window.claude&&window.claude.use)return; // Claude içinde açıldıysa kendi sistemini kullan
 const BROKERS=window.RELAY_BROKERS||['wss://broker.emqx.io:8084/mqtt','wss://broker.hivemq.com:8884/mqtt','wss://test.mosquitto.org:8081'];
 const NS='khd1/doc/';
+/* telefon başka uygulamaya geçip dönünce (WhatsApp vb.) ölü bağlantıyı hemen yenile */
+const __wake=window.__khWake=window.__khWake||(()=>{const L=[];let hidAt=0;
+  const go=force=>{for(const c of L){try{if(c.disconnecting)continue;if(!c.connected){if(!c.reconnecting)c.reconnect()}else if(force&&c.stream&&c.stream.destroy)c.stream.destroy()}catch(e){}}};
+  document.addEventListener('visibilitychange',()=>{if(document.hidden)hidAt=Date.now();else go(Date.now()-hidAt>4000)});
+  addEventListener('online',()=>go(true));addEventListener('pageshow',e=>{if(e.persisted)go(true)});
+  return c=>{L.push(c);return c}})();
+
 const rid=()=>Math.random().toString(36).slice(2,10);
 const UID=(()=>{try{let u=localStorage.getItem('relay_uid');if(!u){u='u'+rid();localStorage.setItem('relay_uid',u)}return u}catch(e){return 'u'+rid()}})();
 let clients=null;const docs={};
 function conn(){if(clients)return clients;clients=[];
   for(const url of BROKERS){let c;try{c=mqtt.connect(url,{clientId:'khdb_'+rid(),clean:true,keepalive:20,reconnectPeriod:2000,connectTimeout:8000,protocolVersion:4})}catch(e){continue}
-    clients.push(c);
+    clients.push(__wake(c));
     c.on('connect',()=>{for(const p in docs)c.subscribe(NS+p,{qos:1})});
     c.on('message',(t,buf)=>{if(!t.startsWith(NS))return;let m;try{m=JSON.parse(buf.toString())}catch(e){return}recv(t.slice(NS.length),m)});
     c.on('error',()=>{})}

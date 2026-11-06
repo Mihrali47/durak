@@ -215,13 +215,13 @@ $('ov').addEventListener('click',e=>{if(e.target===$('ov')&&$('sheet').dataset.k
 const PFX='kdm-';let peer=null,conn=null,guest=null,lastSeen=0,room=null,started=false,lastRx=0,hb=null,gver=-1;
 function away(){return !guest||Date.now()-lastSeen>25000}
 function send(d){if(conn&&conn.open)try{conn.send(d)}catch(e){}}
-function bcastState(){if(mode==='host'&&started&&conn)send({t:'state',ver,G,names,tl:KTimer.left()})}
+function bcastState(){if(mode==='host'&&started)ST.set('host',{room,G,names,guest,ver,t:Date.now()});if(mode==='host'&&started&&conn)send({t:'state',ver,G,names,tl:KTimer.left()})}
 function linkFor(c){return (location.protocol.startsWith('http')?location.origin+location.pathname:'https://mihrali47.github.io/durak/dama/')+'#'+c}
 function showOnline(){ov('online',`<h2>Arkadaşınla online</h2><p>Masa kur, linki gönder. Arkadaşın girdiği an oyun başlar.</p>
   <p class="lbl">Adın</p><input class="name" id="oName" maxlength="14" value="${myName()==='Sen'?'':esc(myName())}" placeholder="Adını yaz">
   <div class="row"><button class="btn" id="oBack">Geri</button><button class="btn pri" id="oHost">Masa kur</button></div>`);
   $('oBack').onclick=showMenu;$('oHost').onclick=()=>{ST.set('name',$('oName').value.trim().slice(0,14));hostRoom()}}
-function hostRoom(){leaveOnline();mode='host';started=false;guest=null;room=Math.random().toString(36).slice(2,7).toUpperCase();
+function hostRoom(){leaveOnline();mode='host';started=false;guest=null;room=hostRoom.rs?hostRoom.rs.room:Math.random().toString(36).slice(2,7).toUpperCase();
   peer=new Peer(PFX+room);showLobby();peer.on('open',()=>{history.replaceState(null,'','#'+room)});
   peer.on('connection',c=>c.on('data',d=>hostRecv(c,d)));
   peer.on('error',e=>{if(e.type==='network')toast('Sunucuya bağlanılamadı, tekrar deneniyor…')});
@@ -232,7 +232,9 @@ function hostRecv(c,d){if(!d||!d.uid)return;
     if(!started){started=true;me='w';if(window.KQuick)KQuick.update({n:2,started:true});quick=false;newMatch()}else{ver++;bcastState()}return}
   if(d.uid!==guest)return;lastSeen=Date.now();
   if(d.t==='act'&&d.a)act('b',d.a);else if(d.t==='chat')KChat.receive({name:names[1],x:d.x,l:d.l});else if(d.t==='emo')KChat.emoji({name:names[1],e:d.e})}
-function showLobby(){const link=linkFor(room);const s=ov('lobby',`<h2>Masa hazır</h2><p>Bu linki arkadaşına gönder. Girdiği an oyun başlar.</p><div class="lnk"><input id="lk" readonly value="${link}"><button id="lkC">Kopyala</button></div>
+/* sayfa arka planda kapanıp yeniden açılırsa ev sahibi masasını kaldığı yerden sürdürür */
+function resumeHost(sv){hostRoom.rs=sv;hostRoom();hostRoom.rs=null;guest=sv.guest;lastSeen=Date.now();started=true;G=sv.G;names=sv.names;ver=(sv.ver||0)+1;me='w';sel=null;view0=null;shownMid=G.last?G.last.mid:0;hideOv();sync()}
+function showLobby(){if(mode==='host'&&started)return;const link=linkFor(room);const s=ov('lobby',`<h2>Masa hazır</h2><p>Bu linki arkadaşına gönder. Girdiği an oyun başlar.</p><div class="lnk"><input id="lk" readonly value="${link}"><button id="lkC">Kopyala</button></div>
     ${window.KH?'<div class="row"><button class="btn" id="lkF">👥 Arkadaşlarını çağır</button></div>':''}
     <p class="lbl">Oyun</p><div class="seg" id="lV">${[["tr","Türk daması"],["ru","Rus daması"]].map(([k,v])=>`<button data-v="${k}" class="${variant===k?'on':''}">${v}</button>`).join('')}</div>
     <p class="lbl">Maç kaç galibiyete?</p><div class="seg" id="lT">${[1,3,5].map(n=>`<button data-n="${n}" class="${target===n?'on':''}">${n} oyun</button>`).join('')}</div>
@@ -274,7 +276,7 @@ KTimer.init({secs:()=>40,key:tkey,actor:()=>G.turn,isHuman:c=>true,name:c=>c===m
   onExpire:c=>{toast(`<b>${esc(c===me?'Sen':pn(c))}</b>: <span>süre doldu</span>`);sel=null;if(G.phase==='play'&&mode!=='guest')act(c,{k:'move',...pick()})}});
 window.KH_HOST=()=>{mode='off';hostRoom();return linkFor(room)};
 const hc=(location.hash||'').slice(1).toUpperCase();
-if(/^[A-Z0-9]{5}$/.test(hc))joinRoom(hc);else showMenu();
+if(/^[A-Z0-9]{5}$/.test(hc)){const sv=ST.get('host',null);if(sv&&sv.room===hc&&Date.now()-sv.t<36e5)resumeHost(sv);else joinRoom(hc)}else showMenu();
 {const q=new URLSearchParams(location.search);if(q.get('hizli')){try{q.delete('hizli');history.replaceState(null,'',location.pathname+(q.toString()?'?'+q:'')+location.hash)}catch(e){}setTimeout(()=>{try{quickPlay()}catch(e){console.error(e)}},400)}}
 addEventListener('load',()=>window.KH&&KH.setPresence('Dama'));
 {const L=String(window.LANG||'tr').slice(0,2);if(L!=='tr')document.documentElement.style.setProperty('--sirada',L==='ru'?'" · ХОДИТ"':'" · TO PLAY"')}

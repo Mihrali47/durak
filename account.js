@@ -1,3 +1,8 @@
+window.__khWake=window.__khWake||(()=>{const L=[];let hidAt=0;
+  const go=force=>{for(const c of L){try{if(c.disconnecting)continue;if(!c.connected){if(!c.reconnecting)c.reconnect()}else if(force&&c.stream&&c.stream.destroy)c.stream.destroy()}catch(e){}}};
+  document.addEventListener('visibilitychange',()=>{if(document.hidden)hidAt=Date.now();else go(Date.now()-hidAt>4000)});
+  addEventListener('online',()=>go(true));addEventListener('pageshow',e=>{if(e.persisted)go(true)});
+  return c=>{L.push(c);return c}})();
 /* ===== Kahvehane profil + arkadaş sistemi (test sürümü, sunucusuz) =====
    Profil bu cihazda saklanır. Arkadaşlık istekleri, çevrimiçi durumu ve oyun davetleri
    herkese açık MQTT sunucularında "saklı mesaj" olarak taşınır. Gerçek hesaplar (şifre, cihazlar arası)
@@ -55,7 +60,7 @@ function loadMqtt(cb){if(window.mqtt)return cb();let s=document.querySelector('s
 let started=false;
 function connect(){if(started)return;started=true;loadMqtt(()=>{
   for(const url of BROKERS){let c;try{c=mqtt.connect(url,{clientId:'kha_'+rid(10),clean:true,keepalive:30,reconnectPeriod:4000,connectTimeout:9000,protocolVersion:4})}catch(e){continue}
-    clients.push(c);
+    clients.push(window.__khWake(c));
     c.on('connect',()=>{if(P)initProfile(c)});
     c.on('message',(t,b)=>onMsg(t,b.toString()));c.on('error',()=>{})}
   setInterval(()=>{if(P)pub('pres/'+P.uid,presBody(),true)},60000);

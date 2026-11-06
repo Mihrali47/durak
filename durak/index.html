@@ -19,6 +19,13 @@
 (()=>{
 const BROKERS=window.RELAY_BROKERS||['wss://broker.emqx.io:8084/mqtt','wss://broker.hivemq.com:8884/mqtt','wss://test.mosquitto.org:8081'];
 const NS='khd1/';
+/* telefon başka uygulamaya geçip dönünce (WhatsApp vb.) ölü bağlantıyı hemen yenile */
+const __wake=window.__khWake=window.__khWake||(()=>{const L=[];let hidAt=0;
+  const go=force=>{for(const c of L){try{if(c.disconnecting)continue;if(!c.connected){if(!c.reconnecting)c.reconnect()}else if(force&&c.stream&&c.stream.destroy)c.stream.destroy()}catch(e){}}};
+  document.addEventListener('visibilitychange',()=>{if(document.hidden)hidAt=Date.now();else go(Date.now()-hidAt>4000)});
+  addEventListener('online',()=>go(true));addEventListener('pageshow',e=>{if(e.persisted)go(true)});
+  return c=>{L.push(c);return c}})();
+
 const rid=()=>Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-4);
 class Emitter{constructor(){this._h={}}on(e,f){(this._h[e]=this._h[e]||[]).push(f);return this}emit(e,...a){(this._h[e]||[]).slice().forEach(f=>{try{f(...a)}catch(x){console.error(x)}})}}
 class RConn extends Emitter{
@@ -28,13 +35,13 @@ class RConn extends Emitter{
   _open(){if(this.open||this.closed)return;this.open=true;this.emit('open')}
 }
 class RPeer extends Emitter{
-  constructor(id){super();this.id=id||('g-'+rid());this.inst=rid();this.t0=Date.now();this.conns={};this.seen=new Map();this.clients=[];this.ready=false;this.destroyed=false;
+  constructor(id){super();this.ever={};this.id=id||('g-'+rid());this.inst=rid();this.t0=Date.now();this.conns={};this.seen=new Map();this.clients=[];this.ready=false;this.destroyed=false;
     if(!window.mqtt){setTimeout(()=>this.emit('error',{type:'network',message:'mqtt yok'}),0);return}
     let anyUp=false;
     const failT=setTimeout(()=>{if(!anyUp)this.emit('error',{type:'network',message:'sunucuya ulaşılamadı'})},15000);
     for(const url of BROKERS){
       let c;try{c=mqtt.connect(url,{clientId:'khd_'+rid(),clean:true,keepalive:20,reconnectPeriod:2000,connectTimeout:8000,protocolVersion:4})}catch(e){continue}
-      this.clients.push(c);
+      this.clients.push(__wake(c));
       c.on('connect',()=>{c.subscribe(NS+'in/'+this.id,{qos:1},()=>{if(!anyUp){anyUp=true;clearTimeout(failT)}if(!this.ready){this.ready=true;this.emit('open',this.id)}
         // aynı masa başka pencerede de açıksa yalnızca en son açılan kalsın
         if(id)this._pub(this.id,{k:'claim',t:this.t0});
@@ -55,14 +62,18 @@ class RPeer extends Emitter{
     const cn=this.conns[m.cid];if(!cn)return;
     // bağlantı ilk cevap veren pencereye kilitlenir; başka pencereden gelenler yok sayılır
     if(cn._outgoing){if(!cn.rinst&&m.k==='ack')cn.rinst=m.inst;if(cn.rinst&&m.inst!==cn.rinst)return}else{if(!cn.rinst)cn.rinst=m.inst;if(m.inst!==cn.rinst)return}
-    if(m.k==='ack'){cn._acked=true;clearInterval(cn._rt);cn._open();return}
+    if(m.k==='ack'){cn._acked=true;clearInterval(cn._rt);this.ever[cn.peer_id]=1;cn._open();return}
     if(m.k==='data'){if(!cn.open)cn._open();cn.emit('data',m.d);return}
     if(m.k==='close'){if(cn.closed)return;cn.closed=true;cn.open=false;delete this.conns[m.cid];cn.emit('close')}}
-  connect(remote){const cn=new RConn(this,remote,rid());cn._outgoing=true;this.conns[cn.cid]=cn;
+  connect(remote){this.ever=this.ever||{};
+    // aynı yere bekleyen eski denemeleri bırak (tek deneme kalsın)
+    for(const k in this.conns){const o=this.conns[k];if(o._outgoing&&!o.open&&o.peer_id===remote){clearInterval(o._rt);o.closed=true;delete this.conns[k]}}
+    const cn=new RConn(this,remote,rid());cn._outgoing=true;this.conns[cn.cid]=cn;
     const go=()=>this._pub(remote,{k:'conn',cid:cn.cid});
     if(this.ready)go();let n=0;
-    cn._rt=setInterval(()=>{if(cn._acked||cn.closed||this.destroyed){clearInterval(cn._rt);return}n++;go();
-      if(n===20){clearInterval(cn._rt);if(!cn.open){delete this.conns[cn.cid];this.emit('error',{type:'peer-unavailable'})}}},1500);
+    cn._rt=setInterval(()=>{if(cn._acked||cn.closed||this.destroyed){clearInterval(cn._rt);return}if(document.hidden)return;n++;go();
+      // daha önce bağlandığımız masaya vazgeçmeden denemeye devam et (karşı taraf telefonu kapatmış/başka uygulamada olabilir)
+      if(n===20&&!this.ever[remote]){clearInterval(cn._rt);if(!cn.open){delete this.conns[cn.cid];this.emit('error',{type:'peer-unavailable'})}}},1500);
     return cn}
   destroy(){if(this.destroyed)return;Object.values(this.conns).forEach(c=>{try{c.close()}catch(e){}});this.destroyed=true;
     for(const c of this.clients){try{c.end(true)}catch(e){}}this.clients=[]}

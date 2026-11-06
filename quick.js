@@ -1,3 +1,8 @@
+window.__khWake=window.__khWake||(()=>{const L=[];let hidAt=0;
+  const go=force=>{for(const c of L){try{if(c.disconnecting)continue;if(!c.connected){if(!c.reconnecting)c.reconnect()}else if(force&&c.stream&&c.stream.destroy)c.stream.destroy()}catch(e){}}};
+  document.addEventListener('visibilitychange',()=>{if(document.hidden)hidAt=Date.now();else go(Date.now()-hidAt>4000)});
+  addEventListener('online',()=>go(true));addEventListener('pageshow',e=>{if(e.persisted)go(true)});
+  return c=>{L.push(c);return c}})();
 /* Hızlı oyun (eşleşme): aynı oyunda masa arayanları bir araya getirir.
    Açık masalar herkese açık MQTT sunucusunda "saklı mesaj" olarak ilan edilir: khd1/q/<oyun>/<kod> = {code,n,max,at,lang}
    KQuick.find(game,{max,onHost,onJoin}) → açık masa varsa onJoin(kod), yoksa onHost() çağrılır.
@@ -9,7 +14,7 @@ const NS='khd1/q/';let clients=[],ad=null,adT=null;const seen=new Map();
 function conn(cb){if(!window.mqtt){setTimeout(()=>cb(false),0);return}
   if(clients.length){if(clients.some(c=>c.connected))return cb(true);let n=0;const iv=setInterval(()=>{if(clients.some(c=>c.connected)||++n>25){clearInterval(iv);cb(clients.some(c=>c.connected))}},300);return}
   for(const u of BROKERS){let c;try{c=mqtt.connect(u,{clientId:'khq_'+Math.random().toString(36).slice(2,12),clean:true,keepalive:30,reconnectPeriod:4000,connectTimeout:9000,protocolVersion:4})}catch(e){continue}
-    clients.push(c);c.on('message',(t,b)=>{const s=b.toString();if(!t.startsWith(NS))return;const k=t.slice(NS.length);if(!s){seen.delete(k);return}try{seen.set(k,JSON.parse(s))}catch(e){}});c.on('error',()=>{})}
+    clients.push(window.__khWake(c));c.on('message',(t,b)=>{const s=b.toString();if(!t.startsWith(NS))return;const k=t.slice(NS.length);if(!s){seen.delete(k);return}try{seen.set(k,JSON.parse(s))}catch(e){}});c.on('error',()=>{})}
   let n=0;const iv=setInterval(()=>{if(clients.some(c=>c.connected)||++n>25){clearInterval(iv);cb(clients.some(c=>c.connected))}},300)}
 const pub=(t,o)=>clients.forEach(c=>{try{c.publish(NS+t,o==null?'':JSON.stringify(o),{qos:1,retain:true})}catch(e){}});
 function open(game,mine){const now=Date.now(),out=[];for(const [k,v] of seen){if(!k.startsWith(game+'/'))continue;
