@@ -220,7 +220,7 @@ function showRules(){ov('rules',`<h2>Tavla nasıl oynanır?</h2>
   <p>Her oyuncunun 15 pulu var. Zarları at, pulları zarlardaki sayılar kadar ilerlet. Çift gelirse dört kez oynarsın.</p>
   <p>İki ya da daha fazla rakip pulunun olduğu yere (kapıya) gidemezsin. Rakibin tek pulunun üstüne gelirsen onu kırarsın, pul ortadaki bara gider ve oyuna yeniden girmek zorundadır.</p>
   <p>Bütün pulların evine (sağ alttaki 6 haneye) gelince toplamaya başlarsın. Pullarını ilk toplayan kazanır. Rakip hiç pul toplayamadıysa <b>mars</b>: 2 puan.</p>
-  <p>Başta herkes tek zar atar; büyük atan başlar ve iki zarı yeniden atar. Zarların ikisini de oynayabiliyorsan oynamak zorundasın; sadece birini oynayabiliyorsan büyük olanı oynarsın.</p>
+  <p>Başta herkes tek zar atar; büyük atan başlar ve iki zarı yeniden atar. Zarların ikisini de oynayabiliyorsan oynamak zorundasın; sadece birini oynayabiliyorsan büyük olanı oynarsın. Maçın ikinci oyunundan itibaren önceki oyunu kazanan başlar. Kendi iç sahanda rakibi kırdığın pulla aynı turda kaçamazsın.</p>
   <p>Pula dokun, sarı işaretli yere dokun. Hamlen bitince <b>Tamam</b>'a bas; vazgeçersen <b>Geri al</b>.</p>
   <div class="row"><button class="btn pri" id="rOk">Tamam</button></div>`);$('rOk').onclick=()=>G&&G.phase!=='over'?(hideOv(),after()):showMenu()}
 function showMenu(){const sv=ST.get('save',null),rec=ST.get('rec',[0,0]);

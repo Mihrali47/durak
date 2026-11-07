@@ -411,7 +411,7 @@ function draw(s,from){
   if(S.ended||S.turn!==s||S.phase!=='draw')return err('Şu an taş çekemezsin');
   let t;
   if(from==='side'){if(S.noSide)return err('Geri bıraktığın taşı tekrar alamazsın, ortadan çek');const p=S.discards[prev(s)];if(!p.length)return err('Yanda alınacak taş yok');t=p.pop();S.sideTile=t.id}
-  else{if(!S.deck.length)return err('Deste bitti');t=S.deck.shift()}
+  else{if(!S.deck.length){if(S.lastChance){endHand(null,{});return ok({tile:null,deckOut:true})}return err('Deste bitti')}t=S.deck.shift()}
   S.hands[s].push(t);S.phase='act';return ok({tile:t});
 }
 function returnSide(s){
@@ -473,10 +473,11 @@ function discard(s,tileId,force){
     else if(canAttachAny(t)){S.pen[s]+=101;S.penLog[s].push('İşlek taş atma +101');res.pen.push('işlek')}
   }
   S.discards[s].push(t);S.firstTurn[s]=false;res.tile=t;
-  if(finishing){res.finished=true;endHand(s,{okey:wild(t),elden:S.openedThisTurn})}
+  if(finishing){res.finished=true;endHand(s,{okey:wild(t),elden:S.openedThisTurn&&S.opened.every((o,i)=>i===s||!o)})}   // elden bitiş: o ana kadar kimse açmamış olmalı
   else{
     S.turn=next(s);S.phase='draw';S.sideTile=null;S.noSide=false;S.laidThisTurn=false;S.openedThisTurn=false;
-    if(!S.deck.length){res.deckOut=true;endHand(null,{})}
+    // orta bitti: sıradaki oyuncu son kez yandaki taşı alıp kullanabilir; o da bitiremezse el kapanır
+    if(!S.deck.length){if(S.lastChance){res.deckOut=true;endHand(null,{})}else{S.lastChance=true;res.lastChance=true}}
   }
   return ok(res);
 }
@@ -709,7 +710,7 @@ function* botTurn(s){
   if(S.phase==='draw'){
     plan=botTakeSide(s);
     if(plan){const r=draw(s,'side');yield {msg:`${nm} yandan ${tname(r.tile)} aldı.`}}
-    else{draw(s,'deck');yield {quiet:true}}
+    else{if(!S.deck.length){endHand(null,{});return}draw(s,'deck');yield {quiet:true}}
   }
   const h=()=>S.hands[s];
   if(!S.opened[s]&&plan&&plan!==true){
@@ -1083,7 +1084,7 @@ function res(r){if(!r.ok){if(r.msg)toast(r.msg);return false}return true}
 function toggle(id){if(S.ended)return;if(U.sel.has(id))U.sel.delete(id);else{U.sel.clear();U.sel.add(id)}if(U.newId===id)U.newId=null;render()}
 function pDraw(from,slot){
   if(!(S.turn===0&&S.phase==='draw'&&!U.busy))return;
-  const r=draw(0,from);if(!res(r))return;U.justDrew=Date.now();
+  const r=draw(0,from);if(!res(r))return;if(r.deckOut){toast('Orta bitti, el kapandı.');render();return setTimeout(handEnd,900)}U.justDrew=Date.now();
   const i=U.slots.indexOf(r.tile.id);if(i<0)placeNew(r.tile.id,slot);
   snd('tap');  U.newId=r.tile.id;U.sel.clear();if(from==='side')log(`Yandan ${tname(r.tile)} aldın`);
   const src=from==='side'?$('cr3'):$('deck');const srcRect=src;render();
@@ -1195,7 +1196,7 @@ function showHow(){open(`<h2>Nasıl oynanır?</h2>
   <ul class="how">
     <li>Sıra sende: <b>ortadaki desteye</b> ya da sol alttaki <b>Hamdi'nin taşına</b> dokun ya da ıstakaya sürükle.</li>
     <li>Taşları <b>sürükleyerek</b> yer değiştir. Serileri ve perleri araya <b>boşluk</b> bırakarak diz. <b>Seri Diz</b> ve <b>Çift Diz</b> senin yerine dizer.</li>
-    <li>Istakadaki seriler 101'i geçince <b>Seri Aç</b>, 5 çiftin olunca <b>Çift Aç</b>. <b>Katlamalı</b> oyunda sonradan açan, öncekini geçmek zorunda: 120 ile açılırsa sonraki en az 121 ile açar. <b>Katlamasız</b>da herkes 101 ile açar. Çifte giden aynı elde bitemez.</li>
+    <li>Istakadaki seriler en az 101 olunca <b>Seri Aç</b>, 5 çiftin olunca <b>Çift Aç</b>. <b>Katlamalı</b> oyunda sonradan açan, öncekini geçmek zorunda: 120 ile açılırsa sonraki en az 121 ile açar. <b>Katlamasız</b>da herkes 101 ile açar. Çifte giden aynı elde bitemez.</li>
     <li>Çifte giden de masadaki serilere işleyebilir ve okey alabilir, ama seri açamaz; elinde kalan taşlar 2 katı yazar.</li>
     <li>Biri çifte gidince sağdaki <b>Çiftler</b> bölümü ortak olur: seriyle açmış olanlar da oraya çift işleyebilir.</li>
     <li>Açtıktan sonra taşı masadaki diziye sürükle ve <b>işle</b>.</li>

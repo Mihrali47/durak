@@ -39,6 +39,8 @@ function legal(M,p){if(M.phase!=='play'||p!==M.turn)return[];const h=M.hands[p],
   if(same.length){
     if(g==='koz'&&cs(win.c)===led){const hi=same.filter(c=>cr(c)>cr(win.c));if(hi.length)return hi}
     if(g==='rifki'&&led==='H'&&same.includes('H13')&&M.trick.some(t=>t.c==='H14'))return['H13'];
+    // Kız/Erkek almaz: yerde ceza kartından büyük aynı renk kart varsa ceza kartını atmak zorunlu (Rıfkı kuralı gibi)
+    if((g==='kiz'||g==='erkek')&&cs(win.c)===led){const pc=same.filter(c=>isPen(g,c)&&cr(c)<cr(win.c));if(pc.length)return pc}
     return same}
   if(g==='koz'){const tr=h.filter(c=>cs(c)===T);
     if(tr.length){if(cs(win.c)===T){const hi=tr.filter(c=>cr(c)>cr(win.c));if(hi.length)return hi}return tr}

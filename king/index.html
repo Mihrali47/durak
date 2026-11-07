@@ -278,6 +278,7 @@ function tryPlay(c){if(!M||M.phase!=='play'||busy)return;
   act(me,{k:'play',c})}
 function whyNot(c){const g=M.game,L=K.legal(M,me);
   if(M.trick.length){const led=K.cs(M.trick[0].c);if(L.some(x=>K.cs(x)===led)&&K.cs(c)!==led)return 'Yerdeki renkten atmak zorundasın';
+    if((g==='kiz'||g==='erkek')&&L.length&&L.every(x=>K.cs(x)===led&&(K.cr(x)===12||(g==='erkek'&&(K.cr(x)===13||K.cr(x)===11)))))return g==='kiz'?'Yerde daha büyük kart var, kızını atmak zorundasın':'Yerde daha büyük kart var, papazını ya da valeni atmak zorundasın';
     if(L.every(x=>K.cs(x)===led))return 'Daha büyük atmak zorundasın';
     if(g==='koz'&&L.every(x=>K.cs(x)===M.trump))return 'Koz atmak zorundasın';
     if(g==='kiz')return 'Kızını atmak zorundasın';if(g==='erkek')return 'Papaz ya da valeni atmak zorundasın';if(g==='rifki')return 'Rıfkıyı atmak zorundasın'}
@@ -322,7 +323,7 @@ function showScore(){if(!M)return;const back=$('sheet').dataset.k;
   $('sOk').onclick=()=>{hideOv();afterRender()}}
 function showRules(){ov('rules',`<h2>King nasıl oynanır?</h2>
   <p>4 kişi, 52 kart. Herkese 13 kart dağıtılır. Her elde sırası gelen oyuncu oyunu seçer ve eli o açar. Yerdeki renkten atmak zorunludur.</p>
-  <p><b>Cezalar</b> (her biri en fazla 2 kez oynanır): El almaz, Kupa almaz, Erkek almaz, Kız almaz, Rıfkı, Son iki. Kupa almaz ve Rıfkı'da kupa kırılmadan kupayla açılmaz. Rengin yoksa Kız almazda kızını, Erkek almazda papaz ya da valeni, Kupa almazda kupanı, Rıfkı'da kupa papazını (yoksa bir kupa) atmak zorundasın.</p>
+  <p><b>Cezalar</b> (her biri en fazla 2 kez oynanır): El almaz, Kupa almaz, Erkek almaz, Kız almaz, Rıfkı, Son iki. Kupa almaz ve Rıfkı'da kupa kırılmadan kupayla açılmaz. Rengin yoksa Kız almazda kızını, Erkek almazda papaz ya da valeni, Kupa almazda kupanı, Rıfkı'da kupa papazını (yoksa bir kupa) atmak zorundasın. Yerdeki renkte senden büyük bir kart oynanmışsa ceza kartını (kız, papaz, vale ya da kupa papazı) atmak zorundasın.</p>
   <p><b>Koz:</b> seçen koz rengini belirler. Her el +50. Rengin yoksa koz atmak, büyüğü varsa büyük atmak zorunludur. Koz kırılmadan kozla açılmaz.</p>
   <p><b>King:</b> koz elinde 11 el alan oyunu anında kazanır.</p>
   <p>20 elde her oyuncu 2 koz ve 3 ceza seçer. 12 elde 1 koz ve 2 ceza. Sonunda en yüksek puan kazanır.</p>

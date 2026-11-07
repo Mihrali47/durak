@@ -363,7 +363,7 @@ function showRules(){ov('rules',`<h2>1000 nasıl oynanır?</h2>
   <p><b>Oyun:</b> yerdeki renkten atmak zorunludur. Rengin yoksa koz varsa koz atmalısın. Başta koz yoktur.</p>
   <p><b>Evlilik:</b> aynı renkten papaz ve kız elindeyse, el açarken birini oynayarak evlilik ilan edersin ve o renk koz olur: kupa 100, karo 80, sinek 60, maça 40. İlk elde ilan edilmez.</p>
   <p><b>Puan:</b> ihaleyi alan söylediğini tutturursa ihale kadar yazar, tutturamazsa o kadar silinir. Diğerleri topladıkları puanı (5'e yuvarlanmış) yazar. Kartlara bakıp vazgeçebilirsin: rakiplere 60'ar yazılır, sana bir şey yazılmaz.</p>
-  <p><b>Varil:</b> 880'e gelen varile çıkar. Oradan sadece en az 120'lik ihaleyi alıp tutturarak çıkılır; 3 elde çıkamazsan 120 silinir. Hiç el almadığın her 3. elde ve her 3. vazgeçmende de 120 silinir. 1000'e ilk ulaşan kazanır.</p>
+  <p><b>Varil:</b> 880'e gelen varile çıkar. Oradan ihaleyi alıp tutturarak ve elde en az 120 puan toplayarak çıkılır; 3 elde çıkamazsan 120 silinir. Hiç el almadığın her 3. elde ve her 3. vazgeçmende de 120 silinir. 1000'e ilk ulaşan kazanır.</p>
   <div class="row"><button class="btn pri" id="rOk">Tamam</button></div>`);$('rOk').onclick=()=>M&&M.phase!=='idle'?(hideOv(),afterRender()):showMenu()}
 function showMenu(){const sv=ST.get('save',null),rec=ST.get('rec',[0,0]);
   const s=ov('menu',`<h2>1000</h2><p>Üç kişilik Rus kart oyunu. İhaleyi al, evliliklerini ilan et, 1000 puana ilk sen ulaş.</p>

@@ -2,6 +2,7 @@
 (()=>{
 const BN={Nuri:'Нури',Sen:'Вы'};const nm=(n,j)=>j?(n==='Sen'?'You':n):(BN[n]||n);
 window.I18N_EXTRA=[
+["Aynı konum üç kez tekrarlanırsa ya da 15'er hamle boyunca sadece damalar oynayıp hiç taş alınmazsa oyun berabere biter.",'Ничья, если позиция повторилась трижды или 15 ходов подряд ходили только дамки без взятий.','Draw if the same position occurs three times or for 15 moves each only kings move with no capture.'],["Aynı konum üç kez tekrarlanırsa ya da 25'er hamle boyunca sadece damalar oynayıp hiç taş alınmazsa oyun berabere biter.",'Ничья, если позиция повторилась трижды или 25 ходов подряд ходили только дамки без взятий.','Draw if the same position occurs three times or for 25 moves each only kings move with no capture.'],
 ['Dama','Шашки','Checkers'],['Türk daması','Турецкие шашки','Turkish draughts'],['Rus daması','Русские шашки','Russian draughts'],
 ['Menü','Меню','Menu'],['Kurallar','Правила','Rules'],['Sen','Вы','You'],['Nuri','Нури','Nuri'],['Tamam','Готово','OK'],
 ['Almak zorunlu: en çok taş alan hamleyi oyna','Бить обязательно: выберите ход, который бьёт больше всего шашек','Capture is compulsory: play the move that captures the most'],

@@ -308,7 +308,7 @@ function pseudo(st){const b=st.b,me=st.turn,op=me==='w'?'b':'w',ms=[];
       for(const[dr,dc]of ds){let rr=r+dr,cc=c+dc;while(inB(rr,cc)){const t=rr*8+cc,q=b[t];if(!q)add(t);else{if(q.c===op)add(t);break}rr+=dr;cc+=dc}}}
   }return ms}
 function apply(st,m){const b=st.b.slice();if(m.capSq>=0)b[m.capSq]=null;b[m.from]=null;
-  b[m.to]=m.promo?{c:m.p.c,t:'Q',id:m.p.id}:m.p;
+  b[m.to]=m.promo?{c:m.p.c,t:m.pt||'Q',id:m.p.id}:m.p;
   if(m.castle){const row=m.p.c==='w'?56:0;if(m.castle==='K'){b[row+5]=b[row+7];b[row+7]=null}else{b[row+3]=b[row];b[row]=null}}
   const cr={...st.cr};if(m.p.t==='K'){cr[m.p.c+'K']=false;cr[m.p.c+'Q']=false}
   for(const s of[m.from,m.to]){if(s===63)cr.wK=false;if(s===56)cr.wQ=false;if(s===7)cr.bK=false;if(s===0)cr.bQ=false}
@@ -594,7 +594,7 @@ function logMove(m){const who=col(m.p.c)+' '+NAME[m.p.t];let t,hit=false;
   else if(m.castle)t=`${col(m.p.c)} rok attı, şah kaleye sığındı.`;
   else if(m.p.t==='P')t=`${who} ${sqName(m.from)}→${sqName(m.to)} yürüdü${m.dbl?', iki adım birden':''}.`;
   else t=`${who} ${sqName(m.to)} karesine geçti.`;
-  if(m.promo)t+=' Piyon vezir oldu!';logItems.unshift({t,hit});logItems=logItems.slice(0,7)}
+  if(m.promo)t+=(m.pt||'Q')==='Q'?' Piyon vezir oldu!':' Piyon '+NAME[m.pt]+' oldu!';logItems.unshift({t,hit});logItems=logItems.slice(0,7)}
 
 /* ---------- online (link ile) ---------- */
 const ART='https://claude.ai/artifact/TZMvb354GCgFYQPRUy4stg';
@@ -642,23 +642,28 @@ function onGame(snap){if(!snap.exists){if(online.first){$('st').textContent='Oyu
   if(online.first&&!d.black&&d.white===online.me)SFX.pop();
   online.first=false;refresh()}
 function resync(list){state=initState();last=null;kills={};logItems=[];hist=[];over=false;sel=-1;$('over').hidden=true;
-  for(const s of list){const[f,t]=s.split('-').map(Number),m=legal(state).find(x=>x.from===f&&x.to===t);if(!m)break;if(m.cap)kills[m.p.t]=(kills[m.p.t]||0)+1;logMove(m);state=apply(state,m);last=m}
+  for(const s of list){const[f,t]=s.split('-').map(Number),pt=/^[QRBN]$/.test(s.split('-')[2]||'')?s.split('-')[2]:undefined,m0=legal(state).find(x=>x.from===f&&x.to===t);if(!m0)break;const m=m0.promo&&pt?{...m0,pt}:m0;if(m.cap)kills[m.p.t]=(kills[m.p.t]||0)+1;logMove(m);state=apply(state,m);last=m}
   moves=legal(state);build();endCheck();refresh()}
-function pump(){if(busy||over||!online.pending.length)return;const s=online.pending.shift(),[f,t]=s.split('-').map(Number),m=moves.find(x=>x.from===f&&x.to===t);
-  if(!m){online.pending=[];resync(online.list);return}play(Object.assign({},m,{remote:true}))}
-function pushMove(m){online.list.push(m.from+'-'+m.to);const L=online.list.slice();
+function pump(){if(busy||over||!online.pending.length)return;const s=online.pending.shift(),[f,t]=s.split('-').map(Number),pt=/^[QRBN]$/.test(s.split('-')[2]||'')?s.split('-')[2]:undefined,m=moves.find(x=>x.from===f&&x.to===t);
+  if(!m){online.pending=[];resync(online.list);return}play(Object.assign({},m,{remote:true},m.promo&&pt?{pt}:{}))}
+function pushMove(m){online.list.push(m.from+'-'+m.to+(m.pt&&m.pt!=='Q'?'-'+m.pt:''));const L=online.list.slice();
   online.ref.update({moves:L,n:L.length,t:Date.now()}).catch(()=>{$('sub').textContent='Hamle gönderilemedi. İnternetini kontrol et; sorun sürerse sayfayı yenile.'})}
 
 /* ---------- akış ---------- */
 function onSq(i){if(busy||over)return;if(autoTurn())return;
-  if(sel>=0){const m=moves.find(m=>m.from===sel&&m.to===i);if(m){play(m);return}}
+  if(sel>=0){const m=moves.find(m=>m.from===sel&&m.to===i);if(m){if(m.promo)return choosePromo(m);play(m);return}}
   const p=state.b[i];sel=(p&&p.c===state.turn&&i!==sel)?i:-1;if(sel>=0){SFX.tap();react(els.get(p.id),['💪','😃','🫡'][Math.floor(Math.random()*3)])}refresh()}
+/* piyon son sıraya ulaşınca ne olacağını oyuncu seçer: vezir, kale, fil ya da at */
+function choosePromo(m){document.querySelector('.promo-pick')?.remove();const d=document.createElement('div');d.className='promo-pick';
+  d.style.cssText='position:fixed;inset:0;z-index:200;display:grid;place-items:center;background:rgba(10,20,40,.45)';
+  d.innerHTML=`<div style="background:#fff;border-radius:16px;padding:14px;box-shadow:0 10px 30px rgba(0,0,0,.35);text-align:center"><b style="display:block;margin-bottom:10px;font-size:16px">Piyon ne olsun?</b><div style="display:flex;gap:8px">${['Q','R','B','N'].map(t=>`<button data-t="${t}" style="width:68px;height:78px;border-radius:12px;border:1.5px solid #ccd;background:#f4f6fb;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font:600 13px/1 system-ui"><span style="font-size:34px;line-height:1">${{Q:'♛',R:'♜',B:'♝',N:'♞'}[t]}</span><span>${NAME[t][0].toLocaleUpperCase('tr')+NAME[t].slice(1)}</span></button>`).join('')}</div></div>`;
+  d.onclick=e=>{const b=e.target.closest('button');if(!b){if(e.target===d){d.remove();sel=-1;refresh()}return}d.remove();play({...m,pt:b.dataset.t})};document.body.appendChild(d)}
 async function play(m){busy=true;sel=-1;if(mode==='online'&&!m.remote)pushMove(m);refresh();
   const el=els.get(m.p.id),v=m.cap?els.get(m.cap.id):null;el.style.zIndex=30;
   try{await ANIM[m.p.t](m,el,v)}catch(e){console.error(e)}
   mood(el,'');
   hist.push({state,last,logItems:logItems.slice()});state=apply(state,m);last=m;
-  if(m.promo){await bodyOf(el).animate([{transform:'rotate(0) scale(1)'},{transform:'rotate(360deg) scale(1.4)',offset:.5},{transform:'rotate(720deg) scale(1)'}],{duration:D(700)}).finished.catch(()=>{});bodyOf(el).innerHTML=charSVG('Q');bubble(m.to,'VEZİR OLDUM!')}
+  if(m.promo){await bodyOf(el).animate([{transform:'rotate(0) scale(1)'},{transform:'rotate(360deg) scale(1.4)',offset:.5},{transform:'rotate(720deg) scale(1)'}],{duration:D(700)}).finished.catch(()=>{});bodyOf(el).innerHTML=charSVG(m.pt||'Q');bubble(m.to,(m.pt||'Q')==='Q'?'VEZİR OLDUM!':NAME[m.pt].toLocaleUpperCase('tr')+' OLDUM!')}
   if(m.cap){kills[m.p.t]=(kills[m.p.t]||0)+1;taunt(m)}
   sync();logMove(m);moves=legal(state);endCheck();busy=false;refresh();
   if(!over&&inCheck(state))bubble(kingSq(state.b,state.turn),'ŞAH!','chk');
@@ -667,7 +672,7 @@ async function play(m){busy=true;sel=-1;if(mode==='online'&&!m.remote)pushMove(m
 function botMove(){if(mode==='online'||!started||over||busy||!autoTurn())return;
   let best=null,bs=-Infinity;for(const m of moves){const s=score(state,m,mode==='watch');if(s>bs){bs=s;best=m}}if(best)play(best)}
 const posKey=st=>st.b.map(p=>p?p.c+p.t:'.').join('')+st.turn+JSON.stringify(st.cr)+st.ep;
-function endCheck(){const rest=state.b.filter(p=>p&&p.t!=='K'),onlyKings=!rest.length||(rest.length===1&&(rest[0].t==='B'||rest[0].t==='N')),tooLong=mode==='watch'&&hist.length>=220;
+function endCheck(){const rest=state.b.filter(p=>p&&p.t!=='K'),onlyKings=!rest.length||(rest.length===1&&(rest[0].t==='B'||rest[0].t==='N'))||(()=>{const bs=state.b.map((p,i)=>p&&p.t!=='K'?[p,i]:null).filter(Boolean);return bs.length>0&&bs.every(([p])=>p.t==='B')&&new Set(bs.map(([,i])=>((i>>3)+(i&7))%2)).size===1})(),tooLong=mode==='watch'&&hist.length>=220;
   const k=posKey(state),rep=1+hist.filter(h=>h.state&&posKey(h.state)===k).length,fifty=(state.hm||0)>=100;
   if(!moves.length||onlyKings||tooLong||rep>=3||fifty){over=true;let T,S;
     if(onlyKings){T='Berabere';S='Mat edecek taş kalmadı, kavga bitti.'}

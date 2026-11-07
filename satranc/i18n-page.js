@@ -5,6 +5,7 @@ const PD={piyona:'piyon',ata:'at',file:'fil',kaleye:'kale',vezire:'vezir','şaha
 const CL={Mavi:['Синие','Blue'],Siyah:['Чёрные','Black'],mavi:['синий','blue'],siyah:['чёрный','black']};
 const VB={'kafa attı':['боднула','headbutted'],'çifte attı':['лягнул','kicked'],'yumruk attı':['ударил','punched'],'tosladı':['протаранила','rammed'],'yıldırım çaktı':['метнул молнию в','zapped'],'tepeden çöktü':['обрушился на','slammed']};
 window.I18N_EXTRA=[
+['Piyon ne olsun?','Во что превратить пешку?','Promote the pawn to?'],['Vezir','Ферзь','Queen'],['Kale','Ладья','Rook'],['Fil','Слон','Bishop'],['At','Конь','Knight'],['KALE OLDUM!','Я ЛАДЬЯ!','I\'M A ROOK!'],['FİL OLDUM!','Я СЛОН!','I\'M A BISHOP!'],['AT OLDUM!','Я КОНЬ!','I\'M A KNIGHT!'],
 ['Berabere','Ничья','Draw'],['Pat','Пат','Stalemate'],['Şah mat!','Мат!','Checkmate!'],
 ['Mat edecek taş kalmadı, kavga bitti.','Матовать нечем, бой окончен.','Not enough pieces left to mate, the fight is over.'],
 ['Aynı pozisyon üç kez tekrarlandı.','Позиция повторилась трижды.','The same position occurred three times.'],

@@ -261,7 +261,11 @@ function evaluate(ts){
   if(!ts.length)return null;
   const s=[...ts].sort((a,b)=>a.n-b.n),cands=[];
   const same=s.every(t=>t.c===s[0].c), consec=s.every((t,i)=>!i||t.n===s[i-1].n+1);
-  if(s.length>=3&&same&&consec)cands.push({k:'seri'+s.length,t:s});
+  if(s.length>=3&&same&&consec&&COMBOS['seri'+s.length])cands.push({k:'seri'+s.length,t:s});
+  // seçimin içindeki seriler de sayılır (ör. kırmızı 1-2-3 + mavi 9 → Seri (3))
+  for(const c of CL){const byN={};s.filter(t=>t.c===c).forEach(t=>{byN[t.n]=byN[t.n]||t});const ns=Object.keys(byN).map(Number).sort((a,b)=>a-b);
+    let run=[];for(const n of ns){if(run.length&&n===run[run.length-1]+1)run.push(n);else run=[n];
+      for(let k=3;k<=run.length;k++)if(COMBOS['seri'+k])cands.push({k:'seri'+k,t:run.slice(-k).map(x=>byN[x])})}}
   if(s.length===5&&same)cands.push({k:'renk',t:s});
   const g={};s.forEach(t=>(g[t.n]=g[t.n]||[]).push(t));
   const groups=Object.values(g);

@@ -5,7 +5,8 @@ const own=(b,p,i)=>p===0?b[i]>0:b[i]<0,cnt=(b,i)=>Math.abs(b[i]);
 function board(){const b=Array(26).fill(0);b[24]=2;b[13]=5;b[8]=3;b[6]=5;b[1]=-2;b[12]=-5;b[17]=-3;b[19]=-5;return b}
 function rnd(){return 1+((typeof crypto!=='undefined'&&crypto.getRandomValues)?crypto.getRandomValues(new Uint32Array(1))[0]%6:(Math.random()*6|0))}
 function newMatch(o={}){const G={target:o.target||5,score:[0,0],games:0,b:null,bar:[0,0],off:[0,0],turn:0,phase:'roll',dice:[],open:null,last:null,rid:0,mid:0,winner:null,matchWinner:null,pts:0,noMove:false};newGame(G);return G}
-function newGame(G){G.b=board();G.bar=[0,0];G.off=[0,0];G.winner=null;G.pts=0;G.last=null;G.noMove=false;
+function newGame(G){const pw=G.winner;G.b=board();G.bar=[0,0];G.off=[0,0];G.winner=null;G.pts=0;G.last=null;G.noMove=false;
+  if(G.games>0&&pw!=null){G.open=null;G.turn=pw;G.dice=[];G.phase='roll';G.rid++;return}   // maçta ilk oyundan sonra önceki oyunu kazanan başlar
   let a,c;do{a=rnd();c=rnd()}while(a===c);G.open=[a,c];G.turn=a>c?0:1;G.dice=[];G.phase='roll';G.rid++}   // Türk tavlası: tek zarda büyük atan başlar ve iki zarı yeniden atar
 const st=G=>({b:G.b.slice(),bar:G.bar.slice(),off:G.off.slice()});
 function allHome(s,p){if(s.bar[p])return false;for(let i=1;i<=24;i++)if(own(s.b,p,i)&&(p===0?i>6:i<19))return false;return true}
@@ -13,7 +14,7 @@ function singles(s,p,d){const b=s.b,out=[],sg=p===0?1:-1;
   const land=t=>!(p===0?b[t]<-1:b[t]>1);
   if(s.bar[p]){const t=p===0?25-d:d;if(land(t))out.push({f:'bar',t,d});return out}
   const home=allHome(s,p);
-  for(let i=1;i<=24;i++){if(!own(b,p,i))continue;const t=p===0?i-d:i+d;
+  for(let i=1;i<=24;i++){if(!own(b,p,i))continue;if(s.lock&&s.lock[i]&&cnt(b,i)<=s.lock[i])continue;const t=p===0?i-d:i+d;
     if(t>=1&&t<=24){if(land(t))out.push({f:i,t,d})}
     else if(home){const dist=p===0?i:25-i;
       if(dist===d)out.push({f:i,t:'off',d});
@@ -31,7 +32,9 @@ function seqs(G){const p=G.turn,dice=G.dice;if(!dice.length)return [];
   function rec(s,left,path){let any=false;
     const tried=new Set();
     for(let k=0;k<left.length;k++){const d=left[k];if(tried.has(d))continue;tried.add(d);
-      for(const m of singles(s,p,d)){any=true;const s2={b:s.b.slice(),bar:s.bar.slice(),off:s.off.slice()};const mm={...m};apply(s2,p,mm);
+      for(const m of singles(s,p,d)){any=true;const s2={b:s.b.slice(),bar:s.bar.slice(),off:s.off.slice(),lock:{...(s.lock||{})}};const mm={...m};apply(s2,p,mm);
+        // iç sahada kıran pul aynı turda kaçamaz (Türk tavlası)
+        if(mm.hit&&(p===0?mm.t<=6:mm.t>=19))s2.lock[mm.t]=(s2.lock[mm.t]||0)+1;
         rec(s2,left.slice(0,k).concat(left.slice(k+1)),path.concat([{f:m.f,t:m.t,d:m.d}]))}}
     if(!any){if(path.length>max){max=path.length;res.length=0}if(path.length===max)res.push(path)}}
   rec(st(G),list,[]);

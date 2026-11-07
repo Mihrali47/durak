@@ -16,7 +16,7 @@ function startDeal(M){if(M.over)return;const r=rng(M.seed+M.deal*7919);const d=d
 function active(M){return [0,1,2,3].filter(p=>M.bids[p]!=='pas')}
 function bid(M,p,v){if(M.phase!=='bid'||p!==M.turn)return 'Sıra sende değil';
   if(v==='pas'||v===0){M.bids[p]='pas'}
-  else{v=+v;const min=M.high?M.high.v+1:M.minBid;if(!(v>=min&&v<=13))return `En az ${min} demelisin`;M.bids[p]=v;M.high={p,v}}
+  else{v=+v;const min=M.high?M.high.v+1:M.minBid;if(!Number.isInteger(v)||!(v>=min&&v<=13))return `En az ${min} demelisin`;M.bids[p]=v;M.high={p,v}}
   const act=active(M);
   if(act.length===0){M.high={p:M.dealer,v:M.minBid};M.bids[M.dealer]=M.minBid;return toTrump(M)}   // herkes pas: dağıtan zorunlu
   if(act.length===1&&M.high&&act[0]===M.high.p)return toTrump(M);

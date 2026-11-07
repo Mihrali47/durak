@@ -47,7 +47,8 @@ function concede(M,p){if(M.phase!=='raise'||p!==M.decl)return 'Şu an olmaz';if(
   if(M.ros[p]%3===0){s[p]=-120;note[p]='3. vazgeçme −120'}else note[p]='Vazgeçti';
   for(let q=0;q<N;q++){const wasBarrel=M.barrel[q]>0;M.score[q]+=s[q];if(wasBarrel&&q!==p){M.barrel[q]++;if(M.barrel[q]>3){M.score[q]-=120;s[q]-=120;M.barrel[q]=0;note[q]='Varilde 3 el −120'}}
     if(M.score[q]>=880&&M.score[q]<1000&&!M.barrel[q]){s[q]-=M.score[q]-880;M.score[q]=880;M.barrel[q]=1;note[q]=(note[q]?note[q]+' · ':'')+'Varile çıktı'}}
-  M.log.push({deal:M.deal,decl:p,bid:M.bid,made:null,ros:true,raw:[0,0,0],s,note,marr:[]});M.deal++;M.dealer=(M.dealer+1)%N;M.phase='dealEnd';return null}
+  M.log.push({deal:M.deal,decl:p,bid:M.bid,made:null,ros:true,raw:[0,0,0],s,note,marr:[]});M.deal++;M.dealer=(M.dealer+1)%N;
+  const win=[0,1,2].filter(q=>M.score[q]>=1000).sort((a,b)=>M.score[b]-M.score[a]);if(win.length){M.winner=win[0];M.phase='over'}else M.phase='dealEnd';return null}
 function winnerOf(trick,trump){let b=trick[0];
   for(const t of trick.slice(1)){const s=cs(t.c),bs=cs(b.c);if(s===bs){if(STR[cr(t.c)]>STR[cr(b.c)])b=t}else if(trump&&s===trump)b=t}
   return b}
@@ -68,7 +69,7 @@ function finishDeal(M){const D=M.decl,raw=[0,1,2].map(p=>pts(M.taken[p])+M.marr[
   const made=raw[D]>=M.bid;
   for(let p=0;p<N;p++){
     if(p===D){
-      if(M.barrel[p]>0){if(made&&M.bid>=120){s[p]=M.bid;note[p]='Varilden çıktı'}else if(made){s[p]=0;note[p]='Varilde'}else{s[p]=-M.bid;note[p]='Varilden düştü'}}
+      if(M.barrel[p]>0){if(made&&raw[p]>=120){s[p]=1000-M.score[p];note[p]='Varilden çıktı'}else if(made){s[p]=0;note[p]='Varilde'}else{s[p]=-M.bid;note[p]='Varilden düştü'}}
       else s[p]=made?M.bid:-M.bid}
     else{
       if(M.barrel[p]>0){s[p]=0;note[p]='Varilde'}
@@ -96,7 +97,7 @@ function botGive(M,p){const h=M.hands[p],ms=marriages(h);const keep=c=>ms.includ
   const o=h.slice().sort((a,b)=>val(a)-val(b));return [o[0],o[1]]}
 function botRaise(M,p){const est=handEst(M.hands[p],false);let v=M.bid;
   if(est<M.bid-25&&!M.barrel[p]&&((M.ros||[0,0,0])[p]%3)!==2)return 'ros';
-  const target=Math.floor((est-10)/5)*5;if(target>v)v=Math.min(target,marriages(M.hands[p]).length?300:120);if(M.barrel[p]&&v<120&&est>=130)v=120;return Math.max(v,M.bid)}
+  const target=Math.floor((est-10)/5)*5;if(target>v)v=Math.min(target,marriages(M.hands[p]).length?300:120);return Math.max(v,M.bid)}
 function botPlay(M,p){const L=legal(M,p),h=M.hands[p],T=M.trump,D=M.decl,isDecl=p===D;
   const lo=a=>a.slice().sort((x,y)=>PT[cr(x)]-PT[cr(y)]||STR[cr(x)]-STR[cr(y)]);
   const hi=a=>a.slice().sort((x,y)=>STR[cr(y)]-STR[cr(x)]);

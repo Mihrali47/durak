@@ -201,7 +201,7 @@ function render(){if(!G)return;if(buildBoard.key!==G.act.join()+':'+me)buildBoar
   d.style.outline=`3px solid ${CV[G.turn]}`;d.style.outlineOffset='3px';
   let m='',s='';
   if(G.phase==='over')m=G.winner===me?'Kazandın!':`${names[G.winner]} kazandı`;
-  else if(G.turn===me){if(G.phase==='roll'){m='Zar at';const base=!G.pawns[me].some(x=>x>=0&&x<40);if(G.tries>0&&base)s=`Kalan hak: ${(G.t1?1:3)-G.tries}`;else if(G.roll===6&&G.last&&G.last.p===me)s='6 attın, tekrar at!'}
+  else if(G.turn===me){if(G.phase==='roll'){m='Zar at';const base=!G.pawns[me].some(x=>x>=0&&x<40);if(G.tries>0&&base)s=`Kalan hak: ${(G.t1?1:3)-G.tries}`;else if(G.roll===6&&G.rp===me)s='6 attın, tekrar at!'}
     else{m='Piyonunu seç';s=`Zar: ${G.roll}`}}
   else m=`${names[G.turn]} oynuyor…`;
   $('msg').innerHTML=m?`<span>${m}</span>`:'';$('msg2').innerHTML=s?`<span>${s}</span>`:'';

@@ -182,11 +182,13 @@ function rulesHtml(v){return v==='ru'?`<h2>Rus daması nasıl oynanır?</h2>
   <p>Oyun sadece koyu karelerde oynanır. Herkesin 12 taşı var. Taşlar çapraz olarak bir kare ileri gider.</p>
   <p>Rakip taşın hemen arkasındaki kare boşsa üstünden atlayıp alırsın. Taş alırken geriye doğru da alabilir. Alabildiğin taş varsa almak zorunlu; arka arkaya alabiliyorsan devam edersin.</p>
   <p>Karşı uca ulaşan taş dama olur: çaprazda istediği kadar gider, uzaktan alır. Taş alırken uca varırsa hemen dama olur ve dama olarak almaya devam eder.</p>
-  <p>Rakibin taşlarını bitiren ya da onu hamle yapamaz hale getiren kazanır.</p>`:`<h2>Türk daması nasıl oynanır?</h2>
+  <p>Rakibin taşlarını bitiren ya da onu hamle yapamaz hale getiren kazanır.</p>
+  <p>Aynı konum üç kez tekrarlanırsa ya da 15'er hamle boyunca sadece damalar oynayıp hiç taş alınmazsa oyun berabere biter.</p>`:`<h2>Türk daması nasıl oynanır?</h2>
   <p>Herkesin 16 taşı var, ikinci ve üçüncü sıraya dizilir. Taşlar bir kare ileri ya da yana gider, geri gitmez. Çapraz hareket yoktur.</p>
   <p>Rakip taşın hemen arkasındaki kare boşsa üstünden atlayıp alırsın (ileri ya da yana). Almak zorunludur ve en çok taşı alan hamle oynanmalıdır. Alınan taş hemen kalkar.</p>
   <p>Karşı uca ulaşan taş dama olur: düz çizgide istediği kadar ileri, geri ve yana gider, uzaktaki taşı da alır.</p>
-  <p>Rakibin taşlarını bitiren ya da onu hamle yapamaz hale getiren kazanır.</p>`}
+  <p>Rakibin taşlarını bitiren ya da onu hamle yapamaz hale getiren kazanır.</p>
+  <p>Aynı konum üç kez tekrarlanırsa ya da 25'er hamle boyunca sadece damalar oynayıp hiç taş alınmazsa oyun berabere biter.</p>`}
 function showRules(){ov('rules',rulesHtml(G?G.v:variant)+`<p>Taşına dokun, yeşil işaretli kareye dokun. Kırmızı yanıp sönen taşlar almak zorunda olanlar.</p><div class="row"><button class="btn pri" id="rOk">Tamam</button></div>`);
   $('rOk').onclick=()=>G&&G.phase!=='over'?(hideOv(),after()):showMenu()}
 function showMenu(){const sv=ST.get('save',null),rec=ST.get('rec',[0,0]);

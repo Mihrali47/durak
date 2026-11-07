@@ -22,6 +22,7 @@ function roll(G,p,force){if(G.phase!=='roll')return 'Şimdi zar atılmaz';if(p!=
   const r=force||(typeof crypto!=='undefined'&&crypto.getRandomValues?1+crypto.getRandomValues(new Uint32Array(1))[0]%6:rnd(G));
   G.roll=r;G.rid++;G.rp=p;G.moves=legal(G,p,r);
   if(G.moves.length){G.phase='move';return null}
+  if(r===6){G.phase='roll';return null}   // 6 atınca oynayacak hamle olmasa da bir daha atar
   G.tries++;const max=movableOnBoard(G,p)||G.t1?1:3;
   if(G.tries>=max)pass(G);else G.phase='roll';
   return null}
