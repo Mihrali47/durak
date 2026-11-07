@@ -39,7 +39,7 @@ header .t{flex:1;min-width:0;text-align:center;font-weight:700;font-size:16px}
 .cell.tg{box-shadow:0 0 0 4px rgba(231,181,76,.9)}
 .pawn{position:absolute;width:6.4%;height:6.4%;margin:-3.2% 0 0 -3.2%;border-radius:50%;z-index:2;transition:left .11s linear,top .11s linear,transform .15s;
   box-shadow:0 3px 0 rgba(0,0,0,.35),inset 0 -4px 0 rgba(0,0,0,.25),inset 0 3px 0 rgba(255,255,255,.35);border:2px solid rgba(0,0,0,.25)}
-.pawn.can{z-index:4;animation:pulse .9s ease-in-out infinite;cursor:pointer}
+.pawn.can{z-index:300!important;animation:pulse .9s ease-in-out infinite;cursor:pointer}
 .pawn.can::after{content:"";position:absolute;inset:-7px;border-radius:50%;border:3px solid #fff;opacity:.9}
 .pawn.up{transform:translateY(-14%) scale(1.12);z-index:5}
 /* satranç piyonu görünümü: yürür, vurur, devrilir */
@@ -166,7 +166,7 @@ const BASE=[[[0,9],[1,9],[0,10],[1,10]],[[0,0],[1,0],[0,1],[1,1]],[[9,0],[10,0],
 const ST={get(k,d){try{const v=localStorage.getItem('kb_'+k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem('kb_'+k,JSON.stringify(v))}catch(e){}},del(k){try{localStorage.removeItem('kb_'+k)}catch(e){}}};
 const UID=ST.get('uid',null)||(()=>{const u=Math.random().toString(36).slice(2,10);ST.set('uid',u);return u})();
 const SPD=+(new URLSearchParams(location.search).get('spd')||1);
-let kEsli=ST.get('esli',false),kT1=ST.get('t1',false);
+let kEsli=ST.get('esli',false),kT1=ST.get('t1',false),kTest=ST.get('test6',true);   // TEST: satıştan önce kapatılacak
 let G=null,names=['Sen',...BOTN],me=0,mode='off',human=[true,false,false,false],ver=0,busy=false,shownRid=0,shownMid=0,botT=null,schedKey=null,nPlayers=ST.get('n',4),autoT=null;
 const myName=()=>(window.KH&&KH.name())||ST.get('name','')||'Sen';
 const pn=p=>p===me&&mode==='off'?'Sen':names[p];
@@ -237,29 +237,28 @@ function dust(q){const e=document.createElement('div');e.className='dust';e.styl
 /* yürüme yönüne göre adamın görünümü: sağ, sol, önden, arkadan */
 function face(el,dx,dy){const im=el.querySelector('img.spr');if(!im)return;const p=+el.id[2];const d=dx==null?'front':Math.abs(dx)>=Math.abs(dy)?(dx>0?'right':'left'):(dy>0?'front':'back');const src=`img/${SPR[p]}_${d}.webp`;if(!im.src.endsWith(src))im.src=src}
 ['r','b','g','y'].forEach(c=>['front','right','back','left'].forEach(d=>{const i=new Image();i.src=`img/${c}_${d}.webp`}));
+/* hareket: adam kareden kareye zıplayarak gider (çömelir, havalanır, yere basar) */
 function stride(el,a,b,n=2,stepMs=150){return new Promise(res=>{
-  const len=Math.hypot(b.x-a.x,b.y-a.y)||1,ux=(b.x-a.x)/len,sw=Math.abs(ux)>.2?Math.sign(ux):0,AMP=14+22*Math.abs(ux),T=stepMs/SPD;
-  const body=el.querySelector('.body'),L=[...el.querySelectorAll('.lg')],AR=[...el.querySelectorAll('.arm')],t0=performance.now();let lastK=0;
-  const ease=q=>.4*q+.6*(q*q*(3-2*q));face(el,b.x-a.x,b.y-a.y);
-  if(document.hidden){setP(el,b);return res()}
-  function frame(now){const tt=Math.max(0,Math.min((now-t0)/T,n)),k=Math.min(Math.floor(tt),n-1),q=tt-k;
-    const pos=lerp(a,b,(k+ease(q))/n);setP(el,pos);
-    const swI=k%2,stI=1-swI,si=Math.sin(Math.PI*q),side=stI===0?-1:1,co=Math.cos(Math.PI*q);
-    if(k!==lastK){KSfx.play('tap');lastK=k}
-    body.style.transform=`translateX(${side*si*3}%) translateY(${-si*8}%) rotate(${side*si*6}deg) scale(${1+.03*(1-si)},${1-.04*(1-si)})`;
-    const out=swI===0?1:-1;
-    if(L.length){L[swI].style.transform=`translateY(${-si*2}px) rotate(${sw?sw*AMP*co:out*si*16}deg)`;
-    L[stI].style.transform=`rotate(${sw?-sw*AMP*co*.8:-out*si*5}deg)`;
-    AR[swI].style.transform=`rotate(${(swI===0?-1:1)*24*co}deg)`;AR[stI].style.transform=`rotate(${(stI===0?1:-1)*24*co}deg)`}
-    if(tt<n)requestAnimationFrame(frame);
-    else{setP(el,b);body.style.transform='';L.concat(AR).forEach(l=>l.style.transform='');res()}}
+  const len=Math.hypot(b.x-a.x,b.y-a.y)||1,dir=Math.sign(b.x-a.x),T=Math.max(200,Math.min(420,len*26))/SPD;
+  const body=el.querySelector('.body'),t0=performance.now();face(el,b.x-a.x,b.y-a.y);
+  if(document.hidden||len<.2){setP(el,b);return res()}
+  const H=Math.min(55,22+len*2.2);let landed=false;
+  function frame(now){const q=Math.min(1,(now-t0)/T);
+    const air=Math.max(0,Math.min(1,(q-.14)/.72)),e=air<.5?2*air*air:1-Math.pow(-2*air+2,2)/2;
+    setP(el,lerp(a,b,e));
+    let tf;
+    if(q<.14){const c=q/.14;tf=`translateY(0) scale(${1+.1*c},${1-.12*c})`}
+    else if(q<.86){const k=Math.sin(Math.PI*air);tf=`translateY(${-k*H}%) rotate(${dir*8*Math.sin(Math.PI*air*2)}deg) scale(${1-.05*k},${1+.06*k})`}
+    else{const c=(q-.86)/.14;if(!landed){landed=true;KSfx.play('tap')}tf=`translateY(0) scale(${1+.12*(1-c)},${1-.14*(1-c)})`}
+    body.style.transform=tf;
+    if(q<1)requestAnimationFrame(frame);else{setP(el,b);body.style.transform='';res()}}
   requestAnimationFrame(frame)})}
 function shakeBoard(){$('board').animate([{transform:'translate(0,0)'},{transform:'translate(-5px,3px)'},{transform:'translate(4px,-3px)'},{transform:'translate(-3px,2px)'},{transform:'translate(0,0)'}],{duration:320/SPD})}
 function animMove(L){return new Promise(async r=>{const e=$(`pw${L.p}${L.i}`);if(!e)return r();e.classList.add('walking');zf(e,0);
   const pts=[];if(L.from<0)pts.push(XY(xyOf(L.p,L.i,0)));else for(let d=L.from+1;d<=L.to;d++)pts.push(XY(xyOf(L.p,L.i,d)));
   let cur=XY(xyOf(L.p,L.i,L.from));const h=L.hit?$(`pw${L.hit.p}${L.hit.i}`):null;
   const walkTo=h?pts.slice(0,-1):pts;
-  for(const q of walkTo){await stride(e,cur,q,2,140);cur=q}
+  for(const q of walkTo){await stride(e,cur,q);cur=q}
   if(h){const tgt=pts[pts.length-1],len=Math.hypot(tgt.x-cur.x,tgt.y-cur.y)||1,ux=(tgt.x-cur.x)/len,uy=(tgt.y-cur.y)/len,dx=Math.sign(ux)||1;
     h.classList.add('scared');face(h,-ux,-uy);
     const near=lerp(cur,tgt,Math.max(0,1-5.2/len));await stride(e,cur,near,2,130);cur=near;face(e,ux,uy);
@@ -290,7 +289,7 @@ function schedule(){if(!G||busy||mode==='guest'||G.phase==='over'){clearTimeout(
   if(!isBot(G.turn))return;
   botT=setTimeout(()=>{schedKey=null;if(busy||!isBot(G.turn))return;if(G.phase==='roll')act(G.turn,{k:'roll'});else if(G.phase==='move')act(G.turn,{k:'move',m:KB.botPick(G,G.turn)})},(G.phase==='roll'?650:500)/SPD)}
 function act(p,a){if(mode==='guest'){send({t:'act',uid:UID,a});return}
-  let e=null;if(a.k==='roll')e=KB.roll(G,p);else if(a.k==='move')e=KB.move(G,p,a.m);
+  let e=null;if(a.k==='roll')e=KB.roll(G,p,kTest&&mode==='off'&&G.pawns[p].some(d=>d<0)?6:undefined);else if(a.k==='move')e=KB.move(G,p,a.m);
   if(e){if(p===me)toast(e);return}
   ver++;bcastState();sync()}
 $('rollB').onclick=e=>{if(e.target.closest('#die'))return;$('die').click()};
@@ -321,6 +320,7 @@ function showMenu(){const sv=ST.get('save',null),rec=ST.get('rec',[0,0]);
     <p class="lbl">Bilgisayar</p><div class="seg" id="mL">${[["kolay","Kolay"],["normal","Normal"]].map(([k,v])=>`<button data-l="${k}" class="${botLvl===k?'on':''}">${v}</button>`).join('')}</div>
     <p class="lbl">Kaç kişi?</p><div class="seg" id="mN">${[2,3,4].map(n=>`<button data-n="${n}" class="${nPlayers===n?'on':''}">${n} kişi</button>`).join('')}</div>
     <p class="lbl">4 kişide</p><div class="seg" id="mE"><button data-e="0" class="${kEsli?'':'on'}">Herkes tek</button><button data-e="1" class="${kEsli?'on':''}">Eşli (2'ye 2)</button></div>
+    <p class="lbl">Test zarı (sadece bilgisayara karşı)</p><div class="seg" id="mX"><button data-x="1" class="${kTest?'on':''}">Kulübede taş varsa hep 6</button><button data-x="0" class="${kTest?'':'on'}">Normal zar</button></div>
     <p class="lbl">Taş çıkarmak için (6 gerekir)</p><div class="seg" id="mT"><button data-t="3" class="${kT1?'':'on'}">3 hak</button><button data-t="1" class="${kT1?'on':''}">1 hak</button></div>
     <div class="row" style="flex-direction:column">
       ${G&&G.phase!=='over'&&mode!=='guest'?'<button class="btn pri" id="mBack">Oyuna dön</button>':''}
@@ -334,6 +334,7 @@ function showMenu(){const sv=ST.get('save',null),rec=ST.get('rec',[0,0]);
     <p style="font-size:12.5px;margin-top:10px">Rekorun: ${rec[0]} galibiyet, ${rec[1]} mağlubiyet.</p>`);
   s.querySelectorAll('#mL button').forEach(b=>b.onclick=()=>{botLvl=b.dataset.l;try{localStorage.setItem('kh_botlvl',JSON.stringify(botLvl))}catch(e){};s.querySelectorAll('#mL button').forEach(x=>x.classList.toggle('on',x===b))});
   s.querySelectorAll('#mE button').forEach(b=>b.onclick=()=>{kEsli=b.dataset.e==='1';ST.set('esli',kEsli);s.querySelectorAll('#mE button').forEach(x=>x.classList.toggle('on',x===b))});
+  s.querySelectorAll('#mX button').forEach(b=>b.onclick=()=>{kTest=b.dataset.x==='1';ST.set('test6',kTest);s.querySelectorAll('#mX button').forEach(x=>x.classList.toggle('on',x===b))});
   s.querySelectorAll('#mT button').forEach(b=>b.onclick=()=>{kT1=b.dataset.t==='1';ST.set('t1',kT1);s.querySelectorAll('#mT button').forEach(x=>x.classList.toggle('on',x===b))});
   s.querySelectorAll('#mN button').forEach(b=>b.onclick=()=>{nPlayers=+b.dataset.n;ST.set('n',nPlayers);s.querySelectorAll('#mN button').forEach(x=>x.classList.toggle('on',x===b))});
   if($('mBack'))$('mBack').onclick=()=>{hideOv();after()};

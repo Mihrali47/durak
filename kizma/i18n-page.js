@@ -2,6 +2,7 @@
 (()=>{
 const BN={Nuri:'Нури','Rıza':'Рыза',Hamdi:'Хамди',Sen:'Вы'};const nm=(n,j)=>j?(n==='Sen'?'You':n):(BN[n]||n);
 window.I18N_EXTRA=[
+['Test zarı (sadece bilgisayara karşı)','Тестовый кубик (только против компьютера)','Test die (vs computer only)'],['Kulübede taş varsa hep 6','Всегда 6, пока есть фишки в доме','Always 6 while pawns are at base'],['Normal zar','Обычный кубик','Normal die'],
 ['Kavgacı Kızma Birader','Драчливый «Не сердись»','Brawling Ludo'],['—','—','—'],
 ['Taş çıkarmak için (6 gerekir)','Вывод фишки (нужна 6)','To bring a pawn out (needs a 6)'],['3 hak','3 попытки','3 tries'],['1 hak','1 попытка','1 try'],
 ['4 kişide','При 4 игроках','With 4 players'],['Herkes tek','Каждый за себя','Free for all'],['Eşli (2\'ye 2)','Парами (2 на 2)','Teams (2 vs 2)'],[' · Ortak',' · партнёр',' · partner'],[' · Rakip',' · соперник',' · rival'],['Ortağınla kazandınız!','Вы с партнёром победили!','You and your partner won!'],['Rakipler kazandı','Победили соперники','The rivals won'],
