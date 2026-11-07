@@ -356,7 +356,11 @@ const PFX='kbt-';let peer=null,conn=null,conns={},seats=[null,null,null,null],la
 function away(p){const s=seats[p];if(!s)return true;return Date.now()-(lastSeen[s.uid]||0)>20000}
 function send(d){if(mode==='guest'&&conn&&conn.open)conn.send(d)}
 function bcast(d){if(mode!=='host')return;for(const u in conns){const c=conns[u];if(c.open)try{c.send(d)}catch(e){}}}
-function bcastState(){if(mode==='host'&&started)bcast({t:'state',ver,M,names,human,tl:KTimer.left()});if(mode==='host'&&started)ST.set('host',{room,M,names,human,seats,ver,t:Date.now()})}
+/* online: her oyuncuya yalnızca kendi eli gider; rakip elleri, deste ve karıştırma tohumu sadece adet olarak */
+function viewFor(M,s){const V=JSON.parse(JSON.stringify(M));if(Array.isArray(V.hands))V.hands=V.hands.map((h,i)=>i===s?h:(h||[]).map(()=>'X'));
+  if(Array.isArray(V.deck))V.deck=V.deck.map(()=>'X');if(Array.isArray(V.prikup))V.prikup=V.prikup.map(()=>'X');delete V.seed;
+  if(Array.isArray(V.pile)&&V.closed>0)V.pile=V.pile.map((c,i)=>i<V.closed?'X':c);return V}
+function bcastState(){if(mode==='host'&&started){const tl=KTimer.left();for(const u in conns){const c=conns[u];if(!c.open)continue;const st=seats.findIndex(x=>x&&x.uid===u);try{c.send({t:'state',ver,M:viewFor(M,st),names,human,tl})}catch(e){}}}if(mode==='host'&&started)ST.set('host',{room,M,names,human,seats,ver,t:Date.now()})}
 /* sayfa arka planda kapanıp yeniden açılırsa (telefonda başka uygulamaya geçince) ev sahibi masasını kaldığı yerden sürdürür */
 function resumeHost(sv){hostRoom.rs=sv;hostRoom();hostRoom.rs=null;for(const x of (sv.seats||[]))if(x&&x.uid)lastSeen[x.uid]=Date.now();seats=sv.seats;started=true;M=sv.M;names=sv.names;human=sv.human;ver=(sv.ver||0)+1;me=0;shownTid=M.last?M.last.id:null;dealSeen=M.deal;choiceSeen=M.trump?M.deal+':'+M.trump:null;if($('bEmo'))$('bEmo').hidden=false;hideOv();bcastState();sync()}
 

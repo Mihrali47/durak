@@ -435,7 +435,7 @@ const PFX='kps-';let ver=0,hb=null,Q=[],qBusy=false,gver=-1;
 const sw=w=>w==='p'?'c':w==='c'?'p':w;
 function setOpp(n){NAME.c=n||'Rakip';$('nmC').textContent=NAME.c;$('nmC2').textContent=NAME.c}
 function hostEv(ev){if(ON&&ON.host&&ON.conn){clearTimeout(push.t);push(ev)}}
-function snap(){return {total:G.total,handNo:G.handNo,deckN:(G.deck||[]).length,pile:G.pile,handPn:G.hand.p.length,handC:G.hand.c,takenP:G.taken.p.length,takenC:G.taken.c.length,
+function snap(){return {total:G.total,handNo:G.handNo,deckN:(G.deck||[]).length,pile:G.pile.map((c,i)=>c.down?{id:'kapali'+i,r:'?',s:'?',down:true,rot:c.rot,dx:c.dx,dy:c.dy}:c),handPn:G.hand.p.length,handC:G.hand.c,takenP:G.taken.p.length,takenC:G.taken.c.length,
   pisti:G.pisti,last:G.last,turn:G.turn,ended:!!G.ended,target}}
 function saveHost(){if(!ON||!ON.host||!ON.started||!G)return;try{localStorage.setItem('pisti_host',JSON.stringify({code:ON.code,G:{...G,seen:[...(G.seen||[])],busy:false},uid:ON.uid,opp:NAME.c,target,ver,t:Date.now()}))}catch(e){}}
 function push(ev){saveHost();if(!ON||!ON.host||!ON.conn||!ON.conn.open)return;try{ON.conn.send({t:'st',v:++ver,S:snap(),ev:ev||null,name:myName()||'Ev sahibi'})}catch(e){}}

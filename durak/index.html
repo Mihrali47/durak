@@ -772,6 +772,7 @@ function endAfter(kind,cheater){
 function finishBout(){
   const took=D.phase==='taking';
   const def=D.defender;
+  D.lastTook=took?def:null;
   if(took){D.hands[def].push(...D.table.flatMap(x=>[x.a,...(x.d?[x.d]:[])]))}
   else{D.discard+=D.table.length*2;D.table.forEach(x=>{D.discarded.push(x.a);if(x.d)D.discarded.push(x.d)})}
   D.table=[];
@@ -1402,6 +1403,7 @@ $('bUndo').onclick=async()=>{if(U.busy)return;if(goldHave()<1){clearTimeout(U.rt
   U.busy=false;render();RUNSOON()};
 async function run(){
   clearTimeout(U.rt);U.rt=null;clearInterval(U.rti);
+  if(ON&&ON.seat>0&&ON.started){render();return} // online misafir: oyunu ev sahibi yürütür
   if(U.busy||!D||D.ended)return;U.afterMe=true;U.busy=true;render();
   try{
   for(let guard=0;guard<400&&!D.ended;guard++){
@@ -1470,7 +1472,8 @@ function gameEnd(){
 
 /* ===== ONLINE (2-4 kişi, linkle, kayıt yok) =====
    Masayı kuran ev sahibi (koltuk 0). Misafirler ona bağlanır, ev sahibi koltuk verir.
-   Durumun tamamı gönderilir; ev sahibi gelen durumu diğer misafirlere iletir. */
+   Ev sahibi oyunu yürütür: misafir yalnızca hamlesini yollar, ev sahibi motorla doğrulayıp uygular.
+   Her misafire sadece kendi eli gider; rakip elleri ve deste sadece adet olarak. */
 let WL=null;async function wake(){try{if(navigator.wakeLock&&document.visibilityState==='visible')WL=await navigator.wakeLock.request('screen')}catch(e){}}
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&D&&!D.ended)wake()});
 const myName=()=>(localStorage.getItem('durak_name')||'').trim()||'Misafir';
@@ -1483,7 +1486,7 @@ const rot=(p,k,n)=>p==null||p<0?p:((p-k)%n+n)%n;
 function mapState(o,k){const n=o.n,m=p=>rot(p,k,n);const s=JSON.parse(JSON.stringify(o));
   s.hands=[...Array(n)].map((_,i)=>o.hands[((i+k)%n+n)%n]);s.attacker=m(o.attacker);s.defender=m(o.defender);
   s.passed=(o.passed||[]).map(m);s.accused=(o.accused||[]).map(m);s.outOrder=(o.outOrder||[]).map(m);s.durak=o.durak==null?null:m(o.durak);
-  s.table=(o.table||[]).map(x=>({...x,by:m(x.by)}));s.marked=(o.marked||[]).map(m);s.resigned=o.resigned==null?null:m(o.resigned);if(o.caught)s.caught={...o.caught,by:m(o.caught.by),cheater:m(o.caught.cheater)};return s}
+  s.table=(o.table||[]).map(x=>({...x,by:m(x.by)}));s.marked=(o.marked||[]).map(m);s.resigned=o.resigned==null?null:m(o.resigned);s.lastTook=o.lastTook==null?null:m(o.lastTook);if(o.caught)s.caught={...o.caught,by:m(o.caught.by),cheater:m(o.caught.cheater)};return s}
 const ser=()=>({...D,passed:[...D.passed],accused:[...D.accused]});
 function load(o){D=o;D.passed=new Set(o.passed||[]);D.accused=new Set(o.accused||[])}
 let lastPushed='';
@@ -1491,7 +1494,49 @@ let lastPushed='';
 const hostConns=()=>ON&&ON.seat===0?Object.entries(ON.conns||{}).filter(([s,c])=>c&&c.open):[];
 function send(body,except){try{if(!ON)return;if(ON.seat===0){for(const [s,c] of hostConns())if(+s!==except)c.send(body)}else if(CONN&&CONN.open)CONN.send(body)}catch(e){}}
 const canon=()=>mapState(ser(),-ON.seat);
-function push(force){if(!ON||!D||!ON.started)return;const st=canon();const js=JSON.stringify(st);if(js===lastPushed&&!force)return;lastPushed=js;ON.ver++;saveOn();send({t:'state',state:st,ver:ON.ver,from:ON.seat})}
+/* gizli bilgi: rakip elleri ve deste kapalı kart olarak gider; hile işaretleri gönderilmez (el bitince her şey açılır) */
+function hideFor(st,s){const o=JSON.parse(JSON.stringify(st));if(o.ended)return o;
+  o.hands=o.hands.map((h,i)=>i===s?h:h.map((_,j)=>({id:'x'+i+'_'+j,r:'?',s:'?',hid:1})));
+  o.talon=(o.talon||[]).map((_,j)=>({id:'t'+j,r:'?',s:'?',hid:1}));
+  o.table=(o.table||[]).map(x=>{const y={...x};delete y.ca;delete y.cd;return y});return o}
+const isGuest=()=>!!(ON&&ON.seat>0&&ON.started);
+function sendStates(re){const st=canon();for(const [s,c] of hostConns())try{c.send({t:'state',state:hideFor(st,+s),ver:ON.ver,from:0,re})}catch(e){}}
+function push(force){if(!ON||!D||!ON.started)return;
+  if(ON.seat!==0){if(D.resigned===0&&!ON.sentResign){ON.sentResign=1;send({t:'act',fn:'resign'})}return}
+  const st=canon();const js=JSON.stringify(st);if(js===lastPushed&&!force)return;lastPushed=js;ON.ver++;saveOn();sendStates()}
+/* misafirden gelen hamle: sırası ve kartı motorda doğrulanır, geçersizse yok sayılır */
+function hostAct(s,d){if(!D||!ON||!ON.started)return;if(U.busy||APPLYING){clearTimeout(hostAct['t'+s]);hostAct['t'+s]=setTimeout(()=>hostAct(s,d),150);return}
+  if(D.ended)return push(true);const a=Array.isArray(d.a)?d.a:[],no=m=>R_err(m||'Bu hamle olmaz');
+  const prev={table:snapTable(),tableIds:new Set(D.table.flatMap(x=>[x.a.id,...(x.d?[x.d.id]:[])])),hands:D.hands.map(h=>h.map(c=>c.id)),def:D.defender,ended:D.ended};
+  let r;
+  switch(d.fn){
+    case 'attack':r=attack(s,a[0],!!a[1]);break;
+    case 'defend':r=s===D.defender?defend(a[0],+a[1],!!a[2]):no('Savunma sırası sende değil');break;
+    case 'transfer':r=s===D.defender?transfer(a[0]):no();break;
+    case 'showTrump':r=s===D.defender?showTrump(a[0]):no();break;
+    case 'undo':r=undo(s);break;
+    case 'take':r=s===D.defender?take():no();break;
+    case 'pass':r=(s===D.attacker||throwers().includes(s))?pass(s):no();break;
+    case 'accuse':r=accuse(s);break;
+    case 'accuseCard':r=accuseCard(s,+a[0],a[1]==='d'?'d':'a');break;
+    case 'resign':D.ended=true;D.durak=s;D.resigned=s;r=R_ok();break;
+    default:return}
+  if(!r||!r.ok){const c=ON.conns[s];try{c&&c.send({t:'err',msg:(r&&r.msg)||''})}catch(e){}lastPushed='';push(true);return}
+  if(d.fn==='take')showTag(s,'Alıyorum','t');else if(d.fn==='pass')showTag(s,'Pas');
+  push();applyRemote(prev)}
+/* misafirde motor hamleleri: ekranda hemen görünür, ev sahibine yalnızca hamle gider */
+(()=>{const E={attack,defend,transfer,showTrump,undo,take,pass,accuse,accuseCard};
+  const opt=(fn,args,rr)=>{if(rr&&rr.ok){ON.pend=Date.now();send({t:'act',fn,a:args})}return rr};
+  attack=function(p,id,cheat){if(!isGuest())return E.attack(p,id,cheat);if(p!==me)return R_err('');return opt('attack',[id,!!cheat],E.attack(p,id,cheat))};
+  defend=function(id,i,cheat){if(!isGuest())return E.defend(id,i,cheat);return opt('defend',[id,i,!!cheat],E.defend(id,i,cheat))};
+  transfer=function(id){if(!isGuest())return E.transfer(id);return opt('transfer',[id],E.transfer(id))};
+  showTrump=function(id){if(!isGuest())return E.showTrump(id);return opt('showTrump',[id],E.showTrump(id))};
+  undo=function(p){if(!isGuest())return E.undo(p);return opt('undo',[],E.undo(p))};
+  take=function(){if(!isGuest())return E.take();return opt('take',[],E.take())};
+  pass=function(p){if(!isGuest())return E.pass(p);if(p!==me)return R_ok();return opt('pass',[],E.pass(p))};
+  accuse=function(p){if(!isGuest())return E.accuse(p);send({t:'act',fn:'accuse'});return R_err('Kontrol ediliyor…')};
+  accuseCard=function(p,i,part){if(!isGuest())return E.accuseCard(p,i,part);send({t:'act',fn:'accuseCard',a:[i,part]});return R_err('Kontrol ediliyor…')};
+})();
 const code5=()=>{const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<5;i++)s+=A[Math.random()*A.length|0];return s};
 /* isimler: yerel sıra (0 = ben) */
 function applyNames(){if(!ON)return;const P=ON.players||[];const n=ON.started&&D?D.n:Math.max(2,P.length);
@@ -1552,7 +1597,7 @@ function hostHello(c,d){
   ON.conns[seat]=c;c._seat=seat;ON.seen[seat]=Date.now();
   try{c.send({t:'welcome',seat,players:ON.players.map(p=>p.name),started:ON.started,n:ON.meta.n,ver:ON.ver})}catch(e){}
   send(lobbyMsg(),seat);applyNames();
-  if(ON.started&&D){try{c.send({t:'state',state:canon(),ver:ON.ver,from:0})}catch(e){}render()}else showWaiting();
+  if(ON.started&&D){try{c.send({t:'state',state:hideFor(canon(),seat),ver:ON.ver,from:0})}catch(e){}render()}else showWaiting();
   saveOn();
 }
 
@@ -1576,7 +1621,7 @@ function heartbeat(){clearInterval(HB);lastSeen=Date.now();HB=setInterval(()=>{i
   send({t:'ping'});
   if(ON.quick&&ON.seat===0&&!ON.started){const n=ON.players.length;KQuick.update({n});if(n>=2&&!ON.q2)ON.q2=Date.now();if(n<2)ON.q2=0;if(n>=MAXP||(n>=2&&Date.now()-ON.q2>20000)){startOnlineGame(true);return}if(n===1){const r=KQuick.rival('durak',ON.code);if(r){leaveOnline();joinOnline(r);return}}}
   // kaybolan güncellemeler kendiliğinden toparlansın: mevcut durumu sürüm artırmadan tekrar gönder
-  if(D&&ON.started&&!U.busy&&!APPLYING){try{send({t:'state',state:canon(),ver:ON.ver,from:ON.seat,re:1})}catch(e){}}
+  if(D&&ON.started&&!U.busy&&!APPLYING&&ON.seat===0){try{sendStates(1)}catch(e){}}
   if(ON.seat===0){for(const [s,c] of Object.entries(ON.conns||{})){if(c&&Date.now()-(ON.seen[s]||0)>15000&&!c._warned){c._warned=1;toast(`${(ON.players[s]||{}).name||'Bir oyuncu'} bağlantısı koptu, geri gelmesi bekleniyor`)}}}
   else if(Date.now()-lastSeen>6000&&CONN){lastSeen=Date.now();autoReconnect(ON.code,0)}},2000)}
 function autoReconnect(code,n){if(!ON||ON.code!==code)return;
@@ -1595,10 +1640,8 @@ function wire(c,onOpen){
       if(d.t==='tag'||d.t==='emo'||d.t==='chat'){const m={...d,from:s};send(m,s);
         if(d.t==='tag')showTag(s,d.x,d.cls);else if(d.t==='emo')showEmo(s,d.e);else if(typeof addChat==='function')addChat(local(s),String(d.x||'').slice(0,140),true,String(d.l||'').slice(0,2));return}
       if(d.t==='rematch'){if(D&&D.ended){close();onlineRematch()}return}
-      if(d.t!=='state')return;
-      if(!(d.ver>ON.ver))return;                       // ev sahibi beraberlikte kazanır
-      if(JSON.stringify(d.state)===JSON.stringify(canon())){ON.ver=d.ver;return}
-      acceptState(d);send({t:'state',state:d.state,ver:d.ver,from:s},s);return}
+      if(d.t==='act')return hostAct(s,d);
+      return}
     // misafir
     if(c!==CONN)return;lastSeen=Date.now();
     if(d.t==='ping')return;
@@ -1609,8 +1652,10 @@ function wire(c,onOpen){
     if(d.t==='tag')return showTag(d.from==null?0:d.from,d.x,d.cls);
     if(d.t==='emo')return showEmo(d.from==null?0:d.from,d.e);
     if(d.t==='chat'){if(typeof addChat==='function')addChat(local(d.from==null?0:d.from),String(d.x||'').slice(0,140),true,String(d.l||'').slice(0,2));return}
+    if(d.t==='err'){if(d.msg)toast(d.msg);return}
     if(d.t!=='state'||ON.seat<0)return;
     if(ON.got&&D&&ON.started&&d.ver<ON.ver)return;     // eski durum
+    if(d.re&&ON.got&&D&&ON.started&&d.ver<=ON.ver&&(U.busy||APPLYING||Date.now()-(ON.pend||0)<3000))return;
     if(ON.got&&D&&ON.started&&JSON.stringify(d.state)===JSON.stringify(canon())){ON.ver=Math.max(ON.ver,d.ver);return}
     acceptState(d)});
   c.on('close',()=>{if(!ON)return;
@@ -1641,7 +1686,7 @@ async function applyRemote0(prev){if(prev&&prev.ended&&!D.ended)close();
   if(!prev){close();tKey='';render();return}
   const addTable=D.table.flatMap(x=>[x.a,...(x.d?[x.d]:[])]).filter(c=>!prev.tableIds.has(c.id));
   if(D.table.length===0&&prev.table.length){
-    const taker=D.hands.findIndex(h=>prev.table.every(o=>h.some(c=>c.id===o.c.id)));taker>=0?snd.take():snd.clear();
+    let taker=D.hands.findIndex(h=>prev.table.every(o=>h.some(c=>c.id===o.c.id)));if(taker<0&&D.lastTook!=null&&D.lastTook!==me)taker=D.lastTook;taker>=0?snd.take():snd.clear();
     U.busy=true;await TO(sweep(prev.table,taker>=0?(taker===me?$('hand'):$('seat'+taker)):$('bita'),taker<0));render();await TO(dealAnim(prev.hands,taker>=0?Object.assign(new Set(prev.tableIds),{p:taker,n:prev.tableIds.size}):null));U.busy=false}
   else{U.busy=true;render();if(addTable.length)snd.card();
     for(const c of addTable){const x=D.table.find(t=>t.a.id===c.id||(t.d&&t.d.id===c.id));const who=x?(x.d&&x.d.id===c.id?D.defender:x.by):1;
@@ -1653,6 +1698,7 @@ function onlineRematch(){if(!D||!D.ended)return;const first=D.durak!=null?(D.dur
 function leaveOnline(){if(window.KQuick)KQuick.stop();clearInterval(HB);try{CONN&&CONN.close()}catch(e){}try{ON&&ON.conns&&Object.values(ON.conns).forEach(c=>{try{c.close()}catch(e){}})}catch(e){}try{PEER&&PEER.destroy()}catch(e){}CONN=null;PEER=null;ON=null;NAMES=BOTS.slice()}
 setTimeout(()=>{const h=(location.hash||'').slice(1).toUpperCase();if(/^[A-Z0-9]{5}$/.test(h)){close();joinOnline(h)}},0);
 addEventListener('hashchange',()=>{const h=(location.hash||'').slice(1).toUpperCase();if(/^[A-Z0-9]{5}$/.test(h)&&(!ON||ON.code!==h)){close();joinOnline(h)}});
+if(/[?&]test=1/.test(location.search))window.__T={myOptions,doAttack,doDefend,botAttackCard,canThrow,beats,getU:()=>U};
 window.__dbg=()=>({busy:U.busy,applying:APPLYING,pending:PENDING,opt:myOptions().mode,seat:ON&&ON.seat,ver:ON&&ON.ver,players:ON&&ON.players});
 
 function quickOnline(){if(!(localStorage.getItem('durak_name')||'').trim()){toast('Önce adını yaz');try{$('nameIn').focus()}catch(e){}return}

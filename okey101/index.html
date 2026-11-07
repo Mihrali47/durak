@@ -1079,7 +1079,7 @@ addEventListener('pointerup',e=>{
 addEventListener('pointercancel',()=>{if(drag){drag.g&&drag.g.remove();drag.el.classList.remove('dragging');drag=null;render()}});
 
 /* hamleler */
-function res(r){if(!r.ok){toast(r.msg);return false}return true}
+function res(r){if(!r.ok){if(r.msg)toast(r.msg);return false}return true}
 function toggle(id){if(S.ended)return;if(U.sel.has(id))U.sel.delete(id);else{U.sel.clear();U.sel.add(id)}if(U.newId===id)U.newId=null;render()}
 function pDraw(from,slot){
   if(!(S.turn===0&&S.phase==='draw'&&!U.busy))return;
@@ -1285,10 +1285,12 @@ function viewNames(k){return [0,1,2,3].map(i=>i===0?'Sen':OK.names[(i+k)%4])}
 /* ev sahibi: her değişiklikte herkese kendi gözünden durumu yolla */
 function bcastK(d){for(const u in OK.conns){const c=OK.conns[u];if(c.open)try{c.send(d)}catch(e){}}}
 function schedB(){if(!(OK.on&&OK.host&&OK.started))return;clearTimeout(schedB.t);schedB.t=setTimeout(sendAll,70)}
+/* online: misafire rakip ıstakaları ve orta deste sadece adet olarak gider (el bitince açılır) */
+function hideS(o){if(o.ended)return o;o.hands=o.hands.map((h,i)=>i===0?h:h.map((_,j)=>({id:-1-i*40-j,c:'x',n:0})));o.deck=o.deck.map((_,j)=>({id:-200-j,c:'x',n:0}));return o}
 function sendAll(){if(!(OK.on&&OK.host&&OK.started&&S&&GM))return;OK.ver++;
   try{localStorage.setItem('okey101_host',JSON.stringify({code:OK.code,S,GM,lob:OK.lob,names:OK.names,human:OK.human,rising:RULES.rising,classic:!!RULES.classic,slots:U.slots,ver:OK.ver,t:Date.now()}))}catch(e){}
   for(const l of OK.lob){if(l.seat===0)continue;const c=OK.conns[l.uid];if(!c||!c.open)continue;
-    try{c.send({t:'st',v:OK.ver,S:rotS(S,l.seat),GM:rotGM(GM,l.seat),names:viewNames(l.seat),rising:RULES.rising,classic:!!RULES.classic,total:GM.total})}catch(e){}}}
+    try{c.send({t:'st',v:OK.ver,S:hideS(rotS(S,l.seat)),GM:rotGM(GM,l.seat),names:viewNames(l.seat),rising:RULES.rising,classic:!!RULES.classic,total:GM.total})}catch(e){}}}
 {const r0=render;render=function(){r0();schedB();const l1=$('lb1'),l2=$('lb2'),l3=$('lb3'),t1=`${NAMES[1]} attı`,t2=`${NAMES[2]} attı`,t3=`${NAMES[3]} attı · al`;
   if(l1&&l1.dataset.v!==t1){l1.dataset.v=t1;l1.textContent=t1}if(l2&&l2.dataset.v!==t2){l2.dataset.v=t2;l2.textContent=t2}if(l3&&l3.dataset.v!==t3){l3.dataset.v=t3;l3.textContent=t3}}}
 {const h0=handEnd;handEnd=function(){if(OK.on&&!OK.host){guestEnd();return}h0();schedB();
@@ -1355,7 +1357,10 @@ window.KH_HOST=()=>{hostOnline();return linkK(OK.code)+''};
 function joinOnline(code){if(!myNameK()){open(`<h2>101 Okey masasına davet</h2><p class="muted">Adını yaz ve masaya otur.</p><input id="nmK" maxlength="14" placeholder="Adını yaz" style="width:100%;min-height:46px;border-radius:12px;border:1px solid #c9c1b0;padding:0 12px;font:600 16px/1 inherit">
     <div class="rowb"><button class="btn green" id="goK">Masaya otur</button></div>`);$('goK').onclick=()=>{try{localStorage.setItem('okey101_name',($('nmK').value.trim()||'Misafir').slice(0,14))}catch(e){}joinOnline(code)};return}
   Object.assign(OK,{on:true,host:false,code,peer:new Peer(),conn:null,started:false,gver:-1,last:0});
-  for(const f in ENG)window[f]=function(s,...a){const r=ENG[f](s,...a);if(OK.on&&!OK.host&&s===0&&r&&r.ok)gsendK({t:'act',fn:f,a});return r};
+  for(const f in ENG)window[f]=function(s,...a){
+    /* ortadan çekilecek taş misafirde bilinmez: ev sahibine sorulur, gelen durumla ıstakaya eklenir */
+    if(OK.on&&!OK.host&&s===0&&f==='draw'&&a[0]==='deck'){if(!(S&&S.turn===0&&S.phase==='draw'))return {ok:false,msg:'Sıra sende değil'};gsendK({t:'act',fn:f,a});OK.wantDraw=Date.now();return {ok:false,msg:''}}
+    const r=ENG[f](s,...a);if(OK.on&&!OK.host&&s===0&&r&&r.ok)gsendK({t:'act',fn:f,a});return r};
   open('<h2>Bağlanılıyor…</h2><p class="muted">Masaya bağlanıyorsun, birkaç saniye sürebilir.</p>');
   const connect=()=>{if(!OK.on)return;try{OK.conn&&OK.conn.close()}catch(e){}const c=OK.peer.connect(PFXK+code);OK.conn=c;c.on('open',()=>c.send({t:'hello',uid:UIDK,name:myNameK()}));c.on('data',d=>{OK.last=Date.now();if(d&&d.t==='away')hostAway(true);else hostAway(false);guestRecvK(d)})};
   OK.peer.on('open',connect);
@@ -1375,7 +1380,9 @@ function guestRecvK(d){if(!d)return;
   if(d.t==='st')gApply(d)}
 function gApply(d){if(drag||U.busy){clearTimeout(gApply.t);gApply.t=setTimeout(()=>gApply(d),150);return}if(d.v<=OK.gver)return;OK.gver=d.v;
   const first=!OK.started,prevHand=GM&&GM.handNo,prevDisc=S&&!first?S.discards.map(x=>x.length):null,prevTurn=S&&S.turn;
+  const prevIds=S&&!first?new Set(S.hands[0].map(t=>t.id)):null;
   OK.started=true;RULES.rising=d.rising;RULES.classic=!!d.classic;setNames(d.names);S=d.S;GM=d.GM;GM.started=true;
+  if(prevIds&&prevHand===GM.handNo){const nt=S.hands[0].find(t=>!prevIds.has(t.id));if(nt){U.newId=nt.id;if(OK.wantDraw&&Date.now()-OK.wantDraw<8000){snd('tap');OK.wantDraw=0}}}
   if(first||prevHand!==GM.handNo){U.sel.clear();U.slots=Array(COLS*ROWS).fill(null);U.newId=null;sortSeri();OK.endShown=-1;
     if(!$('ov').hidden)close();log(`${GM.handNo}. el · okey ${CN[S.okC]} ${S.okN}`,true);banner(`${GM.handNo}. EL`,'small')}
   else if(prevDisc)for(let s=1;s<4;s++)if(S.discards[s].length>prevDisc[s]){const t=S.discards[s][S.discards[s].length-1];snd('drop');log(`${NAMES[s]} ${tname(t)} attı`)}
