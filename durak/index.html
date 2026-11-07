@@ -536,6 +536,20 @@ button.card:focus-visible,.btn:focus-visible,.chip:focus-visible,.pair:focus-vis
 .sec{border-top:1px solid #d7dee5;padding-top:12px;display:flex;flex-direction:column;gap:12px}
 details.more summary{cursor:pointer;font-weight:700;color:#3f6584;list-style:none}
 details.more[open] summary{margin-bottom:10px}
+
+/* alt çubuk (Durak uygulamalarındaki gibi): eldeki kartların altında açık renk şerit; solda büyük eylem düğmesi, yanında avatar ve durum */
+.bottom{gap:0;margin-left:calc(-1*max(12px,env(safe-area-inset-left,0px)));margin-right:calc(-1*max(12px,env(safe-area-inset-right,0px)));margin-bottom:calc(-1*max(8px,env(safe-area-inset-bottom,0px)))}
+.bottom .hand{order:1;z-index:1;margin:0 max(12px,env(safe-area-inset-left,0px))}
+.bottom .barrow{order:2;position:relative;z-index:2;background:#f4f6f8;color:#23303b;margin-top:calc(var(--cw)*-.24);min-height:62px;
+  padding:9px max(12px,env(safe-area-inset-right,0px)) max(9px,env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px));border-radius:18px 18px 0 0;box-shadow:0 -4px 16px rgba(0,0,0,.28)}
+.bottom .actions{order:-1}
+.bottom .status{color:#23303b;font-weight:500}.bottom .status b{color:#c0392b}
+.bottom .btn{height:46px;min-width:104px;padding:0 20px;background:#fff;color:#d23b3b;border:2px solid #dde3e8;font-size:18px;box-shadow:0 2px 6px rgba(0,0,0,.12)}
+.bottom .btn#bPass,.bottom .btn.multi{color:#23824f}
+.bottom .btn.cheat{background:#efe6fb;color:#5b3d8a}
+.bottom .btn.undo{font-size:14px;color:#3f6584;min-width:0}
+.bottom .chatbtn{background:#dfe5ea;color:#23303b}
+.bottom .me .av{box-shadow:0 1px 4px rgba(0,0,0,.2)}
 </style>
 
 <div class="app" id="app">
