@@ -40,7 +40,7 @@ header .t{flex:1;min-width:0;text-align:center;font-weight:700;font-size:16px}
 .pawn{position:absolute;width:6.4%;height:6.4%;margin:-3.2% 0 0 -3.2%;border-radius:50%;z-index:2;transition:left .11s linear,top .11s linear,transform .15s;
   box-shadow:0 3px 0 rgba(0,0,0,.35),inset 0 -4px 0 rgba(0,0,0,.25),inset 0 3px 0 rgba(255,255,255,.35);border:2px solid rgba(0,0,0,.25)}
 .pawn.can{z-index:300!important;animation:pulse .9s ease-in-out infinite;cursor:pointer}
-.pawn.can::after{content:"";position:absolute;inset:-7px;border-radius:50%;border:3px solid #fff;opacity:.9}
+
 .pawn.up{transform:translateY(-14%) scale(1.12);z-index:5}
 /* satranç piyonu görünümü: yürür, vurur, devrilir */
 .pawn{background:none!important;border:0!important;box-shadow:none!important;border-radius:0!important;width:7.6%!important;height:9.5%;margin:-7.1% 0 0 -3.8%;filter:drop-shadow(0 3px 2px rgba(0,0,0,.45))}
@@ -56,7 +56,8 @@ header .t{flex:1;min-width:0;text-align:center;font-weight:700;font-size:16px}
 @keyframes box{0%,100%{transform:translateY(0) rotate(-2deg) scale(1,1)}25%{transform:translateY(-6%) rotate(0deg) scale(.98,1.03)}50%{transform:translateY(0) rotate(2deg) scale(1.02,.97)}75%{transform:translateY(-4%) rotate(0deg) scale(.99,1.02)}}
 .pawn.walking .fig{animation:none}
 .pawn svg{display:block;width:100%;height:100%;overflow:visible;transform-origin:50% 92%}
-.pawn.can::after{inset:auto 2% -4% 2%;height:20%;border-radius:50%;border:3px solid #fff;box-shadow:0 0 8px rgba(255,255,255,.8)}
+/* oynayabilecek adam: altta beyaz halka yok, figür altın gibi parlar */
+.pawn.can .fig{filter:drop-shadow(0 0 3px #ffd75e) drop-shadow(0 0 6px rgba(255,200,60,.85))}
 /* ayak altındaki gölge: adam karenin içinde dursun */
 .pawn::before{content:"";position:absolute;left:14%;right:14%;bottom:-3%;height:16%;border-radius:50%;background:radial-gradient(ellipse,rgba(40,25,10,.45),rgba(40,25,10,0) 70%);z-index:-1}
 .pawn.walking::before{opacity:.7}.pawn.walking::after,.pawn.scared::after{display:none!important}
