@@ -33,7 +33,7 @@ header .t{flex:1;min-width:0;text-align:center;font-weight:700;font-size:16px}
 .pl .h{font-size:12px;color:var(--muted)}
 .wrapb{flex:1;min-height:0;width:100%;display:flex;align-items:center;justify-content:center}
 .board{position:relative;width:min(100%,var(--bs));aspect-ratio:1;background:var(--board);border-radius:18px;box-shadow:0 10px 30px rgba(0,0,0,.5),inset 0 0 0 6px #e6d4b0}
-.cell{position:absolute;width:7.6%;height:7.6%;margin:-3.8% 0 0 -3.8%;border-radius:50%;background:#fffaf0;border:2px solid var(--line)}
+.cell{position:absolute;width:7%;height:7%;margin:-3.5% 0 0 -3.5%;border-radius:50%;background:#fffaf0;border:2px solid var(--line)}
 .cell.st{border-width:3px}
 .cell.hm{opacity:.9}
 .cell.tg{box-shadow:0 0 0 4px rgba(231,181,76,.9)}
@@ -43,9 +43,10 @@ header .t{flex:1;min-width:0;text-align:center;font-weight:700;font-size:16px}
 .pawn.can::after{content:"";position:absolute;inset:-7px;border-radius:50%;border:3px solid #fff;opacity:.9}
 .pawn.up{transform:translateY(-14%) scale(1.12);z-index:5}
 /* satranç piyonu görünümü: yürür, vurur, devrilir */
-.pawn{background:none!important;border:0!important;box-shadow:none!important;border-radius:0!important;height:9.4%;margin:-7.4% 0 0 -3.2%;filter:drop-shadow(0 3px 2px rgba(0,0,0,.45))}
+.pawn{background:none!important;border:0!important;box-shadow:none!important;border-radius:0!important;width:9.6%!important;height:13.4%;margin:-12.1% 0 0 -4.8%;filter:drop-shadow(0 3px 2px rgba(0,0,0,.45))}
+.pawn img.spr{display:block;width:100%;height:100%;object-fit:contain;object-position:50% 100%;pointer-events:none;-webkit-user-drag:none;user-select:none}
 .pawn svg{display:block;width:100%;height:100%;overflow:visible;transform-origin:50% 92%}
-.pawn.can::after{inset:auto -6px -6px -6px;height:42%;border-radius:50%}
+.pawn.can::after{inset:auto -3px -2px -3px;height:22%;border-radius:50%}
 .pawn .body{position:absolute;inset:0;transform-origin:50% 92%}
 .pawn .lg,.pawn .arm{transform-box:fill-box;transform-origin:50% 6%}
 .pawn .mo{display:none}.pawn.scared .mo{display:inline}.pawn.scared .mh{display:none}.pawn.scared .eye{transform:scale(1.35);transform-box:fill-box;transform-origin:center}
@@ -109,16 +110,38 @@ input.name{width:100%;border:1px solid #d9d1bf;border-radius:10px;padding:11px;f
   .players{grid-column:2;grid-row:2;grid-template-columns:1fr;align-self:start}
   .bottom{grid-column:2;grid-row:3;flex-wrap:wrap}
 }
+
+/* Kavgacı görünüm: ahşap çerçeveli tahta, renkli ev köşeleri, büyük Zar at düğmesi */
+header .t{font:800 18px/1.1 Georgia,"Times New Roman",serif;letter-spacing:.01em;color:#f6e6c4;text-shadow:0 2px 0 rgba(0,0,0,.4)}
+header .t .orn{color:#c9a463;font-weight:400;opacity:.8}
+.board{border:clamp(8px,2.2vw,15px) solid #74411c;border-radius:20px;box-sizing:border-box;
+  box-shadow:inset 0 0 0 3px #e9d3a6,inset 0 0 22px rgba(120,80,30,.25),0 0 0 2px #3b1f0b,0 0 0 4px #8d5a2b,0 14px 34px rgba(0,0,0,.6);
+  background:radial-gradient(ellipse at 50% 40%,#fbf1dc,#efdcb8)}
+.board::after{content:"";position:absolute;inset:calc(-1*clamp(8px,2.2vw,15px) + 4px);border-radius:16px;pointer-events:none;
+  background:radial-gradient(circle,#e8c46a 0 3px,#8a6224 4px,transparent 5px) 0 0/100% 100% no-repeat,
+    radial-gradient(circle at 6px 6px,#e8c46a 0 3px,#8a6224 4px,transparent 5px),radial-gradient(circle at calc(100% - 6px) 6px,#e8c46a 0 3px,#8a6224 4px,transparent 5px),
+    radial-gradient(circle at 6px calc(100% - 6px),#e8c46a 0 3px,#8a6224 4px,transparent 5px),radial-gradient(circle at calc(100% - 6px) calc(100% - 6px),#e8c46a 0 3px,#8a6224 4px,transparent 5px)}
+.zone{position:absolute;border-radius:14px;z-index:0;pointer-events:none}
+.cell{z-index:1}
+.rollb{display:flex;align-items:center;gap:14px;padding:8px 10px 8px 26px;border-radius:22px;cursor:pointer;
+  background:linear-gradient(#8e2a1f,#5e170f);border:2px solid #d9a85a;box-shadow:0 0 0 2px #3a0d07,0 8px 20px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.25)}
+.rollb .rl{white-space:nowrap;font:800 24px/1 Georgia,"Times New Roman",serif;color:#fff3dc;text-shadow:0 2px 0 rgba(0,0,0,.45);border-right:2px solid rgba(217,168,90,.55);padding-right:16px}
+.rollb .die{width:62px;height:62px;padding:9px}
+.rollb:has(.die:disabled){filter:saturate(.45) brightness(.8);cursor:default}
+.rollb:has(.die.go){animation:rglow 1.1s ease-in-out infinite}
+@keyframes rglow{50%{box-shadow:0 0 0 2px #3a0d07,0 0 0 7px rgba(231,181,76,.55),0 8px 20px rgba(0,0,0,.5)}}
+@media (max-width:520px){header .t .orn{display:none}header .t{font-size:17px}}
+@media (orientation:landscape) and (max-height:560px){.rollb{padding:6px 8px 6px 16px;gap:10px}.rollb .rl{font-size:19px;padding-right:10px}.rollb .die{width:52px;height:52px;padding:7px}}
 </style>
 </head>
 <body>
 <div class="app">
-  <header><button class="hb" id="bMenu">Menü</button><div class="t">Kızma Birader</div><button class="hb" id="bRules">Kurallar</button></header>
+  <header><button class="hb" id="bMenu">Menü</button><div class="t"><span class="orn">—</span> <span>Kavgacı Kızma Birader</span> <span class="orn">—</span></div><button class="hb" id="bRules">Kurallar</button></header>
   <div class="players" id="players"></div>
   <div class="wrapb" id="wrapb"><div class="board" id="board"><div class="center" id="center"></div></div></div>
   <div class="bottom">
     <div class="msg" id="msg"></div>
-    <button class="die" id="die" data-v="6" aria-label="Zar at"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></button>
+    <div class="rollb" id="rollB"><span class="rl">Zar at</span><button class="die" id="die" data-v="6" aria-label="Zar at"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></button></div>
     <div class="msg" id="msg2" style="text-align:right"></div>
     <button class="hb chatb" id="bChat" hidden>💬</button>
   </div>
@@ -129,7 +152,7 @@ input.name{width:100%;border:1px solid #d9d1bf;border-radius:10px;padding:11px;f
 const KB=window.KB,$=id=>document.getElementById(id);
 let botLvl=(()=>{try{return JSON.parse(localStorage.getItem('kh_botlvl'))||'normal'}catch(e){return 'normal'}})();
 {const _pk=KB.botPick;KB.botPick=(G,p)=>botLvl==='kolay'&&Math.random()<.6?(Math.random()*G.moves.length|0):_pk(G,p)}
-const COL=['Kırmızı','Mavi','Yeşil','Sarı'],CV=['var(--c0)','var(--c1)','var(--c2)','var(--c3)'];
+const COL=['Kırmızı','Mavi','Yeşil','Sarı'],CV=['var(--c0)','var(--c1)','var(--c2)','var(--c3)'],SPR=['r','b','g','y'];
 const BOTN=['Nuri','Rıza','Hamdi'];
 const PATH=[[0,4],[1,4],[2,4],[3,4],[4,4],[4,3],[4,2],[4,1],[4,0],[5,0],[6,0],[6,1],[6,2],[6,3],[6,4],[7,4],[8,4],[9,4],[10,4],[10,5],[10,6],[9,6],[8,6],[7,6],[6,6],[6,7],[6,8],[6,9],[6,10],[5,10],[4,10],[4,9],[4,8],[4,7],[4,6],[3,6],[2,6],[1,6],[0,6],[0,5]];
 const HOME=[[[5,9],[5,8],[5,7],[5,6]],[[1,5],[2,5],[3,5],[4,5]],[[5,1],[5,2],[5,3],[5,4]],[[9,5],[8,5],[7,5],[6,5]]];
@@ -144,7 +167,7 @@ const pn=p=>p===me&&mode==='off'?'Sen':names[p];
 function toast(h,ms=2200){const t=$('toast');t.innerHTML=h;t.hidden=false;t.style.opacity=1;clearTimeout(toast.t);toast.t=setTimeout(()=>{t.style.opacity=0;setTimeout(()=>t.hidden=true,300)},ms)}
 /* tahta senin rengin altta kalacak şekilde döner */
 function rot([x,y]){for(let k=0;k<me;k++)[x,y]=[y,10-x];return [x,y]}
-const pct=v=>(4.55+v*9.09)+'%';
+const pct=v=>(7+v*8.6)+'%';
 function place(el,xy){const [x,y]=rot(xy);el.style.left=pct(x);el.style.top=pct(y)}
 function xyOf(p,i,d){return d<0?BASE[p][i]:d<40?PATH[KB.absPos(p,d)]:HOME[p][d-40]}
 function pawnSvg(c){const k='rgba(0,0,0,.55)';return `<svg viewBox="0 0 40 58" aria-hidden="true">
@@ -156,12 +179,15 @@ function pawnSvg(c){const k='rgba(0,0,0,.55)';return `<svg viewBox="0 0 40 58" a
 <path d="M13 25Q14.5 22.5 17 22" stroke="rgba(255,255,255,.55)" stroke-width="2" fill="none" stroke-linecap="round"/>
 <circle cx="20" cy="11" r="8.6" fill="#f1d3b3" stroke="${k}" stroke-width="1.5"/><path d="M11.6 9.5Q12.5 2.4 20 2.4Q27.5 2.4 28.4 9.5Q24 6.6 20 7Q16 6.6 11.6 9.5Z" fill="${c}" stroke="${k}" stroke-width="1.2"/>
 <circle class="eye" cx="17" cy="11.5" r="1.3" fill="#2b2118"/><circle class="eye" cx="23" cy="11.5" r="1.3" fill="#2b2118"/><path class="mh" d="M17.5 15Q20 16.8 22.5 15" stroke="#2b2118" stroke-width="1.2" fill="none" stroke-linecap="round"/><ellipse class="mo" cx="20" cy="15.6" rx="1.7" ry="2.1" fill="#2b2118"/></svg>`}
-function buildBoard(){const b=$('board');b.querySelectorAll('.cell,.pawn').forEach(x=>x.remove());
+function buildBoard(){const b=$('board');b.querySelectorAll('.cell,.pawn,.zone').forEach(x=>x.remove());
+  for(const p of [0,1,2,3]){const on=G.act.includes(p),pts=BASE[p].map(rot),xs=pts.map(q=>q[0]),ys=pts.map(q=>q[1]),z=document.createElement('div');z.className='zone';
+    z.style.left=(2.7+Math.min(...xs)*8.6)+'%';z.style.top=(2.7+Math.min(...ys)*8.6)+'%';z.style.width=((Math.max(...xs)-Math.min(...xs)+1)*8.6)+'%';z.style.height=((Math.max(...ys)-Math.min(...ys)+1)*8.6)+'%';
+    z.style.background=on?`color-mix(in srgb,${CV[p]} 30%,transparent)`:'rgba(0,0,0,.04)';b.appendChild(z)}
   PATH.forEach((xy,k)=>{const c=document.createElement('div');c.className='cell';const s=KB.START.indexOf(k);if(s>=0&&G.act.includes(s)){c.classList.add('st');c.style.borderColor=CV[s];c.style.background=`color-mix(in srgb,${CV[s]} 35%,#fff)`}c.dataset.k=k;place(c,xy);b.appendChild(c)});
   for(const p of [0,1,2,3]){const on=G.act.includes(p);
     HOME[p].forEach(xy=>{const c=document.createElement('div');c.className='cell hm';c.style.background=on?`color-mix(in srgb,${CV[p]} 45%,#fff)`:'#eee3cc';c.style.borderColor=on?CV[p]:'var(--line)';place(c,xy);b.appendChild(c)});
     BASE[p].forEach(xy=>{const c=document.createElement('div');c.className='cell';c.style.background=on?`color-mix(in srgb,${CV[p]} 25%,#fff)`:'#eee3cc';c.style.borderColor=on?CV[p]:'var(--line)';place(c,xy);b.appendChild(c)});
-    if(on)for(let i=0;i<4;i++){const e=document.createElement('div');e.className='pawn';e.id=`pw${p}${i}`;e.style.background=CV[p];e.innerHTML='<div class="body">'+pawnSvg(CV[p])+'</div>';e.onclick=()=>tapPawn(p,i);b.appendChild(e)}}
+    if(on)for(let i=0;i<4;i++){const e=document.createElement('div');e.className='pawn';e.id=`pw${p}${i}`;e.style.background=CV[p];e.innerHTML=`<div class="body"><img class="spr" src="img/${SPR[p]}_front.webp" alt="" draggable="false"></div>`;e.onclick=()=>tapPawn(p,i);b.appendChild(e)}}
   buildBoard.key=G.act.join()+':'+me}
 function render(){if(!G)return;if(buildBoard.key!==G.act.join()+':'+me)buildBoard();
   for(const p of G.act)for(let i=0;i<4;i++){const e=$(`pw${p}${i}`);if(!e||e.dataset.anim)continue;place(e,xyOf(p,i,G.pawns[p][i]));e.classList.remove('can','up')}
@@ -195,15 +221,18 @@ function animDie(v){KSfx.play('dice');return new Promise(r=>{const d=$('die');d.
 function markAnim(L,on){for(const id of [`pw${L.p}${L.i}`,L.hit?`pw${L.hit.p}${L.hit.i}`:null]){const e=id&&$(id);if(e){if(on)e.dataset.anim=1;else delete e.dataset.anim}}}
 const sleep=ms=>new Promise(z=>setTimeout(z,ms/SPD));
 /* satrançtaki yürüyüş: adım adım ilerler, kol-bacak zıt sallanır, ayak basınca toz kalkar */
-const XY=xy=>{const [x,y]=rot(xy);return {x:4.55+x*9.09,y:4.55+y*9.09}};
+const XY=xy=>{const [x,y]=rot(xy);return {x:7+x*8.6,y:7+y*8.6}};
 const setP=(el,q)=>{el.style.left=q.x+'%';el.style.top=q.y+'%'};
 const lerp=(a,b,t)=>({x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t});
 function dust(q){const e=document.createElement('div');e.className='dust';e.style.left=q.x+'%';e.style.top=q.y+'%';$('board').appendChild(e);
   e.animate([{transform:'translate(-50%,-50%) scale(.4)',opacity:.9},{transform:'translate(-50%,-50%) scale(1.8,1.3)',opacity:0}],{duration:380/SPD,easing:'ease-out'}).finished.then(()=>e.remove())}
+/* yürüme yönüne göre adamın görünümü: sağ, sol, önden, arkadan */
+function face(el,dx,dy){const im=el.querySelector('img.spr');if(!im)return;const p=+el.id[2];const d=dx==null?'front':Math.abs(dx)>=Math.abs(dy)?(dx>0?'right':'left'):(dy>0?'front':'back');const src=`img/${SPR[p]}_${d}.webp`;if(!im.src.endsWith(src))im.src=src}
+['r','b','g','y'].forEach(c=>['front','right','back','left'].forEach(d=>{const i=new Image();i.src=`img/${c}_${d}.webp`}));
 function stride(el,a,b,n=2,stepMs=150){return new Promise(res=>{
   const len=Math.hypot(b.x-a.x,b.y-a.y)||1,ux=(b.x-a.x)/len,sw=Math.abs(ux)>.2?Math.sign(ux):0,AMP=14+22*Math.abs(ux),T=stepMs/SPD;
   const body=el.querySelector('.body'),L=[...el.querySelectorAll('.lg')],AR=[...el.querySelectorAll('.arm')],t0=performance.now();let lastK=0;
-  const ease=q=>.4*q+.6*(q*q*(3-2*q));
+  const ease=q=>.4*q+.6*(q*q*(3-2*q));face(el,b.x-a.x,b.y-a.y);
   if(document.hidden){setP(el,b);return res()}
   function frame(now){const tt=Math.max(0,Math.min((now-t0)/T,n)),k=Math.min(Math.floor(tt),n-1),q=tt-k;
     const pos=lerp(a,b,(k+ease(q))/n);setP(el,pos);
@@ -211,9 +240,9 @@ function stride(el,a,b,n=2,stepMs=150){return new Promise(res=>{
     if(k!==lastK){KSfx.play('tap');lastK=k}
     body.style.transform=`translateX(${side*si*3}%) translateY(${-si*8}%) rotate(${side*si*6}deg) scale(${1+.03*(1-si)},${1-.04*(1-si)})`;
     const out=swI===0?1:-1;
-    L[swI].style.transform=`translateY(${-si*2}px) rotate(${sw?sw*AMP*co:out*si*16}deg)`;
+    if(L.length){L[swI].style.transform=`translateY(${-si*2}px) rotate(${sw?sw*AMP*co:out*si*16}deg)`;
     L[stI].style.transform=`rotate(${sw?-sw*AMP*co*.8:-out*si*5}deg)`;
-    AR[swI].style.transform=`rotate(${(swI===0?-1:1)*24*co}deg)`;AR[stI].style.transform=`rotate(${(stI===0?1:-1)*24*co}deg)`;
+    AR[swI].style.transform=`rotate(${(swI===0?-1:1)*24*co}deg)`;AR[stI].style.transform=`rotate(${(stI===0?1:-1)*24*co}deg)`}
     if(tt<n)requestAnimationFrame(frame);
     else{setP(el,b);body.style.transform='';L.concat(AR).forEach(l=>l.style.transform='');res()}}
   requestAnimationFrame(frame)})}
@@ -235,9 +264,9 @@ function animMove(L){return new Promise(async r=>{const e=$(`pw${L.p}${L.i}`);if
     const hb=XY(BASE[L.hit.p][L.hit.i]),mid={x:(tgt.x+hb.x)/2,y:Math.min(tgt.y,hb.y)-14};h.style.zIndex=9;
     h.querySelector('.body').animate([{transform:'rotate(0)'},{transform:`rotate(${dx*720}deg) scale(.8)`,offset:.85},{transform:'rotate(720deg)'}],{duration:760/SPD,easing:'ease-out'});
     await h.animate([{left:tgt.x+'%',top:tgt.y+'%'},{left:mid.x+'%',top:mid.y+'%',offset:.45},{left:hb.x+'%',top:hb.y+'%'}],{duration:760/SPD,easing:'cubic-bezier(.3,.6,.4,1)'}).finished;
-    setP(h,hb);h.style.zIndex='';h.classList.remove('scared');
+    setP(h,hb);h.style.zIndex='';h.classList.remove('scared');face(h);
     await stride(e,cur,tgt,1,160)}
-  e.classList.remove('walking');markAnim(L,0);r()})}
+  face(e);e.classList.remove('walking');markAnim(L,0);r()})}
 function after(){if(!G||busy)return;
   if(G.phase==='over'){showOver();return}
   if(mode==='off')ST.set('save',{G,names});
@@ -252,6 +281,7 @@ function act(p,a){if(mode==='guest'){send({t:'act',uid:UID,a});return}
   let e=null;if(a.k==='roll')e=KB.roll(G,p);else if(a.k==='move')e=KB.move(G,p,a.m);
   if(e){if(p===me)toast(e);return}
   ver++;bcastState();sync()}
+$('rollB').onclick=e=>{if(e.target.closest('#die'))return;$('die').click()};
 $('die').onclick=()=>{if(!G||busy||G.phase!=='roll'||G.turn!==me)return;$('die').disabled=true;act(me,{k:'roll'})};
 function tapPawn(p,i){if(!G||busy||p!==me||G.turn!==me||G.phase!=='move')return;const k=G.moves.findIndex(m=>m.i===i);if(k<0){toast('Bu piyon oynayamaz');return}clearTimeout(autoT);act(me,{k:'move',m:k})}
 function newGame(){const n=mode==='off'?nPlayers:null;
