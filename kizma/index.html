@@ -43,11 +43,18 @@ header .t{flex:1;min-width:0;text-align:center;font-weight:700;font-size:16px}
 .pawn.can::after{content:"";position:absolute;inset:-7px;border-radius:50%;border:3px solid #fff;opacity:.9}
 .pawn.up{transform:translateY(-14%) scale(1.12);z-index:5}
 /* satranç piyonu görünümü: yürür, vurur, devrilir */
-.pawn{background:none!important;border:0!important;box-shadow:none!important;border-radius:0!important;width:7.6%!important;height:10.8%;margin:-8.4% 0 0 -3.8%;filter:drop-shadow(0 3px 2px rgba(0,0,0,.45))}
-.pawn img.spr{display:block;width:100%;height:100%;object-fit:contain;object-position:50% 100%;pointer-events:none;-webkit-user-drag:none;user-select:none;transform-origin:50% 100%;animation:box 1s ease-in-out infinite;animation-delay:var(--dl,0s)}
+.pawn{background:none!important;border:0!important;box-shadow:none!important;border-radius:0!important;width:7.6%!important;height:9.5%;margin:-7.1% 0 0 -3.8%;filter:drop-shadow(0 3px 2px rgba(0,0,0,.45))}
+.pawn .fig{position:absolute;inset:0;transform-origin:50% 100%;animation:box 1s ease-in-out infinite;animation-delay:var(--dl,0s)}
+.pawn img.spr{position:absolute;inset:0;display:block;width:100%;height:100%;object-fit:contain;object-position:50% 100%;pointer-events:none;-webkit-user-drag:none;user-select:none}
+/* yürüyüş için resim üç parçaya bölünür: gövde, sol bacak, sağ bacak (yandan bakışta iki bacak tek parça) */
+.pawn img.up{clip-path:inset(0 0 23.5% 0);z-index:2}
+.pawn img.lg{transform-origin:50% 76%;z-index:1}
+.pawn img.lg.l{clip-path:inset(76% 50% 0 0)}.pawn img.lg.r{clip-path:inset(76% 0 0 50%)}
+/* yandan: iki bacak aynı bacak resminin iki kopyası; arkadaki hafif gölgeli, makas gibi zıt sallanır */
+.pawn.side img.lg.l,.pawn.side img.lg.r{clip-path:inset(76% 0 0 0)}.pawn.side img.lg.l{filter:brightness(.62);z-index:0}
 /* boksör duruşu: yerinde zıplar, omuz sallar */
 @keyframes box{0%,100%{transform:translateY(0) rotate(-2deg) scale(1,1)}25%{transform:translateY(-6%) rotate(0deg) scale(.98,1.03)}50%{transform:translateY(0) rotate(2deg) scale(1.02,.97)}75%{transform:translateY(-4%) rotate(0deg) scale(.99,1.02)}}
-.pawn.walking img.spr{animation:none}
+.pawn.walking .fig{animation:none}
 .pawn svg{display:block;width:100%;height:100%;overflow:visible;transform-origin:50% 92%}
 .pawn.can::after{inset:auto 2% -4% 2%;height:20%;border-radius:50%;border:3px solid #fff;box-shadow:0 0 8px rgba(255,255,255,.8)}
 /* ayak altındaki gölge: adam karenin içinde dursun */
@@ -195,7 +202,7 @@ function buildBoard(){const b=$('board');b.querySelectorAll('.cell,.pawn,.zone')
   for(const p of [0,1,2,3]){const on=G.act.includes(p);
     HOME[p].forEach(xy=>{const c=document.createElement('div');c.className='cell hm';c.style.background=on?`color-mix(in srgb,${CV[p]} 45%,#fff)`:'#eee3cc';c.style.borderColor=on?CV[p]:'var(--line)';place(c,xy);b.appendChild(c)});
     BASE[p].forEach(xy=>{const c=document.createElement('div');c.className='cell';c.style.background=on?`color-mix(in srgb,${CV[p]} 25%,#fff)`:'#eee3cc';c.style.borderColor=on?CV[p]:'var(--line)';place(c,xy);b.appendChild(c)});
-    if(on)for(let i=0;i<4;i++){const e=document.createElement('div');e.className='pawn';e.id=`pw${p}${i}`;e.style.background=CV[p];e.style.setProperty('--dl',(-Math.random()).toFixed(2)+'s');e.innerHTML=`<div class="body"><img class="spr" src="img/${SPR[p]}_front.webp" alt="" draggable="false"></div>`;e.onclick=()=>tapPawn(p,i);b.appendChild(e)}}
+    if(on)for(let i=0;i<4;i++){const e=document.createElement('div');e.className='pawn';e.id=`pw${p}${i}`;e.style.background=CV[p];e.style.setProperty('--dl',(-Math.random()).toFixed(2)+'s');e.innerHTML=`<div class="body"><div class="fig">${['up','lg l','lg r'].map(c=>`<img class="spr ${c}" src="img/${SPR[p]}_front.webp" alt="" draggable="false">`).join('')}</div></div>`;e.onclick=()=>tapPawn(p,i);b.appendChild(e)}}
   buildBoard.key=G.act.join()+':'+me}
 function render(){if(!G)return;if(buildBoard.key!==G.act.join()+':'+me)buildBoard();
   for(const p of G.act)for(let i=0;i<4;i++){const e=$(`pw${p}${i}`);if(!e||e.dataset.anim)continue;place(e,xyOf(p,i,G.pawns[p][i]));e.classList.remove('can','up')}
@@ -235,23 +242,27 @@ const lerp=(a,b,t)=>({x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t});
 function dust(q){const e=document.createElement('div');e.className='dust';e.style.left=q.x+'%';e.style.top=q.y+'%';$('board').appendChild(e);
   e.animate([{transform:'translate(-50%,-50%) scale(.4)',opacity:.9},{transform:'translate(-50%,-50%) scale(1.8,1.3)',opacity:0}],{duration:380/SPD,easing:'ease-out'}).finished.then(()=>e.remove())}
 /* yürüme yönüne göre adamın görünümü: sağ, sol, önden, arkadan */
-function face(el,dx,dy){const im=el.querySelector('img.spr');if(!im)return;const p=+el.id[2];const d=dx==null?'front':Math.abs(dx)>=Math.abs(dy)?(dx>0?'right':'left'):(dy>0?'front':'back');const src=`img/${SPR[p]}_${d}.webp`;if(!im.src.endsWith(src))im.src=src}
+function face(el,dx,dy){const ims=el.querySelectorAll('img.spr');if(!ims.length)return;const p=+el.id[2];const d=dx==null?'front':Math.abs(dx)>=Math.abs(dy)?(dx>0?'right':'left'):(dy>0?'front':'back');const src=`img/${SPR[p]}_${d}.webp`;el.classList.toggle('side',d==='left'||d==='right');ims.forEach(im=>{if(!im.src.endsWith(src))im.src=src})}
 ['r','b','g','y'].forEach(c=>['front','right','back','left'].forEach(d=>{const i=new Image();i.src=`img/${c}_${d}.webp`}));
-/* hareket: adam kareden kareye zıplayarak gider (çömelir, havalanır, yere basar) */
+/* yürüyüş: her kare iki adım; önden/arkadan bacaklar sırayla kalkar, yandan bacaklar ileri geri açılır, gövde hafifçe iner kalkar */
 function stride(el,a,b,n=2,stepMs=150){return new Promise(res=>{
-  const len=Math.hypot(b.x-a.x,b.y-a.y)||1,dir=Math.sign(b.x-a.x),T=Math.max(200,Math.min(420,len*26))/SPD;
-  const body=el.querySelector('.body'),t0=performance.now();face(el,b.x-a.x,b.y-a.y);
+  const len=Math.hypot(b.x-a.x,b.y-a.y)||1,cells=Math.max(1,Math.round(len/8.6)),steps=cells*2,T=Math.max(150,Math.min(200,stepMs+30))/SPD;
+  const body=el.querySelector('.body'),L=el.querySelector('img.lg.l'),Rr=el.querySelector('img.lg.r'),t0=performance.now(),dir=Math.sign(b.x-a.x);let last=-1;
+  face(el,b.x-a.x,b.y-a.y);const side=el.classList.contains('side');
   if(document.hidden||len<.2){setP(el,b);return res()}
-  const H=Math.min(55,22+len*2.2);let landed=false;
-  function frame(now){const q=Math.min(1,(now-t0)/T);
-    const air=Math.max(0,Math.min(1,(q-.14)/.72)),e=air<.5?2*air*air:1-Math.pow(-2*air+2,2)/2;
-    setP(el,lerp(a,b,e));
-    let tf;
-    if(q<.14){const c=q/.14;tf=`translateY(0) scale(${1+.1*c},${1-.12*c})`}
-    else if(q<.86){const k=Math.sin(Math.PI*air);tf=`translateY(${-k*H}%) rotate(${dir*8*Math.sin(Math.PI*air*2)}deg) scale(${1-.05*k},${1+.06*k})`}
-    else{const c=(q-.86)/.14;if(!landed){landed=true;KSfx.play('tap')}tf=`translateY(0) scale(${1+.12*(1-c)},${1-.14*(1-c)})`}
-    body.style.transform=tf;
-    if(q<1)requestAnimationFrame(frame);else{setP(el,b);body.style.transform='';res()}}
+  /* insan yürüyüşü: sürekli faz; yandan bacaklar kalçadan makas gibi zıt yönde sallanır, önden/arkadan sırayla dizden bükülüp kalkar */
+  function frame(now){const tt=Math.min((now-t0)/T,steps),k=Math.floor(tt),ph=Math.PI*tt,sn=Math.sin(ph),bob=Math.abs(Math.cos(ph));
+    setP(el,lerp(a,b,tt/steps));
+    if(k!==last&&k<steps){last=k;KSfx.play('tap')}
+    if(side){const A=26*sn;
+      body.style.transform=`translateY(${-bob*2.5}%) rotate(${dir*4}deg)`;
+      if(L)L.style.transform=`rotate(${A}deg) translateY(${-Math.max(0,sn)*3}%)`;
+      if(Rr)Rr.style.transform=`rotate(${-A}deg) translateY(${-Math.max(0,-sn)*3}%)`}
+    else{const l=Math.max(0,sn),r=Math.max(0,-sn);
+      body.style.transform=`translate(${sn*2}%,${-bob*2}%) rotate(${sn*3}deg)`;
+      if(L)L.style.transform=`translateY(${-l*9}%) scaleY(${1-l*.12})`;
+      if(Rr)Rr.style.transform=`translateY(${-r*9}%) scaleY(${1-r*.12})`}
+    if(tt<steps)requestAnimationFrame(frame);else{setP(el,b);body.style.transform='';if(L)L.style.transform='';if(Rr)Rr.style.transform='';res()}}
   requestAnimationFrame(frame)})}
 function shakeBoard(){$('board').animate([{transform:'translate(0,0)'},{transform:'translate(-5px,3px)'},{transform:'translate(4px,-3px)'},{transform:'translate(-3px,2px)'},{transform:'translate(0,0)'}],{duration:320/SPD})}
 function animMove(L){return new Promise(async r=>{const e=$(`pw${L.p}${L.i}`);if(!e)return r();e.classList.add('walking');zf(e,0);
