@@ -137,7 +137,7 @@ const BASE=[[[0,9],[1,9],[0,10],[1,10]],[[0,0],[1,0],[0,1],[1,1]],[[9,0],[10,0],
 const ST={get(k,d){try{const v=localStorage.getItem('kb_'+k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem('kb_'+k,JSON.stringify(v))}catch(e){}},del(k){try{localStorage.removeItem('kb_'+k)}catch(e){}}};
 const UID=ST.get('uid',null)||(()=>{const u=Math.random().toString(36).slice(2,10);ST.set('uid',u);return u})();
 const SPD=+(new URLSearchParams(location.search).get('spd')||1);
-let kEsli=ST.get('esli',false);
+let kEsli=ST.get('esli',false),kT1=ST.get('t1',false);
 let G=null,names=['Sen',...BOTN],me=0,mode='off',human=[true,false,false,false],ver=0,busy=false,shownRid=0,shownMid=0,botT=null,schedKey=null,nPlayers=ST.get('n',4),autoT=null;
 const myName=()=>(window.KH&&KH.name())||ST.get('name','')||'Sen';
 const pn=p=>p===me&&mode==='off'?'Sen':names[p];
@@ -175,7 +175,7 @@ function render(){if(!G)return;if(buildBoard.key!==G.act.join()+':'+me)buildBoar
   d.style.outline=`3px solid ${CV[G.turn]}`;d.style.outlineOffset='3px';
   let m='',s='';
   if(G.phase==='over')m=G.winner===me?'Kazandın!':`${names[G.winner]} kazandı`;
-  else if(G.turn===me){if(G.phase==='roll'){m='Zar at';const base=!G.pawns[me].some(x=>x>=0&&x<40);if(G.tries>0&&base)s=`Kalan hak: ${3-G.tries}`;else if(G.roll===6&&G.last&&G.last.p===me)s='6 attın, tekrar at!'}
+  else if(G.turn===me){if(G.phase==='roll'){m='Zar at';const base=!G.pawns[me].some(x=>x>=0&&x<40);if(G.tries>0&&base)s=`Kalan hak: ${(G.t1?1:3)-G.tries}`;else if(G.roll===6&&G.last&&G.last.p===me)s='6 attın, tekrar at!'}
     else{m='Piyonunu seç';s=`Zar: ${G.roll}`}}
   else m=`${names[G.turn]} oynuyor…`;
   $('msg').innerHTML=m?`<span>${m}</span>`:'';$('msg2').innerHTML=s?`<span>${s}</span>`:'';
@@ -255,7 +255,7 @@ function act(p,a){if(mode==='guest'){send({t:'act',uid:UID,a});return}
 $('die').onclick=()=>{if(!G||busy||G.phase!=='roll'||G.turn!==me)return;$('die').disabled=true;act(me,{k:'roll'})};
 function tapPawn(p,i){if(!G||busy||p!==me||G.turn!==me||G.phase!=='move')return;const k=G.moves.findIndex(m=>m.i===i);if(k<0){toast('Bu piyon oynayamaz');return}clearTimeout(autoT);act(me,{k:'move',m:k})}
 function newGame(){const n=mode==='off'?nPlayers:null;
-  if(mode==='off'){me=0;G=KB.newGame({n,esli:n===4&&kEsli});names=[myName(),...BOTN];human=[true,false,false,false]}
+  if(mode==='off'){me=0;G=KB.newGame({n,esli:n===4&&kEsli,t1:kT1});names=[myName(),...BOTN];human=[true,false,false,false]}
   shownRid=0;shownMid=0;showOver.done=false;ver++;bcastState();hideOv();buildBoard.key=null;sync()}
 /* ---------- paneller ---------- */
 function ov(k,h){$('ov').style.alignItems='';const s=$('sheet');s.dataset.k=k;s.innerHTML=h;$('ov').hidden=false;return s}
@@ -272,13 +272,14 @@ function showRules(){ov('rules',`<h2>Kızma Birader nasıl oynanır?</h2>
   <p>Herkesin 4 piyonu kulübede başlar. Piyonu kulübeden çıkarmak için <b>6</b> atmalısın. 6 atınca bir kez daha atarsın.</p>
   <p>Piyonlar tahtanın etrafında bir tur döner ve kendi renginin ev yoluna girer. Dört piyonunu da eve ilk sokan kazanır.</p>
   <p>Rakibin durduğu kareye gelirsen onu kırarsın, piyonu kulübesine döner. Kendi piyonunun üstüne gelemezsin.</p>
-  <p>Tahtada oynayacak piyonun yoksa 6 için 3 hakkın var. Kulübede piyon varken 6 atarsan çıkarmak zorundasın; başlangıç karesini de önce boşaltmalısın.</p>
+  <p>Tahtada oynayacak piyonun yoksa 6 için 3 hakkın var (menüden 1 hakka çevrilebilir). Kulübede piyon varken 6 atarsan çıkarmak zorundasın; başlangıç karesini de önce boşaltmalısın.</p>
   <div class="row"><button class="btn pri" id="rOk">Tamam</button></div>`);$('rOk').onclick=()=>G?(hideOv(),after()):showMenu()}
 function showMenu(){const sv=ST.get('save',null),rec=ST.get('rec',[0,0]);
   const s=ov('menu',`<h2>Kızma Birader</h2><p>Zar at, piyonlarını eve götür, rakibini kır. Bilgisayara karşı ya da linkle arkadaşlarınla.</p>
     <p class="lbl">Bilgisayar</p><div class="seg" id="mL">${[["kolay","Kolay"],["normal","Normal"]].map(([k,v])=>`<button data-l="${k}" class="${botLvl===k?'on':''}">${v}</button>`).join('')}</div>
     <p class="lbl">Kaç kişi?</p><div class="seg" id="mN">${[2,3,4].map(n=>`<button data-n="${n}" class="${nPlayers===n?'on':''}">${n} kişi</button>`).join('')}</div>
     <p class="lbl">4 kişide</p><div class="seg" id="mE"><button data-e="0" class="${kEsli?'':'on'}">Herkes tek</button><button data-e="1" class="${kEsli?'on':''}">Eşli (2'ye 2)</button></div>
+    <p class="lbl">Taş çıkarmak için (6 gerekir)</p><div class="seg" id="mT"><button data-t="3" class="${kT1?'':'on'}">3 hak</button><button data-t="1" class="${kT1?'on':''}">1 hak</button></div>
     <div class="row" style="flex-direction:column">
       ${G&&G.phase!=='over'&&mode!=='guest'?'<button class="btn pri" id="mBack">Oyuna dön</button>':''}
       ${!G&&sv?'<button class="btn pri" id="mLoad">Kaldığın yerden devam et</button>':''}
@@ -291,6 +292,7 @@ function showMenu(){const sv=ST.get('save',null),rec=ST.get('rec',[0,0]);
     <p style="font-size:12.5px;margin-top:10px">Rekorun: ${rec[0]} galibiyet, ${rec[1]} mağlubiyet.</p>`);
   s.querySelectorAll('#mL button').forEach(b=>b.onclick=()=>{botLvl=b.dataset.l;try{localStorage.setItem('kh_botlvl',JSON.stringify(botLvl))}catch(e){};s.querySelectorAll('#mL button').forEach(x=>x.classList.toggle('on',x===b))});
   s.querySelectorAll('#mE button').forEach(b=>b.onclick=()=>{kEsli=b.dataset.e==='1';ST.set('esli',kEsli);s.querySelectorAll('#mE button').forEach(x=>x.classList.toggle('on',x===b))});
+  s.querySelectorAll('#mT button').forEach(b=>b.onclick=()=>{kT1=b.dataset.t==='1';ST.set('t1',kT1);s.querySelectorAll('#mT button').forEach(x=>x.classList.toggle('on',x===b))});
   s.querySelectorAll('#mN button').forEach(b=>b.onclick=()=>{nPlayers=+b.dataset.n;ST.set('n',nPlayers);s.querySelectorAll('#mN button').forEach(x=>x.classList.toggle('on',x===b))});
   if($('mBack'))$('mBack').onclick=()=>{hideOv();after()};
   if($('mLoad'))$('mLoad').onclick=()=>{mode='off';me=0;G=sv.G;names=sv.names;names[0]=myName();human=[true,false,false,false];shownRid=G.rid;shownMid=G.mid;hideOv();sync()};
@@ -340,7 +342,7 @@ function showLobby(){if(mode==='host'&&started)return;if(mode!=='host'&&mode!=='
   if($('lGo'))$('lGo').onclick=()=>startOnline()}
 function startOnline(again){if(window.KQuick)KQuick.update({started:true});quick=false;started=true;me=0;const n=lob.length;const act=fill?[0,1,2,3]:KB.seatsFor(n);seatOf={};names=[null,null,null,null];human=[false,false,false,false];
   lob.forEach((x,k)=>{const s=fill?k:act[k];seatOf[x.uid]=s;names[s]=x.name;human[s]=true});let b=0;act.forEach(p=>{if(!names[p])names[p]=BOTN[b++]});
-  G=KB.newGame({seats:act,esli:act.length===4&&kEsli});$('bChat').hidden=false;newGame()}
+  G=KB.newGame({seats:act,esli:act.length===4&&kEsli,t1:kT1});$('bChat').hidden=false;newGame()}
 function joinRoom(code){leaveOnline();mode='guest';room=code;started=false;G=null;
   if(myName()==='Sen'){const s=ov('join',`<h2>Kızma Birader masasına davet</h2><p>Adını yaz ve masaya otur.</p><input class="name" id="jName" maxlength="14" placeholder="Adını yaz"><div class="row"><button class="btn pri" id="jGo">Masaya otur</button></div>`);
     $('jGo').onclick=()=>{ST.set('name',($('jName').value.trim()||'Misafir').slice(0,14));joinRoom(code)};return}

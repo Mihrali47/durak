@@ -5,7 +5,7 @@ const START=[30,0,10,20];
 const absPos=(p,d)=>(START[p]+d)%40;
 function seatsFor(n){return n===2?[0,2]:n===3?[0,1,2]:[0,1,2,3]}
 function newGame(o={}){const act=o.seats||seatsFor(o.n||4);const esli=!!o.esli&&act.length===4;
-  return {act,pawns:[0,1,2,3].map(p=>act.includes(p)?[-1,-1,-1,-1]:null),turn:act[0],phase:'roll',roll:null,moves:[],tries:0,winner:null,last:null,rid:0,mid:0,esli,seed:o.seed||((Math.random()*1e9)|0),rolls:0}}
+  return {act,pawns:[0,1,2,3].map(p=>act.includes(p)?[-1,-1,-1,-1]:null),turn:act[0],phase:'roll',roll:null,moves:[],tries:0,winner:null,last:null,rid:0,mid:0,esli,t1:!!o.t1,seed:o.seed||((Math.random()*1e9)|0),rolls:0}}
 function occupant(G,abs){for(const p of G.act)for(let i=0;i<4;i++){const d=G.pawns[p][i];if(d>=0&&d<40&&absPos(p,d)===abs)return {p,i}}return null}
 function stuck(P,d){for(let x=d+1;x<=43;x++)if(!P.includes(x))return false;return true}
 function movableOnBoard(G,p){const P=G.pawns[p];return P.some(d=>d>=0&&d<40)||P.some(d=>d>=40&&!stuck(P,d))}
@@ -22,7 +22,7 @@ function roll(G,p,force){if(G.phase!=='roll')return 'Şimdi zar atılmaz';if(p!=
   const r=force||(typeof crypto!=='undefined'&&crypto.getRandomValues?1+crypto.getRandomValues(new Uint32Array(1))[0]%6:rnd(G));
   G.roll=r;G.rid++;G.rp=p;G.moves=legal(G,p,r);
   if(G.moves.length){G.phase='move';return null}
-  G.tries++;const max=movableOnBoard(G,p)?1:3;
+  G.tries++;const max=movableOnBoard(G,p)||G.t1?1:3;
   if(G.tries>=max)pass(G);else G.phase='roll';
   return null}
 function pass(G){G.tries=0;G.phase='roll';const a=G.act;let i=a.indexOf(G.turn);for(let k=0;k<4;k++){i=(i+1)%a.length;if(!(G.esli&&G.pawns[a[i]].every(d=>d>=40)))break}G.turn=a[i];G.moves=[]}
