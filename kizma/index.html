@@ -43,8 +43,11 @@ header .t{flex:1;min-width:0;text-align:center;font-weight:700;font-size:16px}
 .pawn.can::after{content:"";position:absolute;inset:-7px;border-radius:50%;border:3px solid #fff;opacity:.9}
 .pawn.up{transform:translateY(-14%) scale(1.12);z-index:5}
 /* satranç piyonu görünümü: yürür, vurur, devrilir */
-.pawn{background:none!important;border:0!important;box-shadow:none!important;border-radius:0!important;width:9.6%!important;height:13.4%;margin:-12.1% 0 0 -4.8%;filter:drop-shadow(0 3px 2px rgba(0,0,0,.45))}
-.pawn img.spr{display:block;width:100%;height:100%;object-fit:contain;object-position:50% 100%;pointer-events:none;-webkit-user-drag:none;user-select:none}
+.pawn{background:none!important;border:0!important;box-shadow:none!important;border-radius:0!important;width:9.6%!important;height:12%;margin:-10.9% 0 0 -4.8%;filter:drop-shadow(0 3px 2px rgba(0,0,0,.45))}
+.pawn img.spr{display:block;width:100%;height:100%;object-fit:contain;object-position:50% 100%;pointer-events:none;-webkit-user-drag:none;user-select:none;transform-origin:50% 100%;animation:box 1s ease-in-out infinite;animation-delay:var(--dl,0s)}
+/* boksör duruşu: yerinde zıplar, omuz sallar */
+@keyframes box{0%,100%{transform:translateY(0) rotate(-2deg) scale(1,1)}25%{transform:translateY(-6%) rotate(0deg) scale(.98,1.03)}50%{transform:translateY(0) rotate(2deg) scale(1.02,.97)}75%{transform:translateY(-4%) rotate(0deg) scale(.99,1.02)}}
+.pawn.walking img.spr{animation:none}
 .pawn svg{display:block;width:100%;height:100%;overflow:visible;transform-origin:50% 92%}
 .pawn.can::after{inset:auto -3px -2px -3px;height:22%;border-radius:50%}
 .pawn .body{position:absolute;inset:0;transform-origin:50% 92%}
@@ -187,7 +190,7 @@ function buildBoard(){const b=$('board');b.querySelectorAll('.cell,.pawn,.zone')
   for(const p of [0,1,2,3]){const on=G.act.includes(p);
     HOME[p].forEach(xy=>{const c=document.createElement('div');c.className='cell hm';c.style.background=on?`color-mix(in srgb,${CV[p]} 45%,#fff)`:'#eee3cc';c.style.borderColor=on?CV[p]:'var(--line)';place(c,xy);b.appendChild(c)});
     BASE[p].forEach(xy=>{const c=document.createElement('div');c.className='cell';c.style.background=on?`color-mix(in srgb,${CV[p]} 25%,#fff)`:'#eee3cc';c.style.borderColor=on?CV[p]:'var(--line)';place(c,xy);b.appendChild(c)});
-    if(on)for(let i=0;i<4;i++){const e=document.createElement('div');e.className='pawn';e.id=`pw${p}${i}`;e.style.background=CV[p];e.innerHTML=`<div class="body"><img class="spr" src="img/${SPR[p]}_front.webp" alt="" draggable="false"></div>`;e.onclick=()=>tapPawn(p,i);b.appendChild(e)}}
+    if(on)for(let i=0;i<4;i++){const e=document.createElement('div');e.className='pawn';e.id=`pw${p}${i}`;e.style.background=CV[p];e.style.setProperty('--dl',(-Math.random()).toFixed(2)+'s');e.innerHTML=`<div class="body"><img class="spr" src="img/${SPR[p]}_front.webp" alt="" draggable="false"></div>`;e.onclick=()=>tapPawn(p,i);b.appendChild(e)}}
   buildBoard.key=G.act.join()+':'+me}
 function render(){if(!G)return;if(buildBoard.key!==G.act.join()+':'+me)buildBoard();
   for(const p of G.act)for(let i=0;i<4;i++){const e=$(`pw${p}${i}`);if(!e||e.dataset.anim)continue;place(e,xyOf(p,i,G.pawns[p][i]));e.classList.remove('can','up')}
