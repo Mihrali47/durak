@@ -6,11 +6,17 @@ const EMO=['👍','😂','😮','😡','🙏','👏','☕','🔥'];
 const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const myL=()=>String(window.LANG||navigator.language||'tr').slice(0,2).toLowerCase();
 /* yazının dili otomatik bulunur: Türkçe arayüzde İngilizce ya da Rusça yazılsa da karşı taraf kendi dilinde görür */
-async function translate(text,hint){const L=myL();const sl='auto';
-  try{const r=await fetch('https://translate.googleapis.com/translate_a/single?client=gtx&sl='+sl+'&tl='+L+'&dt=t&q='+encodeURIComponent(text));const j=await r.json();
-    const out=(j[0]||[]).map(x=>x[0]).join(''),src=j[2];if(src&&src!==L&&out&&out.trim().toLowerCase()!==text.trim().toLowerCase())return out;return null}
-  catch(e){try{const r=await fetch('https://api.mymemory.translated.net/get?q='+encodeURIComponent(text)+'&langpair='+(hint&&hint!==L?hint:'autodetect')+'|'+L);const j=await r.json();const out=j&&j.responseData&&j.responseData.translatedText;
-    if(out&&out.trim().toLowerCase()!==text.trim().toLowerCase()&&!/INVALID|MYMEMORY/i.test(out))return out}catch(x){}return null}}
+async function translate(text,hint){const L=myL();
+  /* yazının dili otomatik bulunur; karışık yazıda (Türkçe arayüzde İngilizce kelimeler gibi) yabancı kısım da çevrilir */
+  const norm=x=>String(x||'').toLocaleLowerCase().replace(/[\s.,!?¡¿'"…:;()\-]+/g,' ').trim(),same=x=>norm(x)===norm(text);
+  const EN=/\b(the|you|your|how|are|is|what|good|game|play|hello|hi|thanks|thank|please|come|go|yes|no|why|where|when|nice|bro|love|lol|wait|sorry|ok|okay|win|lost|lose|my|me|i|we|this|that|and|but|not|can|will|do|does|did|have|has|want|let|lets|again|fast|slow|turn)\b/i;
+  const TR=/[çğışöüİ]|\b(ne|nasıl|naber|kanka|hadi|tamam|evet|hayır|bir|ve|sen|ben|iyi|oyun|neden|niye|bekle|sıra|abi|kardeş|olsun|değil|var|yok|çok|güzel)\b/i;
+  const g=async sl=>{const r=await fetch('https://translate.googleapis.com/translate_a/single?client=gtx&sl='+sl+'&tl='+L+'&dt=t&q='+encodeURIComponent(text));const j=await r.json();return {t:(j[0]||[]).map(x=>x[0]).join(''),src:j[2]||sl}};
+  try{let a=await g('auto');
+    if(same(a.t)){const alt=L!=='en'&&EN.test(text)?'en':L!=='tr'&&TR.test(text)?'tr':null;if(alt){const b=await g(alt);if(!same(b.t))a=b}}
+    return a.t&&!same(a.t)?a.t:null}
+  catch(e){try{const r=await fetch('https://api.mymemory.translated.net/get?q='+encodeURIComponent(text)+'&langpair=autodetect|'+L);const j=await r.json();const out=j&&j.responseData&&j.responseData.translatedText;
+    if(out&&!same(out)&&!/INVALID|MYMEMORY/i.test(out))return out}catch(x){}return null}}
 const css=`.kc-btn{position:fixed;right:max(12px,env(safe-area-inset-right));bottom:max(12px,env(safe-area-inset-bottom));z-index:70;width:48px;height:48px;border-radius:50%;border:1px solid #e7b54c;background:#2b1b11;color:#fff;font-size:22px;box-shadow:0 4px 14px rgba(0,0,0,.45);cursor:pointer}
 .kc-btn.new{box-shadow:0 0 0 3px #e7b54c,0 4px 14px rgba(0,0,0,.45)}
 .kc-p{position:fixed;right:max(12px,env(safe-area-inset-right));bottom:calc(max(12px,env(safe-area-inset-bottom)) + 58px);z-index:71;width:min(340px,calc(100vw - 24px));background:#f7f3ea;color:#22201b;border-radius:14px;padding:8px;box-shadow:0 8px 24px rgba(0,0,0,.45);font:14px/1.35 "Rubik",system-ui,sans-serif}
