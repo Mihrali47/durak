@@ -59,7 +59,7 @@ header .t{flex:1;min-width:0;text-align:center;font-weight:700;font-size:16px}
 .pawn.can::after{inset:auto 2% -4% 2%;height:20%;border-radius:50%;border:3px solid #fff;box-shadow:0 0 8px rgba(255,255,255,.8)}
 /* ayak altındaki gölge: adam karenin içinde dursun */
 .pawn::before{content:"";position:absolute;left:14%;right:14%;bottom:-3%;height:16%;border-radius:50%;background:radial-gradient(ellipse,rgba(40,25,10,.45),rgba(40,25,10,0) 70%);z-index:-1}
-.pawn.walking::before{opacity:.7}
+.pawn.walking::before{opacity:.7}.pawn.walking::after,.pawn.scared::after{display:none!important}
 .pawn .body{position:absolute;inset:0;transform-origin:50% 92%}
 .pawn .lg,.pawn .arm{transform-box:fill-box;transform-origin:50% 6%}
 .pawn .mo{display:none}.pawn.scared .mo{display:inline}.pawn.scared .mh{display:none}.pawn.scared .eye{transform:scale(1.35);transform-box:fill-box;transform-origin:center}
@@ -265,7 +265,7 @@ function stride(el,a,b,n=2,stepMs=150){return new Promise(res=>{
     if(tt<steps)requestAnimationFrame(frame);else{setP(el,b);body.style.transform='';if(L)L.style.transform='';if(Rr)Rr.style.transform='';res()}}
   requestAnimationFrame(frame)})}
 function shakeBoard(){$('board').animate([{transform:'translate(0,0)'},{transform:'translate(-5px,3px)'},{transform:'translate(4px,-3px)'},{transform:'translate(-3px,2px)'},{transform:'translate(0,0)'}],{duration:320/SPD})}
-function animMove(L){return new Promise(async r=>{const e=$(`pw${L.p}${L.i}`);if(!e)return r();e.classList.add('walking');zf(e,0);
+function animMove(L){return new Promise(async r=>{const e=$(`pw${L.p}${L.i}`);if(!e)return r();e.classList.add('walking');document.querySelectorAll('.pawn.can').forEach(x=>x.classList.remove('can'));zf(e,0);
   const pts=[];if(L.from<0)pts.push(XY(xyOf(L.p,L.i,0)));else for(let d=L.from+1;d<=L.to;d++)pts.push(XY(xyOf(L.p,L.i,d)));
   let cur=XY(xyOf(L.p,L.i,L.from));const h=L.hit?$(`pw${L.hit.p}${L.hit.i}`):null;
   const walkTo=h?pts.slice(0,-1):pts;
