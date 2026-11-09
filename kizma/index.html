@@ -174,7 +174,7 @@ const BASE=[[[0,9],[1,9],[0,10],[1,10]],[[0,0],[1,0],[0,1],[1,1]],[[9,0],[10,0],
 const ST={get(k,d){try{const v=localStorage.getItem('kb_'+k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem('kb_'+k,JSON.stringify(v))}catch(e){}},del(k){try{localStorage.removeItem('kb_'+k)}catch(e){}}};
 const UID=ST.get('uid',null)||(()=>{const u=Math.random().toString(36).slice(2,10);ST.set('uid',u);return u})();
 const SPD=+(new URLSearchParams(location.search).get('spd')||1);
-let kEsli=ST.get('esli',false),kT1=ST.get('t1',false),kTest=ST.get('test6',true);   // TEST: satıştan önce kapatılacak
+let kEsli=ST.get('esli',false),kT1=ST.get('t1',false);ST.del('test6');
 let G=null,names=['Sen',...BOTN],me=0,mode='off',human=[true,false,false,false],ver=0,busy=false,shownRid=0,shownMid=0,botT=null,schedKey=null,nPlayers=ST.get('n',4),autoT=null;
 const myName=()=>(window.KH&&KH.name())||ST.get('name','')||'Sen';
 const pn=p=>p===me&&mode==='off'?'Sen':names[p];
@@ -225,11 +225,14 @@ function render(){if(!G)return;if(buildBoard.key!==G.act.join()+':'+me)buildBoar
 }
 /* ---------- akış ---------- */
 function isBot(p){if(mode==='guest')return false;if(!human[p])return true;return mode==='host'&&p!==me&&away(p)}
+/* takılma koruması: animasyon (arka plana geçme, ekran kapanması vb. yüzünden) bitmezse süre dolunca zorla bitirilir */
+const guard=(pr,ms,onTimeout)=>new Promise(res=>{let done=false;const t=setTimeout(()=>{if(done)return;done=true;try{onTimeout&&onTimeout()}catch(e){}res()},ms/SPD);pr.then(()=>{if(done)return;done=true;clearTimeout(t);res()},()=>{if(done)return;done=true;clearTimeout(t);res()})});
+function unstick(L){for(const id of [`pw${L.p}${L.i}`,L.hit?`pw${L.hit.p}${L.hit.i}`:null]){const e=id&&$(id);if(!e)continue;e.getAnimations({subtree:true}).forEach(a=>{try{a.cancel()}catch(x){}});e.classList.remove('walking','scared');e.querySelectorAll('.body,img').forEach(x=>x.style.transform='');delete e.dataset.anim;face(e)}}
 async function sync(first){if(!G)return;if(busy)return sync.again=true;
   if(first==='first'){shownRid=G.rid;shownMid=G.mid}
-  if(G.last&&G.last.mid!==shownMid){busy=true;const L=G.last;shownMid=L.mid;markAnim(L,1);render();await animMove(L);busy=false;
+  if(G.last&&G.last.mid!==shownMid){busy=true;const L=G.last;shownMid=L.mid;markAnim(L,1);render();await guard(animMove(L),9000+(Math.abs((L.to||0)-(L.from||0))*450),()=>unstick(L));busy=false;
     if(L.hit)toast(`<b>${pn(L.p)}</b> <span>kırdı:</span> <b>${pn(L.hit.p)}</b>`,1800)}
-  if(G.rid!==shownRid){busy=true;shownRid=G.rid;render();await animDie(G.roll);busy=false;
+  if(G.rid!==shownRid){busy=true;shownRid=G.rid;render();await guard(animDie(G.roll),2500);busy=false;
     if(G.rp===me&&G.phase==='roll'&&!(G.last&&G.last.mid===G.mid&&G.lastRid===G.rid)){if(G.turn===me&&G.roll!==6)toast('6 gelmedi, tekrar at',1400);else if(G.turn!==me)toast('Oynayacak piyon yok',1400)}}
   render();if(sync.again){sync.again=false;return sync()}after()}
 function animDie(v){KSfx.play('dice');return new Promise(r=>{const d=$('die');d.classList.remove('spin');void d.offsetWidth;d.classList.add('spin');let n=0;
@@ -264,7 +267,9 @@ function stride(el,a,b,n=2,stepMs=150){return new Promise(res=>{
       if(L)L.style.transform=`translateY(${-l*9}%) scaleY(${1-l*.12})`;
       if(Rr)Rr.style.transform=`translateY(${-r*9}%) scaleY(${1-r*.12})`}
     if(tt<steps)requestAnimationFrame(frame);else{setP(el,b);body.style.transform='';if(L)L.style.transform='';if(Rr)Rr.style.transform='';res()}}
-  requestAnimationFrame(frame)})}
+  requestAnimationFrame(frame);
+  /* ekran arka plandaysa kare çizilmez; süre dolunca adımı bitir */
+  setTimeout(()=>{if(performance.now()-t0>=T*steps+400&&el.isConnected){frame(t0+T*steps+1)}},T*steps+600)})}
 function shakeBoard(){$('board').animate([{transform:'translate(0,0)'},{transform:'translate(-5px,3px)'},{transform:'translate(4px,-3px)'},{transform:'translate(-3px,2px)'},{transform:'translate(0,0)'}],{duration:320/SPD})}
 function animMove(L){return new Promise(async r=>{const e=$(`pw${L.p}${L.i}`);if(!e)return r();e.classList.add('walking');document.querySelectorAll('.pawn.can').forEach(x=>x.classList.remove('can'));zf(e,0);
   const pts=[];if(L.from<0)pts.push(XY(xyOf(L.p,L.i,0)));else for(let d=L.from+1;d<=L.to;d++)pts.push(XY(xyOf(L.p,L.i,d)));
@@ -301,7 +306,7 @@ function schedule(){if(!G||busy||mode==='guest'||G.phase==='over'){clearTimeout(
   if(!isBot(G.turn))return;
   botT=setTimeout(()=>{schedKey=null;if(busy||!isBot(G.turn))return;if(G.phase==='roll')act(G.turn,{k:'roll'});else if(G.phase==='move')act(G.turn,{k:'move',m:KB.botPick(G,G.turn)})},(G.phase==='roll'?650:500)/SPD)}
 function act(p,a){if(mode==='guest'){send({t:'act',uid:UID,a});return}
-  let e=null;if(a.k==='roll')e=KB.roll(G,p,kTest&&mode==='off'&&G.pawns[p].some(d=>d<0)?6:undefined);else if(a.k==='move')e=KB.move(G,p,a.m);
+  let e=null;if(a.k==='roll')e=KB.roll(G,p);else if(a.k==='move')e=KB.move(G,p,a.m);
   if(e){if(p===me)toast(e);return}
   ver++;bcastState();sync()}
 $('rollB').onclick=e=>{if(e.target.closest('#die'))return;$('die').click()};
@@ -332,7 +337,6 @@ function showMenu(){const sv=ST.get('save',null),rec=ST.get('rec',[0,0]);
     <p class="lbl">Bilgisayar</p><div class="seg" id="mL">${[["kolay","Kolay"],["normal","Normal"]].map(([k,v])=>`<button data-l="${k}" class="${botLvl===k?'on':''}">${v}</button>`).join('')}</div>
     <p class="lbl">Kaç kişi?</p><div class="seg" id="mN">${[2,3,4].map(n=>`<button data-n="${n}" class="${nPlayers===n?'on':''}">${n} kişi</button>`).join('')}</div>
     <p class="lbl">4 kişide</p><div class="seg" id="mE"><button data-e="0" class="${kEsli?'':'on'}">Herkes tek</button><button data-e="1" class="${kEsli?'on':''}">Eşli (2'ye 2)</button></div>
-    <p class="lbl">Test zarı (sadece bilgisayara karşı)</p><div class="seg" id="mX"><button data-x="1" class="${kTest?'on':''}">Kulübede taş varsa hep 6</button><button data-x="0" class="${kTest?'':'on'}">Normal zar</button></div>
     <p class="lbl">Taş çıkarmak için (6 gerekir)</p><div class="seg" id="mT"><button data-t="3" class="${kT1?'':'on'}">3 hak</button><button data-t="1" class="${kT1?'on':''}">1 hak</button></div>
     <div class="row" style="flex-direction:column">
       ${G&&G.phase!=='over'&&mode!=='guest'?'<button class="btn pri" id="mBack">Oyuna dön</button>':''}
@@ -346,7 +350,6 @@ function showMenu(){const sv=ST.get('save',null),rec=ST.get('rec',[0,0]);
     <p style="font-size:12.5px;margin-top:10px">Rekorun: ${rec[0]} galibiyet, ${rec[1]} mağlubiyet.</p>`);
   s.querySelectorAll('#mL button').forEach(b=>b.onclick=()=>{botLvl=b.dataset.l;try{localStorage.setItem('kh_botlvl',JSON.stringify(botLvl))}catch(e){};s.querySelectorAll('#mL button').forEach(x=>x.classList.toggle('on',x===b))});
   s.querySelectorAll('#mE button').forEach(b=>b.onclick=()=>{kEsli=b.dataset.e==='1';ST.set('esli',kEsli);s.querySelectorAll('#mE button').forEach(x=>x.classList.toggle('on',x===b))});
-  s.querySelectorAll('#mX button').forEach(b=>b.onclick=()=>{kTest=b.dataset.x==='1';ST.set('test6',kTest);s.querySelectorAll('#mX button').forEach(x=>x.classList.toggle('on',x===b))});
   s.querySelectorAll('#mT button').forEach(b=>b.onclick=()=>{kT1=b.dataset.t==='1';ST.set('t1',kT1);s.querySelectorAll('#mT button').forEach(x=>x.classList.toggle('on',x===b))});
   s.querySelectorAll('#mN button').forEach(b=>b.onclick=()=>{nPlayers=+b.dataset.n;ST.set('n',nPlayers);s.querySelectorAll('#mN button').forEach(x=>x.classList.toggle('on',x===b))});
   if($('mBack'))$('mBack').onclick=()=>{hideOv();after()};
