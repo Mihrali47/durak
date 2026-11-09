@@ -37,6 +37,10 @@ async function add(name,x,l,mine){const it={name,x,tr:null};LOG.push(it);if(LOG.
 function toggle(){let p=document.querySelector('.kc-p');if(p){p.remove();return}btn.classList.remove('new');
   p=document.createElement('div');p.className='kc-p';p.innerHTML=`<div class="er">${EMO.map(e=>`<button type="button">${e}</button>`).join('')}</div><div class="log"></div><form><input maxlength="140" placeholder="Mesaj yaz…"><button>Gönder</button></form>`;
   document.body.appendChild(p);draw();
+  /* telefonda klavye açılınca kutu klavyenin üstüne çıkar, son mesaj görünür kalır */
+  const vv=window.visualViewport,fit=()=>{if(!p.isConnected){vv&&vv.removeEventListener('resize',fit);vv&&vv.removeEventListener('scroll',fit);return}
+    if(vv){const kb=innerHeight-vv.height-vv.offsetTop;p.style.bottom=kb>60?(kb+8)+'px':'';const l=p.querySelector('.log');if(l){l.style.maxHeight=kb>60?Math.max(70,vv.height-170)+'px':'';l.scrollTop=1e6}}};
+  if(vv){vv.addEventListener('resize',fit);vv.addEventListener('scroll',fit)}p.addEventListener('focusin',()=>setTimeout(fit,300));
   p.querySelectorAll('.er button').forEach(b=>b.onclick=()=>{p.remove();opt.send({t:'emo',e:b.textContent});bubble(`<span class="kc-emo">${b.textContent}</span>`)});
   p.querySelector('form').onsubmit=e=>{e.preventDefault();const i=p.querySelector('input'),x=i.value.trim().slice(0,140);if(!x)return;i.value='';opt.send({t:'chat',x,l:myL()});add('Sen',x,myL(),true)}}
 window.KChat={mount(o){opt=o;style();if(!btn){btn=document.createElement('button');btn.className='kc-btn';btn.textContent='💬';btn.onclick=toggle;document.body.appendChild(btn)}btn.hidden=false;

@@ -357,6 +357,9 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:radial-grad
 @media(max-width:560px){.chip .wide{display:none}.chip{padding:0 10px}}
 @media(max-width:430px){.chip{padding:0 8px;gap:4px;font-size:12px}.top{gap:4px!important}}
 @media(max-width:400px){#bMem{display:none}}
+/* telefonda sade üst çubuk: puan, ses, çıkanlar ve mağaza Menü'de */
+@media(max-width:600px){#coins,#golds,#bInfo,#bSnd,#bMem{display:none!important}.mq{display:grid!important}}
+.mq{display:none;grid-template-columns:repeat(4,1fr);gap:6px}.mq button{height:56px;border-radius:12px;border:1px solid #d5dbe0;background:#fff;color:#23303b;font:600 12px/1.15 var(--body);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer}.mq button b{font-size:19px;line-height:1}
 .chip .ts{font-family:var(--suit);font-size:16px}
 /* kartlar */
 .card{width:var(--w,var(--cw));aspect-ratio:5/7;border-radius:calc(var(--w,var(--cw))*.08);background:var(--card);border:1px solid var(--card-edge);
@@ -490,13 +493,13 @@ button.card:focus-visible,.btn:focus-visible,.chip:focus-visible,.pair:focus-vis
 .chatp .tabs{display:flex;border-bottom:1px solid #dde2e6}.chatp .tabs button{flex:1;border:0;background:none;padding:12px;font:700 14px/1 var(--body);color:#6b7680;cursor:pointer}.chatp .tabs button[aria-pressed=true]{color:#24323f;box-shadow:inset 0 -3px 0 #3f6585}
 .chatp .tabs .x{flex:0 0 46px;font-size:18px}
 .emogrid{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;padding:10px;overflow:auto}.emogrid button{font-size:28px;line-height:1;background:#fff;border:1px solid #e3e8ec;border-radius:12px;padding:8px 0;cursor:pointer}
-.quick{display:flex;flex-wrap:wrap;gap:6px;padding:10px 10px 0}.quick button{border:1px solid #d5dbe0;background:#fff;border-radius:999px;padding:7px 11px;font:600 13px/1 var(--body);cursor:pointer;color:#24323f}
-.msgs{flex:1;overflow:auto;padding:10px;display:flex;flex-direction:column;gap:6px;min-height:120px}
+.chatp .tabs,.chatin,.quick{flex:none}.quick{display:flex;flex-wrap:nowrap;overflow-x:auto;gap:6px;padding:8px 10px 0;scrollbar-width:none}.quick::-webkit-scrollbar{display:none}.quick button{flex:none}.quick button{border:1px solid #d5dbe0;background:#fff;border-radius:999px;padding:7px 11px;font:600 13px/1 var(--body);cursor:pointer;color:#24323f}
+.msgs{flex:1;overflow:auto;padding:10px;display:flex;flex-direction:column;gap:6px;min-height:70px}
 .msg{max-width:82%;padding:7px 10px;border-radius:14px;background:#fff;border:1px solid #e3e8ec;font:500 14px/1.35 var(--body);align-self:flex-start}.msg.me{align-self:flex-end;background:#dcebf7;border-color:#c3dbee}
 .msg small{display:block;color:#6b7680;font-size:11px;margin-top:3px}.msg .who{font:700 11px/1 var(--body);color:#6b7680;margin-bottom:3px}
 .chatin{display:flex;gap:6px;padding:10px;border-top:1px solid #dde2e6}.chatin input{flex:1;min-width:0;height:42px;border-radius:12px;border:1px solid #c5ced6;padding:0 10px;font:500 15px/1 var(--body);background:#fff;color:#24323f}
 .chatin button{border:0;border-radius:12px;background:#3f6585;color:#fff;font:700 14px/1 var(--body);padding:0 14px;cursor:pointer}
-.bub.txt{font-size:13px;max-width:180px;white-space:normal;text-align:center;font-weight:600}
+.bub.txt{font-size:13px;max-width:180px;white-space:normal;text-align:center;font-weight:600;animation-duration:5.5s}
 .ic{display:inline-grid;place-items:center;width:1.15em;height:1.15em;border-radius:50%;font:800 .62em/1 var(--body);vertical-align:-.18em;margin-right:4px}
 .ic.c{background:radial-gradient(circle at 35% 30%,#fff,#c9d1d8 55%,#8e9aa5);color:#4a5560;box-shadow:inset 0 0 0 1.5px #7d8994}
 .ic.g{background:radial-gradient(circle at 35% 30%,#fff6c8,#f2c94c 55%,#b8860b);color:#6b4b00;box-shadow:inset 0 0 0 1.5px #a87a0a}
@@ -1179,12 +1182,13 @@ function handSlotCenter(el){
 }
 function layoutHand(){
   const hd=$('hand'),all=[...hd.querySelectorAll('.card')],cards=all.filter(c=>!c.classList.contains('pend'));all.filter(c=>c.classList.contains('pend')).forEach(c=>c.style.visibility='hidden');if(!cards.length)return;
-  const W=hd.clientWidth,cw=cards[0].offsetWidth,k=cards.length;
-  const step=k>1?Math.min(cw*.62,(W-cw)/(k-1)):0,total=cw+step*(k-1),x0=(W-total)/2;
-  const maxA=Math.min(14,k*2.2);
-  cards.forEach((c,i)=>{const t=k>1?i/(k-1)-.5:0,a=t*maxA,lift=Math.abs(t)*Math.abs(t)*cw*.18;
-    const up=c.classList.contains('sel')?cw*.28:c.classList.contains('ok')?cw*.1:0;
-    c.style.left=(x0+i*step)+'px';c.style.transform=`translateY(${lift-up}px) rotate(${a}deg)`;c.style.zIndex=i+1});
+  const W=hd.clientWidth,cw=cards[0].offsetWidth,k=cards.length,pad=cw*.1;
+  /* kart çoksa ve köşeler okunmayacak kadar sıkışıyorsa el iki sıraya bölünür; dönen uç kartlar ekrandan taşmasın diye kenar payı */
+  const fit=n=>n>1?Math.min(cw*.62,(W-2*pad-cw)/(n-1)):0,two=k>=9&&fit(k)<cw*.34,rows=two?[cards.slice(0,Math.ceil(k/2)),cards.slice(Math.ceil(k/2))]:[cards];
+  rows.forEach((row,ri)=>{const n=row.length,step=fit(n),total=cw+step*(n-1),x0=(W-total)/2,maxA=Math.min(two?8:12,n*2),dy=two&&ri===0?-cw*.62:0;
+    row.forEach((c,i)=>{const t=n>1?i/(n-1)-.5:0,a=t*maxA,lift=t*t*cw*(two?.08:.16);
+      const up=c.classList.contains('sel')?cw*.28:c.classList.contains('ok')?cw*.1:0;
+      c.style.left=(x0+i*step)+'px';c.style.transform=`translateY(${dy+lift-up}px) rotate(${a}deg)`;c.style.zIndex=ri*40+i+1})});
 }
 addEventListener('resize',layoutHand);
 function showInfo(){
@@ -1356,12 +1360,13 @@ async function translate(text,hint){const L=myLang0();
   catch(e){try{const r=await fetch('https://api.mymemory.translated.net/get?q='+encodeURIComponent(text)+'&langpair=autodetect|'+L);const j=await r.json();const out=j&&j.responseData&&j.responseData.translatedText;
     if(out&&!same(out)&&!/INVALID|MYMEMORY/i.test(out))return {t:out,src:'?'}}catch(x){}return null}}
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-function sayBubble(p,text){const host=p===me?$('meAv'):$('av'+p);if(!host)return;host.querySelector('.bub')?.remove();const b=document.createElement('span');b.className='bub txt';b.textContent=text.length>60?text.slice(0,58)+'…':text;host.appendChild(b);setTimeout(()=>b.remove(),3200)}
+function sayBubble(p,text){const host=p===me?$('meAv'):$('av'+p);if(!host)return;host.querySelector('.bub')?.remove();const b=document.createElement('span');b.className='bub txt';b.textContent=text.length>60?text.slice(0,58)+'…':text;host.appendChild(b);setTimeout(()=>b.remove(),5600)}
 async function addChat(p,text,fromNet,sl){const it={p,text,tr:null};CHAT.log.push(it);if(CHAT.log.length>60)CHAT.log.shift();
   sayBubble(p,text);if(p!==me){if(!document.querySelector('.chatp'))CHAT.unread++;markChat()}
   renderChat();if(p!==me){const tr=await translate(text,sl);if(tr){it.tr=tr;renderChat();sayBubble(p,tr.t)}}}
 function sendChat(text){text=String(text||'').trim().slice(0,140);if(!text)return;if(ON&&typeof send==='function')send({t:'chat',x:text,l:myLang0()});addChat(me,text);
   if(!ON&&D&&Math.random()<.6){const bots=[...Array(D.n).keys()].filter(q=>q!==me);const q=bots[Math.random()*bots.length|0];const ans=['😂','Bakalım!','Hadi hadi','👍','Sıra kimde?','Şansın bol olsun','☕'];setTimeout(()=>addChat(q,ans[Math.random()*ans.length|0]),900+Math.random()*900)}}
+if(/[?&]test=1/.test(location.search))window.__C={CHAT,sendChat:t=>sendChat(t),D:()=>D,me:()=>me,render:()=>render()};
 function markChat(){$('chatBtn')?.classList.toggle('new',CHAT.unread>0)}
 function renderChat(){const pnl=document.querySelector('.chatp');if(!pnl||CHAT.tab!=='msg')return;const box=pnl.querySelector('.msgs');if(!box)return;
   box.innerHTML=CHAT.log.map(m=>`<div class="msg ${m.p===me?'me':''}">${m.p!==me?`<div class="who">${esc(NAMES[m.p]||'')}</div>`:''}${esc(m.tr?m.tr.t:m.text)}${m.tr?`<small>Çevrildi · aslı: ${esc(m.text)}</small>`:''}</div>`).join('')||'<p class="muted" style="text-align:center;margin:auto">Henüz mesaj yok. Selam ver!</p>';box.scrollTop=box.scrollHeight}
@@ -1374,8 +1379,11 @@ function openChat(){document.querySelector('.chatp')?.remove();CHAT.unread=0;mar
     pn.querySelectorAll('.emogrid button').forEach(b=>b.onclick=()=>{react(me,b.textContent);pn.remove();
       if(!ON&&D)for(let q=1;q<D.n;q++)if(Math.random()<.35){const ans=b.textContent==='😂'?'😂':b.textContent==='😤'?'😎':'👍';setTimeout(()=>react(q,ans),700+Math.random()*700)}});
     pn.querySelectorAll('.quick button').forEach(b=>b.onclick=()=>sendChat(b.textContent));
-    const f=pn.querySelector('.chatin');if(f)f.onsubmit=e=>{e.preventDefault();const i=f.querySelector('input');sendChat(i.value);i.value='';i.focus()};renderChat()};
-  draw();document.body.appendChild(pn)}
+    const f=pn.querySelector('.chatin');if(f)f.onsubmit=e=>{e.preventDefault();const i=f.querySelector('input');sendChat(i.value);i.value='';i.focus()};renderChat();setTimeout(()=>fit&&fit(),0)};
+  draw();document.body.appendChild(pn);
+  /* telefonda klavye açılınca panel klavyenin üstünde kalsın, son mesaj hep görünsün */
+  const vv=window.visualViewport,fit=()=>{if(!pn.isConnected){vv&&vv.removeEventListener('resize',fit);vv&&vv.removeEventListener('scroll',fit);return}if(vv){pn.style.bottom=Math.max(8,innerHeight-vv.height-vv.offsetTop+8)+'px';pn.style.maxHeight=Math.max(200,vv.height<innerHeight*.8?vv.height-16:vv.height*.7)+'px'}const b=pn.querySelector('.msgs');if(b)b.scrollTop=b.scrollHeight};
+  if(vv){vv.addEventListener('resize',fit);vv.addEventListener('scroll',fit)}pn.addEventListener('focusin',()=>setTimeout(fit,300));fit()}
 $('meAv').onclick=e=>{e.stopPropagation();openChat()};
 {const cb=document.createElement('button');cb.className='chatbtn';cb.id='chatBtn';cb.type='button';cb.setAttribute('aria-label','Sohbet ve emoji');cb.textContent='💬';cb.onclick=e=>{e.stopPropagation();openChat()};$('meBox').appendChild(cb)}
 document.addEventListener('click',e=>{if(!e.target.closest('.chatp,.chatbtn,#meAv'))document.querySelector('.chatp')?.remove()});
@@ -1731,6 +1739,7 @@ function showMenu(){
   let rec={g:0,d:0};try{rec=JSON.parse(localStorage.getItem('durak_rec'))||rec}catch(e){}
   const inGame=D&&!D.ended;
   open(`<h2>Durak</h2>
+  ${inGame?`<div class="mq" id="mq"><button data-k="bInfo"><b>📊</b>Puan</button><button data-k="bSnd"><b>${U.sound?'🔊':'🔇'}</b>Ses</button><button data-k="bMem"><b>🃏</b>Çıkanlar</button><button data-k="coins"><b>🛒</b>Mağaza</button></div>`:''}
   <p>Rusların kahvehane oyunu. Kartlarını kesip at, elinde kart bırakma. Deste bitince elinde en son kart kalan <b>durak</b> (aptal) olur.</p>
   <p class="muted">Kartına dokununca oynanır. Savunurken kesebileceğin kartlar yeşil yanar; birden fazla yer varsa önce kartı, sonra keseceğin kartı seç.</p>
   <div class="seg" id="sLang" style="--k:3">${[['tr','Türkçe'],['ru','Русский'],['en','English']].map(([k,l])=>`<button data-v="${k}" aria-pressed="${(window.LANG||'tr')===k}" onclick="window.setLang&&setLang('${k}')">${l}</button>`).join('')}</div>
@@ -1760,6 +1769,7 @@ function showMenu(){
   $('nameIn').oninput=e=>{try{localStorage.setItem('durak_name',e.target.value.trim())}catch(x){};showCoins()};
   bindSeg('sN',v=>U.n=+v);bindSeg('sT',v=>U.transfer=v==='1');bindSeg('sS',v=>U.speed=+v);bindSeg('sB',v=>U.stake=+v);bindSeg('sD',v=>U.deck=+v);bindSeg('sR',v=>U.neighbors=v==='1');bindSeg('sC',v=>U.cheat=v==='1');bindSeg('sM',v=>U.timer=+v);bindSeg('sSh',v=>U.showTrump=v==='1');bindSeg('sDr',v=>U.draw=v==='1');bindSeg('sF5',v=>U.first5=v==='1');bindSeg('sO',v=>{U.sort=v;if(D)render()});bindSeg('sF',v=>U.felt=v);bindSeg('sK',v=>U.back=v);
   $('goShop').onclick=()=>showShop();
+  document.querySelectorAll('#mq [data-k]').forEach(b=>b.onclick=()=>{const k=b.dataset.k;if(k==='bSnd'){$('bSnd').click();b.querySelector('b').textContent=U.sound?'🔊':'🔇';return}close();$(k).click()});
   $('goOn').onclick=()=>showHostSetup();$('goQ').onclick=()=>{if(typeof KQuick==='undefined'){toast('Hızlı oyun yüklenemedi');return}quickOnline()};$('joinOn').onclick=()=>{const v=($('codeIn').value||'').trim().toUpperCase();if(/^[A-Z0-9]{5}$/.test(v))joinOnline(v);else toast('Kod 5 harf/rakam olmalı')};
   $('go').onclick=()=>{close();leaveOnline();G=null;startGame()};$('quitB').onclick=()=>{try{leaveOnline()}catch(e){}location.href='../'};if(inGame)$('back').onclick=()=>{close();run()};
 }
