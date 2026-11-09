@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="tr"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Tombala</title>
+<script src="i18n-page.js"></script><script src="../i18n.js"></script>
+<script src="../mqtt.min.js"></script><script src="../relay.js"></script>
+<script src="engine.js"></script><script src="../account.js"></script><script src="../quick.js"></script><script src="../sfx.js"></script>
+<link rel="manifest" href="../manifest.webmanifest"><link rel="icon" href="../icon.svg" type="image/svg+xml">
+<meta name="theme-color" content="#21150d">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700&family=Yanone+Kaffeesatz:wght@500;700&display=swap">
+<style>
+/* Kahvehane masası: üstte torba ve çıkan top, ortada ödül tahtası, altta senin kartların. Kartlar eski karton tombala kartları gibi; işaret için kırmızı pul. */
+:root{--wood:#21150d;--wood2:#2c1d12;--felt:#1c3f30;--felt2:#163327;--brass:#cfa24a;--tea:#a5301c;--ivory:#efe4c7;--muted:#ab9a7b;--fmuted:#9fb5a3;--line:#3d2a1b;
+  --sign:"Yanone Kaffeesatz","Arial Narrow",sans-serif;--body:"Rubik",system-ui,-apple-system,"Segoe UI",sans-serif;color-scheme:dark}
+*,*::before,*::after{box-sizing:border-box}
+html,body{height:100%;margin:0}
+@supports (height:100svh){html,body{height:100svh}}
+body{background:var(--wood);color:var(--ivory);font:15px/1.35 var(--body);-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;overflow:hidden}
+button{font:inherit;color:inherit;cursor:pointer}
+[hidden]{display:none!important}
+:focus-visible{outline:3px solid var(--brass);outline-offset:2px}
+.app{height:100%;max-width:620px;margin:0 auto;display:flex;flex-direction:column;gap:8px;
+  padding:max(6px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left))}
+header{display:flex;align-items:center;gap:8px;min-height:40px}
+header h1{flex:1;margin:0;text-align:center;font:700 30px/1 var(--sign);letter-spacing:.01em}
+.hb{background:rgba(0,0,0,.25);border:1px solid #4d3320;border-radius:9px;padding:7px 11px;font-size:13.5px}
+
+/* oyuncular */
+.players{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.players::-webkit-scrollbar{display:none}
+.pl{flex:none;display:flex;flex-direction:column;align-items:flex-start;gap:1px;padding:5px 10px;border-radius:8px;background:rgba(0,0,0,.25);border:1.5px solid transparent;min-width:76px;text-align:left}
+.pl b{font-size:13.5px;font-weight:500;max-width:110px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pl span{font-size:11.5px;color:var(--muted)}
+.pl.hot{border-color:var(--tea)}.pl.hot span{color:#ff9d84}
+.pl.me{border-color:#5b4128}
+
+/* torba ve çıkan top */
+.table{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:center;background:radial-gradient(130% 120% at 30% 0%,var(--felt),var(--felt2));border-radius:8px;padding:12px;box-shadow:0 0 0 4px #3a2616,0 0 0 5px #5b3d22}
+.ball{width:96px;height:96px;border-radius:50%;display:grid;place-items:center;position:relative;
+  background:radial-gradient(circle at 34% 30%,#fff 0 8%,#f4ead2 30%,#d8c49b 72%,#a98c5c 100%);box-shadow:0 8px 16px rgba(0,0,0,.45),inset -6px -8px 14px rgba(0,0,0,.18)}
+.ball b{font:700 52px/1 var(--sign);color:#7d1d10;letter-spacing:-.01em}
+.ball.empty b{font-size:16px;color:#6d5a3a;font-family:var(--body);font-weight:500;text-align:center;line-height:1.15}
+.ball.pop{animation:pop .55s cubic-bezier(.2,.9,.3,1.3)}
+@keyframes pop{0%{transform:translateY(-40px) scale(.4) rotate(-90deg);opacity:0}60%{opacity:1}100%{transform:none}}
+.side{min-width:0;display:flex;flex-direction:column;gap:8px}
+.recent{display:flex;gap:5px;align-items:center;flex-wrap:nowrap;overflow:hidden;min-height:30px}
+.recent i{font-style:normal;flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font:700 17px/1 var(--sign);color:#5a3b1a;background:#e8dcbc;opacity:.92}
+.recent i:nth-child(n+3){opacity:.7}.recent i:nth-child(n+5){opacity:.5}
+.recent small{color:var(--fmuted);font-size:12px;margin-left:auto;white-space:nowrap}
+.prizes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.prize{border-radius:6px;padding:5px 7px;background:rgba(0,0,0,.2);border:1px solid rgba(239,228,199,.12);min-width:0}
+.prize b{display:block;font:700 19px/1 var(--sign);color:var(--ivory)}
+.prize span{display:block;font-size:11.5px;color:var(--fmuted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.prize.next{border-color:var(--brass)}.prize.next b{color:var(--brass)}
+.prize.done span{color:#ffd9a8}
+.prize.done.mine{background:rgba(165,48,28,.45);border-color:#e0764f}
+
+/* kartlar */
+.cards{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding:2px 0 4px;scrollbar-width:thin}
+.card{--cc:#e3b54a;background:var(--cc);border-radius:7px;padding:6px 6px 6px;box-shadow:0 3px 0 rgba(0,0,0,.35),0 8px 16px rgba(0,0,0,.3);position:relative}
+.card.c1{--cc:#c6473b}.card.c2{--cc:#3f72b3}
+.card .hd{display:flex;justify-content:space-between;align-items:center;padding:0 3px 4px;font:700 17px/1 var(--sign);color:rgba(0,0,0,.6)}
+.card .hd span{font:500 12px/1 var(--body);color:rgba(0,0,0,.6)}
+.rows{display:grid;gap:3px}
+.grid{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:3px}
+.cell{aspect-ratio:1/1.08;border-radius:4px;background:rgba(255,250,236,.38);display:grid;place-items:center;position:relative;border:0;padding:0}
+.cell.n{background:#fbf6e8;box-shadow:inset 0 -2px 0 rgba(0,0,0,.12);font:700 clamp(17px,5.6vw,27px)/1 var(--sign);color:#2a1d10}
+.cell.n.out:not(.mk){box-shadow:inset 0 0 0 2px var(--tea),0 0 10px rgba(165,48,28,.55);animation:want 1.2s ease-in-out infinite}
+@keyframes want{50%{box-shadow:inset 0 0 0 3px var(--tea),0 0 14px rgba(165,48,28,.8)}}
+.cell{isolation:isolate}
+.cell.mk::after{content:"";position:absolute;inset:9%;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ff7b63,#c12e17 60%,#8e1d0c);box-shadow:0 2px 3px rgba(0,0,0,.35);z-index:-1}
+.cell.mk{color:#fff7ea;text-shadow:0 1px 1px rgba(0,0,0,.5)}
+.cell.mk.drop::after{animation:drop .25s ease-out}
+@keyframes drop{from{transform:scale(1.6);opacity:0}}
+.row.done .cell.n{background:#fff3c9}
+.card.win{outline:3px solid #fff2b8;outline-offset:2px}
+
+/* alt çubuk */
+.bar{display:flex;gap:8px;align-items:center;position:relative}
+.btn{border:0;border-radius:9px;padding:11px 14px;background:rgba(0,0,0,.28);border:1px solid #4d3320;font-size:14.5px;font-weight:500}
+.btn.tea{background:var(--tea);border-color:var(--tea);color:#fff4ea;font-weight:700}
+.bar .sp{flex:1}
+.bar .st{font-size:13px;color:var(--muted);text-align:center;flex:1;min-width:0}
+
+/* duyuru */
+.shout{position:fixed;left:50%;top:38%;transform:translate(-50%,-50%);z-index:50;text-align:center;pointer-events:none;animation:shout 2.6s ease forwards}
+.shout b{display:block;font:700 clamp(54px,17vw,96px)/.9 var(--sign);color:#ffe4a3;text-shadow:0 4px 0 #7d1d10,0 8px 24px rgba(0,0,0,.6);letter-spacing:.01em}
+.shout span{display:inline-block;margin-top:8px;font-size:16px;font-weight:500;background:rgba(20,12,6,.85);padding:6px 12px;border-radius:999px}
+@keyframes shout{0%{opacity:0;transform:translate(-50%,-50%) scale(.6)}12%{opacity:1;transform:translate(-50%,-50%) scale(1.08)}20%{transform:translate(-50%,-50%) scale(1)}82%{opacity:1}100%{opacity:0;transform:translate(-50%,-62%)}}
+
+/* paneller */
+.ov{position:fixed;inset:0;z-index:40;background:rgba(10,7,4,.6);display:flex;align-items:center;justify-content:center;padding:14px}
+.sheet{background:var(--ivory);color:#241a10;border-radius:10px;width:min(430px,100%);max-height:calc(100% - 10px);overflow:auto;padding:18px 16px 16px;box-shadow:0 12px 40px rgba(0,0,0,.45)}
+.sheet h2{margin:0 0 4px;font:700 30px/1 var(--sign)}
+.sheet p{margin:6px 0;color:#4d4234;font-size:14px}
+.sheet .row2{display:flex;gap:8px;margin-top:12px}
+.sb{flex:1;border:0;border-radius:8px;padding:12px 10px;background:#e3d6b6;color:#241a10;font-weight:500;font-size:15px;text-align:center;text-decoration:none}
+.sb.pri{background:var(--tea);color:#fff4ea}.sb:disabled{opacity:.45}
+.seg{display:flex;background:#e3d6b6;border-radius:8px;padding:3px;margin-top:6px}
+.seg button{flex:1;border:0;background:none;border-radius:6px;padding:9px 4px;font-size:14px;color:#3b2f22}
+.seg button.on{background:#fbf6ea;color:#16110b;font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.lbl{font-size:13px;color:#6e604b;margin:14px 0 0;font-weight:500}
+.rank{list-style:none;padding:0;margin:10px 0 0}
+.rank li{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 11px;border-radius:6px;background:#e9dfc6;margin-bottom:5px;font-size:15px}
+.rank li span{color:#6e604b;font-size:13px}
+.lnk{display:flex;gap:6px;margin-top:8px}
+.lnk input{flex:1;min-width:0;border:1px solid #d3c5a5;border-radius:8px;padding:10px;font-size:13px;background:#fff;color:#222}
+.lnk button{border:0;border-radius:8px;background:var(--tea);color:#fff;padding:0 14px}
+input.name{width:100%;border:1px solid #d3c5a5;border-radius:8px;padding:11px;font-size:15px;margin-top:6px;background:#fff;color:#222}
+.all{display:grid;grid-template-columns:repeat(10,1fr);gap:3px;margin-top:10px}
+.all i{font-style:normal;aspect-ratio:1;border-radius:50%;display:grid;place-items:center;font:700 15px/1 var(--sign);color:#9a8b70;background:#e9dfc6}
+.all i.on{background:#7d1d10;color:#fff3dc}
+.all i.last{box-shadow:0 0 0 3px var(--brass)}
+.mini .card{margin-top:8px}.mini .cell.n{font-size:18px}
+.toast{position:fixed;left:50%;top:60px;transform:translateX(-50%);z-index:60;background:rgba(20,12,6,.92);color:#fff;padding:9px 15px;border-radius:10px;font-size:14px;box-shadow:0 6px 20px rgba(0,0,0,.35);transition:opacity .3s;max-width:90vw;text-align:center}
+.emobar{position:absolute;right:0;bottom:calc(100% + 6px);width:min(340px,calc(100vw - 20px));background:var(--ivory);color:#241a10;border-radius:10px;padding:8px;box-shadow:0 6px 18px rgba(0,0,0,.35);z-index:35}
+.emobar .er{display:flex;justify-content:space-between}.emobar .er button{border:0;background:none;font-size:24px;padding:4px}
+.emobar .log{max-height:180px;overflow:auto;font-size:13.5px;margin:4px 2px 6px}.emobar .log div{padding:3px 0;border-bottom:1px solid #e0d3b5}.emobar .log small{display:block;color:#2f6b4f}
+.emobar form{display:flex;gap:6px}.emobar input{flex:1;min-width:0;border:1px solid #d3c5a5;border-radius:8px;padding:9px;font-size:14px;background:#fff;color:#222}
+.emobar form button{border:0;border-radius:8px;background:var(--tea);color:#fff;padding:0 12px}
+#bChat.new{box-shadow:0 0 0 2px var(--brass)}
+.bub{position:fixed;z-index:31;max-width:170px;background:#fff;color:#222;border-radius:10px;padding:6px 9px;font-size:13px;box-shadow:0 4px 12px rgba(0,0,0,.3);pointer-events:none}
+.emo{position:fixed;font-size:30px;z-index:30;pointer-events:none;animation:emo 2.2s ease-out forwards}
+@keyframes emo{0%{opacity:0;transform:translateY(8px) scale(.6)}15%{opacity:1;transform:none}80%{opacity:1}100%{opacity:0;transform:translateY(-24px)}}
+@media (max-width:420px){.recent i:nth-child(n+4){display:none}}
+@media (max-width:380px){.recent i:nth-child(n+3){display:none}.ball{width:80px;height:80px}.ball b{font-size:44px}.table{gap:10px;padding:10px}.prize b{font-size:17px}}
+@media (min-width:700px){.cell.n{font-size:28px}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header><button class="hb" id="bMenu">Menü</button><h1>Tombala</h1><button class="hb" id="bRules">Kurallar</button></header>
+  <div class="players" id="players"></div>
+  <section class="table" aria-live="polite">
+    <div class="ball empty" id="ball"><b>Torba<br>hazır</b></div>
+    <div class="side">
+      <div class="recent" id="recent"></div>
+      <div class="prizes" id="prizes"></div>
+    </div>
+  </section>
+  <div class="cards" id="cards"></div>
+  <div class="bar">
+    <button class="btn" id="bAll">Çekilenler</button>
+    <div class="st" id="st"></div>
+    <button class="btn tea" id="bPause" hidden>Duraklat</button>
+    <button class="btn" id="bChat" hidden>💬</button>
+  </div>
+</div>
+<div class="ov" id="ov" hidden><div class="sheet" id="sheet"></div></div>
+<div class="toast" id="toast" hidden></div>
+<script>
+const $=id=>document.getElementById(id);
+const ST={get(k,d){try{const v=localStorage.getItem('tb_'+k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem('tb_'+k,JSON.stringify(v))}catch(e){}},del(k){try{localStorage.removeItem('tb_'+k)}catch(e){}}};
+const UID=ST.get('uid',null)||(()=>{const u=Math.random().toString(36).slice(2,10);ST.set('uid',u);return u})();
+const SPD=+(new URLSearchParams(location.search).get('spd')||1);
+const BOTN=['Nuri','Rıza','Hamdi','Cemil','Kâzım'];
+const KN={c1:'1. Çinko',c2:'2. Çinko',tb:'Tombala'};
+const IV={yavas:6000,normal:4000,hizli:2500};
+let nPlayers=ST.get('n',4),perCards=ST.get('per',2),speed=ST.get('spd','normal'),autoMark=ST.get('auto',false),voice=ST.get('voice',true);
+let G=null,names=[],me=0,mode='off',human=[],ver=0,paused=false,drawT=null,shownDid=0,shownWins=0,marks=[],tot=ST.get('tot',{}),roundNo=0;
+const myName=()=>(window.KH&&KH.name())||ST.get('name','')||'Sen';
+const pn=p=>p===me&&mode==='off'?'Sen':names[p];
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function toast(h,ms=2200){const t=$('toast');t.innerHTML=h;t.hidden=false;t.style.opacity=1;clearTimeout(toast.t);toast.t=setTimeout(()=>{t.style.opacity=0;setTimeout(()=>t.hidden=true,300)},ms)}
+
+/* sesli okuma: sayılar seçilen dilde okunur */
+function say(n){if(!voice||!window.speechSynthesis)return;try{const L=window.LANG||'tr';const u=new SpeechSynthesisUtterance(String(n));u.lang=L==='ru'?'ru-RU':L==='en'?'en-GB':'tr-TR';u.rate=1;speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){}}
+function sayText(t){if(!voice||!window.speechSynthesis)return;try{const L=window.LANG||'tr';const u=new SpeechSynthesisUtterance(t);u.lang=L==='ru'?'ru-RU':L==='en'?'en-GB':'tr-TR';speechSynthesis.speak(u)}catch(e){}}
+
+/* ---------- çizim ---------- */
+function drawnSet(){return new Set(G?G.drawn:[])}
+function render(){if(!G)return;const set=drawnSet();
+  // oyuncular
+  $('players').innerHTML=G.seats.map(p=>{const m=TB.missing(G,p),sc=(G.score[p]||0);
+    return `<button class="pl${p===me?' me':''}${G.phase==='draw'&&m<=1?' hot':''}" data-p="${p}"><b>${esc(pn(p))}</b><span>${G.phase==='over'?`${sc} puan`:m===0?'Tamam!':`${m} eksik`}${sc&&G.phase!=='over'?` · ${sc} puan`:''}</span></button>`}).join('');
+  $('players').querySelectorAll('.pl').forEach(b=>b.onclick=()=>showCards(+b.dataset.p));
+  // top
+  const ball=$('ball');if(G.last){ball.classList.remove('empty');ball.innerHTML=`<b>${G.last}</b>`}else{ball.classList.add('empty');ball.innerHTML='<b>Torba<br>hazır</b>'}
+  const rec=G.drawn.slice(-6,-1).reverse();const left=typeof G.bag==='number'?G.bag:G.bag.length;
+  $('recent').innerHTML=rec.map(n=>`<i>${n}</i>`).join('')+`<small>Torbada ${left}</small>`;
+  // ödüller
+  $('prizes').innerHTML=['c1','c2','tb'].map(k=>{const w=G.wins.find(x=>x.k===k);const mine=w&&w.ps.includes(me);
+    return `<div class="prize${w?' done':''}${mine?' mine':''}${G.next===k?' next':''}"><b>${KN[k]}</b><span>${w?w.ps.map(p=>esc(pn(p))).join(', '):G.next===k?'Sırada':'Bekliyor'}</span></div>`}).join('');
+  // kartlarım
+  const my=G.cards[me]||[];
+  if(!marks.length||marks.length!==my.length)marks=my.map(()=>new Set());
+  if(autoMark)my.forEach((c,ci)=>c.flat().forEach(n=>{if(n&&set.has(n))marks[ci].add(n)}));
+  const winCards=new Set(G.wins.flatMap(w=>w.cards.filter(x=>x.p===me).map(x=>x.ci)));
+  $('cards').innerHTML=my.map((c,ci)=>{const left=c.flat().filter(n=>n&&!set.has(n)).length;
+    return `<div class="card c${ci%3}${winCards.has(ci)?' win':''}"><div class="hd">${my.length>1?`${ci+1}. kart`:'Kartın'}<span>${left?`${left} sayı kaldı`:'Tombala!'}</span></div>`+
+      '<div class="rows">'+c.map(rw=>`<div class="grid row${rw.every(n=>!n||set.has(n))?' done':''}">${rw.map(n=>n?`<button class="cell n${set.has(n)?' out':''}${marks[ci].has(n)?' mk':''}" data-c="${ci}" data-n="${n}" aria-label="${n}">${n}</button>`:'<span class="cell"></span>').join('')}</div>`).join('')+'</div></div>'}).join('');
+  // alt çubuk
+  const host=mode!=='guest';$('bPause').hidden=!(host&&G.phase==='draw');$('bPause').textContent=paused?'Devam et':'Duraklat';
+  $('st').textContent=G.phase==='over'?'Oyun bitti':paused?'Durdu':G.drawn.length?`${G.drawn.length}. top`:'Başlıyor…'}
+$('cards').addEventListener('click',e=>{const c=e.target.closest('.cell.n');if(!c||!G)return;const n=+c.dataset.n,ci=+c.dataset.c;
+  if(!drawnSet().has(n)){toast('Bu sayı daha çıkmadı');return}
+  if(marks[ci].has(n))marks[ci].delete(n);else{marks[ci].add(n);KSfx.play('tap')}
+  c.classList.toggle('mk',marks[ci].has(n));c.classList.add('drop');setTimeout(()=>c.classList.remove('drop'),260)});
+
+/* ---------- akış ---------- */
+function shout(t,sub,mine){const d=document.createElement('div');d.className='shout';d.innerHTML=`<b>${esc(t)}</b>${sub?`<span>${sub}</span>`:''}`;document.body.appendChild(d);setTimeout(()=>d.remove(),2700);KSfx.play(mine?'win':'turn')}
+function sync(){if(!G)return;
+  if(G.did!==shownDid){const fresh=G.did===shownDid+1;shownDid=G.did;if(fresh&&G.last){const b=$('ball');b.classList.remove('pop');void b.offsetWidth;b.classList.add('pop');KSfx.play('card');say(G.last)}}
+  render();
+  while(shownWins<G.wins.length){const w=G.wins[shownWins++];const mine=w.ps.includes(me);
+    shout(KN[w.k]+'!',w.ps.map(p=>esc(pn(p))).join(', ')+(w.ps.length>1?' · paylaştı':''),mine);setTimeout(()=>sayText(({ru:{c1:'Первая линия',c2:'Вторая линия',tb:'Лото'},en:{c1:'First line',c2:'Second line',tb:'Full house'}}[window.LANG]||KN)[w.k]),900)}
+  if(G.phase==='over'){clearTimeout(drawT);if(!sync.overShown){sync.overShown=true;setTimeout(showOver,2600)}return}
+  schedule()}
+function schedule(){clearTimeout(drawT);if(!G||mode==='guest'||paused||G.phase!=='draw')return;
+  drawT=setTimeout(()=>{if(!G||paused||G.phase!=='draw')return;TB.draw(G);ver++;bcastState();sync()},(G.drawn.length?IV[speed]:1200)/SPD)}
+$('bPause').onclick=()=>{paused=!paused;ver++;bcastState();render();schedule();if(paused)toast('Torba durdu')};
+function newGame(){clearTimeout(drawT);paused=false;
+  if(mode==='off'){me=0;const seats=[...Array(Math.max(2,Math.min(6,nPlayers))).keys()];G=TB.newGame({seats,cards:perCards});names=[myName(),...BOTN];human=seats.map(p=>p===0)}
+  marks=[];shownDid=G.did;shownWins=0;sync.overShown=false;hideOv();ver++;bcastState();sync()}
+
+/* ---------- paneller ---------- */
+function ov(k,h){const s=$('sheet');s.dataset.k=k;s.innerHTML=h;$('ov').hidden=false;return s}
+function hideOv(){$('ov').hidden=true;$('sheet').dataset.k=''}
+$('ov').addEventListener('click',e=>{if(e.target===$('ov')&&['rules','all','cards'].includes($('sheet').dataset.k))hideOv()});
+function showOver(){if(!G)return;
+  const iWon=G.wins.some(w=>w.k==='tb'&&w.ps.includes(me));
+  if(!showOver.done||showOver.done!==G){showOver.done=G;KSfx.play(iWon?'win':'lose');window.KH&&KH.stat('Tombala',iWon);
+    if(mode==='off'){for(const p of G.seats){const k=p===0?'_me':names[p];tot[k]=(tot[k]||0)+(G.score[p]||0)}ST.set('tot',tot)}}
+  const ord=G.seats.slice().sort((a,b)=>(G.score[b]||0)-(G.score[a]||0));
+  const tb=G.wins.find(w=>w.k==='tb');
+  ov('over',`<h2>${tb?(tb.ps.includes(me)?'Tombala senin!':`Tombala: ${esc(tb.ps.map(pn).join(', '))}`):'Torba bitti'}</h2>
+    <p>${G.drawn.length} top çekildi. Puanlar: 1. çinko 1, 2. çinko 2, tombala 4.</p>
+    <ul class="rank">${ord.map(p=>`<li><b style="flex:1">${esc(pn(p))}</b><span>${G.wins.filter(w=>w.ps.includes(p)).map(w=>KN[w.k]).join(', ')||'—'}</span><b>${G.score[p]||0}</b></li>`).join('')}</ul>
+    <div class="row2">${mode==='guest'?'<p>Ev sahibi yeni oyunu başlatabilir.</p>':`<button class="sb" id="oMenu">Menü</button><button class="sb pri" id="oNew">${mode==='host'?'Yeni el':'Yeni oyun'}</button>`}</div>`);
+  if(mode!=='guest'){$('oNew').onclick=()=>{if(mode==='host')startOnline(true);else newGame()};$('oMenu').onclick=showMenu}}
+function showRules(){ov('rules',`<h2>Tombala nasıl oynanır?</h2>
+  <p>Herkesin kartında 3 sıra var, her sırada 5 sayı. Torbadan 1–90 arası sayılar teker teker çekilir.</p>
+  <p>Çekilen sayı kartındaysa üstüne dokunup pulunu koy. Kartında yanıp sönen sayılar çıkmış ama henüz işaretlemediğin sayılardır. İstersen menüden otomatik işaretlemeyi açabilirsin.</p>
+  <p><b>1. Çinko:</b> bir kartta bir sırayı ilk tamamlayan. <b>2. Çinko:</b> aynı kartta iki sırayı ilk tamamlayan. <b>Tombala:</b> kartın 15 sayısını ilk tamamlayan; oyun biter.</p>
+  <p>Aynı topla birden fazla kişi tamamlarsa ödülü paylaşırlar. Ödüller kendiliğinden verilir; işaretlemeyi unutsan da kaybetmezsin. Bu oyunda coin yok, sadece puan: 1. çinko 1, 2. çinko 2, tombala 4.</p>
+  <div class="row2"><button class="sb pri" id="rOk">Tamam</button></div>`);$('rOk').onclick=()=>G?hideOv():showMenu()}
+function showAll(){if(!G)return;const set=drawnSet();
+  ov('all',`<h2>Çekilen sayılar</h2><p>${G.drawn.length} top çekildi, torbada ${typeof G.bag==='number'?G.bag:G.bag.length} kaldı.</p>
+    <div class="all">${Array.from({length:90},(_,i)=>i+1).map(n=>`<i class="${set.has(n)?'on':''}${n===G.last?' last':''}">${n}</i>`).join('')}</div>
+    <div class="row2"><button class="sb pri" id="aOk">Kapat</button></div>`);$('aOk').onclick=hideOv}
+$('bAll').onclick=showAll;
+function showCards(p){if(!G||!G.cards[p])return;const set=drawnSet();
+  ov('cards',`<h2>${esc(pn(p))}</h2><p>${TB.missing(G,p)} sayı eksik · ${G.score[p]||0} puan</p><div class="mini">${G.cards[p].map((c,ci)=>`<div class="card c${ci%3}"><div class="rows">`+c.map(rw=>`<div class="grid">${rw.map(n=>n?`<span class="cell n${set.has(n)?' mk':''}">${n}</span>`:'<span class="cell"></span>').join('')}</div>`).join('')+'</div></div>').join('')}</div>
+    <div class="row2"><button class="sb pri" id="cOk">Kapat</button></div>`);$('cOk').onclick=hideOv}
+function seg(id,items,cur){return `<div class="seg" id="${id}">${items.map(([v,l])=>`<button data-v="${v}" class="${String(cur)===String(v)?'on':''}">${l}</button>`).join('')}</div>`}
+function bindSeg(s,id,f){s.querySelectorAll(`#${id} button`).forEach(b=>b.onclick=()=>{f(b.dataset.v);s.querySelectorAll(`#${id} button`).forEach(x=>x.classList.toggle('on',x===b))})}
+function showMenu(){const s=ov('menu',`<h2>Tombala</h2><p>Torbadan sayılar çekilir, kartını ilk dolduran kazanır. Bilgisayara karşı ya da linkle arkadaşlarınla. Bu oyunda coin yok.</p>
+    <p class="lbl">Masada kaç kişi?</p>${seg('mN',[[2,'2'],[3,'3'],[4,'4'],[5,'5'],[6,'6']],nPlayers)}
+    <p class="lbl">Kişi başı kart</p>${seg('mC',[[1,'1 kart'],[2,'2 kart'],[3,'3 kart']],perCards)}
+    <p class="lbl">Torba hızı</p>${seg('mS',[['yavas','Yavaş'],['normal','Normal'],['hizli','Hızlı']],speed)}
+    <p class="lbl">İşaretleme</p>${seg('mA',[[0,'Kendim'],[1,'Otomatik']],autoMark?1:0)}
+    <p class="lbl">Sayıları sesli oku</p>${seg('mV',[[1,'Açık'],[0,'Kapalı']],voice?1:0)}
+    <div class="row2" style="flex-direction:column">
+      ${G&&G.phase!=='over'?'<button class="sb pri" id="mBack">Oyuna dön</button>':''}
+      <button class="sb ${G&&G.phase!=='over'?'':'pri'}" id="mBot">Bilgisayara karşı yeni oyun</button>
+      <button class="sb" id="mQuick">⚡ Hızlı oyun</button>
+      <button class="sb" id="mOn">Arkadaşlarla online</button>
+      <button class="sb" id="mRules">Kurallar</button>
+      <button class="sb" id="mSnd">${KSfx.on?'Ses: Açık':'Ses: Kapalı'}</button>
+      <a class="sb" href="../">Salona dön</a></div>
+    <p style="font-size:12.5px;margin-top:10px">Toplam puanın: ${tot._me||0}.</p>`);
+  bindSeg(s,'mN',v=>{nPlayers=+v;ST.set('n',nPlayers)});bindSeg(s,'mC',v=>{perCards=+v;ST.set('per',perCards)});
+  bindSeg(s,'mS',v=>{speed=v;ST.set('spd',speed);if(mode!=='guest'){ver++;bcastState();schedule()}});
+  bindSeg(s,'mA',v=>{autoMark=v==='1';ST.set('auto',autoMark);render()});bindSeg(s,'mV',v=>{voice=v==='1';ST.set('voice',voice)});
+  if($('mBack'))$('mBack').onclick=hideOv;
+  $('mBot').onclick=()=>{if(mode!=='off')leaveOnline();mode='off';newGame()};$('mQuick').onclick=quickPlay;$('mOn').onclick=showOnline;$('mRules').onclick=showRules;
+  $('mSnd').onclick=e=>{e.target.textContent=KSfx.toggle()?'Ses: Açık':'Ses: Kapalı'}}
+$('bMenu').onclick=showMenu;$('bRules').onclick=showRules;
+
+/* ---------- online: ev sahibi torbayı çeker, herkes aynı anda görür ---------- */
+const PFX='ktb-',MAXP=6;let peer=null,conn=null,conns={},lob=[],seatOf={},lastSeen={},room=null,started=false,lastRx=0,hb=null,fill=ST.get('fill',true);
+function send(d){if(mode==='guest'&&conn&&conn.open)conn.send(d)}
+function bcast(d){if(mode!=='host')return;for(const u in conns){const c=conns[u];if(c.open)try{c.send(d)}catch(e){}}}
+function bcastState(){if(mode==='host'&&started&&G){bcast({t:'state',ver,G:TB.view(G),names,human,seats:seatOf,paused,speed});ST.set('host',{room,G,names,human,seatOf,lob,ver,t:Date.now()})}}
+function resumeHost(sv){hostRoom.rs=sv;hostRoom();hostRoom.rs=null;for(const u of Object.keys(sv.seatOf||{}))lastSeen[u]=Date.now();lob=sv.lob||lob;seatOf=sv.seatOf||{};started=true;G=sv.G;names=sv.names;human=sv.human;ver=(sv.ver||0)+1;me=0;shownDid=G.did;shownWins=G.wins.length;$('bChat').hidden=false;hideOv();bcastState();sync()}
+function linkFor(c){const u=location.protocol.startsWith('http')?location.origin+location.pathname:'https://mihrali47.github.io/durak/tombala/';return u+'#'+c}
+function showOnline(){const s=ov('online',`<h2>Arkadaşlarla online</h2><p>Masa kur, linki gönder. 2–6 kişi oynayabilirsiniz.</p>
+  <p class="lbl">Adın</p><input class="name" id="oName" maxlength="14" value="${myName()==='Sen'?'':esc(myName())}" placeholder="Adını yaz">
+  <div class="row2"><button class="sb" id="oBack">Geri</button><button class="sb pri" id="oHost">Masa kur</button></div>`);
+  $('oBack').onclick=showMenu;$('oHost').onclick=()=>{ST.set('name',$('oName').value.trim().slice(0,14));hostRoom()}}
+function hostRoom(){leaveOnline();mode='host';started=false;room=hostRoom.rs?hostRoom.rs.room:Math.random().toString(36).slice(2,7).toUpperCase();lob=[{uid:UID,name:myName()}];seatOf={};
+  peer=new Peer(PFX+room);showLobby();peer.on('open',()=>{history.replaceState(null,'','#'+room);showLobby()});
+  peer.on('connection',c=>c.on('data',d=>hostRecv(c,d)));
+  peer.on('error',e=>{if(e.type==='superseded'){toast('Bu masa başka bir pencerede açıldı');mode='off'}else if(e.type==='network')toast('Sunucuya bağlanılamadı, tekrar deneniyor…')});
+  clearInterval(hb);hb=setInterval(()=>{if(mode!=='host')return;if(started)bcastState();else{bcast({t:'lobby',names:lob.map(x=>x.name)});quickTick()}},3000)}
+function hostRecv(c,d){if(!d||!d.uid)return;lastSeen[d.uid]=Date.now();
+  if(d.t==='hello'){conns[d.uid]=c;const nm=String(d.name||'Misafir').slice(0,14);let L=lob.find(x=>x.uid===d.uid);
+    if(!L){if(!started){if(lob.length>=MAXP){c.send({t:'full'});return}lob.push({uid:d.uid,name:nm})}
+      else{const s=G.seats.find(p=>!human[p]);if(s==null){c.send({t:'full'});return}lob.push({uid:d.uid,name:nm});seatOf[d.uid]=s;human[s]=true;names[s]=nm;ver++}}
+    else L.name=nm;
+    if(started)bcastState();else{bcast({t:'lobby',names:lob.map(x=>x.name)});showLobby()}return}
+  const s=seatOf[d.uid];
+  if(d.t==='emo'&&s!=null){bcast({t:'emo',p:s,e:d.e});showEmo(s,d.e)}
+  else if(d.t==='chat'&&s!=null){const x=String(d.x||'').slice(0,140),l=String(d.l||'').slice(0,2);bcast({t:'chat',p:s,x,l});addChat(s,x,l)}}
+function showLobby(){if(mode==='host'&&started)return;if(mode!=='host'&&mode!=='guest')return;const L=mode==='host'?lob.map(x=>x.name):(showLobby.names||[]);
+  const s=ov('lobby',`<h2>${mode==='host'?'Masa hazır':'Masaya oturdun'}</h2>
+    ${mode==='host'?`<p>Bu linki arkadaşlarına gönder. Herkes gelince başlat.</p><div class="lnk"><input id="lk" readonly value="${linkFor(room||'')}"><button id="lkC">Kopyala</button></div>
+      ${window.KH?'<div class="row2" style="margin-top:8px"><button class="sb" id="lkF">👥 Arkadaşlarını çağır</button></div>':''}
+      <p class="lbl">Kişi başı kart</p>${seg('lC',[[1,'1 kart'],[2,'2 kart'],[3,'3 kart']],perCards)}
+      <p class="lbl">Az kişi olursa</p>${seg('lF',[[1,'Bilgisayar otursun (4 kişiye kadar)'],[0,'Sadece biz']],fill?1:0)}`:'<p>Ev sahibi oyunu başlatınca torba açılacak.</p>'}
+    ${quick&&mode==='host'?'<p><b>Oyuncu aranıyor…</b> Masa dolunca ya da 2. kişi geldikten 20 saniye sonra oyun kendiliğinden başlar.</p>':''}
+    <p class="lbl">Oyuncular</p><ul class="rank">${[...Array(Math.max(4,L.length))].map((_,i)=>`<li><b>${esc(L[i]||'Boş')}</b><span>${i===0?'Ev sahibi':L[i]?'Hazır':''}</span></li>`).join('')}</ul>
+    <div class="row2"><button class="sb" id="lBack">Çık</button>${mode==='host'?`<button class="sb pri" id="lGo" ${L.length<2?'disabled':''}>Başlat (${L.length} kişi)</button>`:''}</div>`);
+  if($('lkF'))$('lkF').onclick=()=>KH.invitePicker('Tombala',linkFor(room));
+  if($('lkC'))$('lkC').onclick=async()=>{const v=$('lk').value;try{if(navigator.share&&matchMedia('(pointer:coarse)').matches){await navigator.share({title:'Tombala',url:v});return}await navigator.clipboard.writeText(v);toast('Link kopyalandı')}catch(e){toast('Linki seçip kopyala')}};
+  if(s.querySelector('#lC'))bindSeg(s,'lC',v=>{perCards=+v;ST.set('per',perCards)});
+  if(s.querySelector('#lF'))bindSeg(s,'lF',v=>{fill=v==='1';ST.set('fill',fill)});
+  $('lBack').onclick=()=>{leaveOnline();mode='off';G=null;history.replaceState(null,'',location.pathname);showMenu()};
+  if($('lGo'))$('lGo').onclick=()=>startOnline()}
+function startOnline(again){if(window.KQuick)KQuick.update({started:true});quick=false;started=true;me=0;
+  const n=lob.length,total=fill?Math.max(n,4):n;const seats=[...Array(total).keys()];seatOf={};names=[];human=seats.map(()=>false);
+  lob.forEach((x,k)=>{seatOf[x.uid]=k;names[k]=x.name;human[k]=true});let b=0;seats.forEach(p=>{if(!names[p])names[p]=BOTN[b++]});
+  G=TB.newGame({seats,cards:perCards});$('bChat').hidden=false;newGame()}
+function joinRoom(code){leaveOnline();mode='guest';room=code;started=false;G=null;
+  if(myName()==='Sen'){ov('join',`<h2>Tombala masasına davet</h2><p>Adını yaz ve masaya otur.</p><input class="name" id="jName" maxlength="14" placeholder="Adını yaz"><div class="row2"><button class="sb pri" id="jGo">Masaya otur</button></div>`);
+    $('jGo').onclick=()=>{ST.set('name',($('jName').value.trim()||'Misafir').slice(0,14));joinRoom(code)};return}
+  ov('lobby','<h2>Bağlanılıyor…</h2><p>Masaya bağlanıyorsun, birkaç saniye sürebilir.</p>');
+  peer=new Peer();peer.on('open',connectHost);
+  peer.on('error',e=>{if(e.type==='peer-unavailable'){ov('lobby','<h2>Masa bulunamadı</h2><p>Ev sahibinin sayfası kapalı olabilir. Linki tekrar iste.</p><div class="row2"><button class="sb pri" id="nf">Menüye dön</button></div>');$('nf').onclick=()=>{leaveOnline();mode='off';showMenu()}}});
+  clearInterval(hb);hb=setInterval(()=>{if(mode!=='guest')return;send({t:'ping',uid:UID});if(lastRx&&Date.now()-lastRx>9000){lastRx=Date.now();connectHost()}},3000)}
+function connectHost(){if(!peer)return;try{conn&&conn.close()}catch(e){}conn=peer.connect(PFX+room);conn.on('open',()=>conn.send({t:'hello',uid:UID,name:myName()}));conn.on('data',guestRecv)}
+function guestRecv(d){lastRx=Date.now();if(!d)return;
+  if(d.t==='full'){ov('lobby','<h2>Masa dolu</h2><p>Bu masada yer kalmadı.</p><div class="row2"><button class="sb pri" id="nf">Menüye dön</button></div>');$('nf').onclick=()=>{leaveOnline();mode='off';showMenu()}}
+  else if(d.t==='lobby'){showLobby.names=d.names;if(!started)showLobby()}
+  else if(d.t==='state'){if(d.ver<ver)return;const s=d.seats[UID];if(s==null)return;const first=!started||!G;
+    const newRound=G&&d.G.did<G.did;
+    me=s;ver=d.ver;G=d.G;names=d.names;human=d.human;paused=!!d.paused;speed=d.speed||speed;started=true;$('bChat').hidden=false;
+    if(first||newRound){shownDid=newRound?0:G.did;shownWins=newRound?0:G.wins.length;marks=[];sync.overShown=false;if(newRound&&$('sheet').dataset.k==='over')hideOv()}
+    if(['lobby','join'].includes($('sheet').dataset.k))hideOv();sync()}
+  else if(d.t==='emo')showEmo(d.p,d.e);else if(d.t==='chat'&&d.p!==me)addChat(d.p,d.x,d.l)}
+function leaveOnline(){if(window.KQuick)KQuick.stop();quick=false;clearInterval(hb);try{peer&&peer.destroy()}catch(e){}peer=null;conn=null;conns={};started=false;$('bChat').hidden=true}
+
+/* ---------- sohbet ve emoji (mesajlar okuyanın diline çevrilir) ---------- */
+const EMO=['👍','😂','😮','😡','🙏','👏'],CHAT=[];
+const myL=()=>String(window.LANG||navigator.language||'tr').slice(0,2).toLowerCase();
+async function translate(text,hint){const L=myL();
+  const norm=x=>String(x||'').toLocaleLowerCase().replace(/[\s.,!?¡¿'"…:;()\-]+/g,' ').trim(),same=x=>norm(x)===norm(text);
+  const EN=/\b(the|you|your|how|are|is|what|good|game|play|hello|hi|thanks|thank|please|come|go|yes|no|why|where|when|nice|bro|love|lol|wait|sorry|ok|okay|win|lost|lose|my|me|i|we|this|that|and|but|not|can|will|do|does|did|have|has|want|let|lets|again|fast|slow|turn)\b/i;
+  const TR=/[çğışöüİ]|\b(ne|nasıl|naber|kanka|hadi|tamam|evet|hayır|bir|ve|sen|ben|iyi|oyun|neden|niye|bekle|sıra|abi|kardeş|olsun|değil|var|yok|çok|güzel)\b/i;
+  const g=async sl=>{const r=await fetch('https://translate.googleapis.com/translate_a/single?client=gtx&sl='+sl+'&tl='+L+'&dt=t&q='+encodeURIComponent(text));const j=await r.json();return {t:(j[0]||[]).map(x=>x[0]).join(''),src:j[2]||sl}};
+  try{let a=await g('auto');
+    if(same(a.t)){const alt=L!=='en'&&EN.test(text)?'en':L!=='tr'&&TR.test(text)?'tr':null;if(alt){const b=await g(alt);if(!same(b.t))a=b}}
+    return a.t&&!same(a.t)?a.t:null}
+  catch(e){try{const r=await fetch('https://api.mymemory.translated.net/get?q='+encodeURIComponent(text)+'&langpair=autodetect|'+L);const j=await r.json();const out=j&&j.responseData&&j.responseData.translatedText;
+    if(out&&!same(out)&&!/INVALID|MYMEMORY/i.test(out))return out}catch(x){}return null}}
+function anchor(p){return document.querySelector(`.pl[data-p="${p}"]`)}
+function bubble(p,t){const el=anchor(p);if(!el)return;document.querySelectorAll('.bub[data-p="'+p+'"]').forEach(x=>x.remove());const r=el.getBoundingClientRect(),b=document.createElement('div');b.className='bub';b.dataset.p=p;
+  b.textContent=t.length>70?t.slice(0,68)+'…':t;document.body.appendChild(b);const w=b.offsetWidth;b.style.left=Math.max(6,Math.min(innerWidth-w-6,r.left))+'px';b.style.top=(r.bottom+6)+'px';setTimeout(()=>b.remove(),4500)}
+async function addChat(p,x,l){const it={p,x,tr:null};CHAT.push(it);if(CHAT.length>60)CHAT.shift();bubble(p,x);if(p!==me&&!document.querySelector('.emobar'))$('bChat').classList.add('new');drawChat();
+  if(p!==me){const t=await translate(x,l);if(t){it.tr=t;drawChat();bubble(p,t)}}}
+function drawChat(){const l=document.querySelector('.emobar .log');if(!l)return;l.innerHTML=CHAT.map(c=>`<div><b>${esc(pn(c.p))}:</b> ${esc(c.x)}${c.tr?`<small>${esc(c.tr)}</small>`:''}</div>`).join('')||'<div style="color:#6e604b">Mesajlar karşı tarafın diline otomatik çevrilir.</div>';l.scrollTop=1e6}
+function sendChat(x){x=String(x||'').trim().slice(0,140);if(!x)return;const l=myL();if(mode==='host'){bcast({t:'chat',p:me,x,l});addChat(me,x,l)}else{send({t:'chat',uid:UID,x,l});addChat(me,x,l)}}
+function showEmo(p,e){const el=anchor(p);if(!el)return;const r=el.getBoundingClientRect(),d=document.createElement('div');d.className='emo';d.textContent=e;d.style.left=(r.left+6)+'px';d.style.top=(r.top-24)+'px';document.body.appendChild(d);setTimeout(()=>d.remove(),2300)}
+$('bChat').onclick=e=>{e.stopPropagation();let b=document.querySelector('.emobar');if(b){b.remove();return}$('bChat').classList.remove('new');
+  b=document.createElement('div');b.className='emobar';b.innerHTML=`<div class="er">${EMO.map(x=>`<button type="button">${x}</button>`).join('')}</div><div class="log"></div><form><input maxlength="140" placeholder="Mesaj yaz…"><button>Gönder</button></form>`;
+  $('bChat').parentNode.appendChild(b);drawChat();
+  b.querySelectorAll('.er button').forEach(x=>x.onclick=()=>{b.remove();if(mode==='host'){bcast({t:'emo',p:me,e:x.textContent});showEmo(me,x.textContent)}else send({t:'emo',uid:UID,e:x.textContent})});
+  b.querySelector('form').onsubmit=ev=>{ev.preventDefault();const i=b.querySelector('input');sendChat(i.value);i.value=''};
+  /* klavye açılınca kutu klavyenin üstünde kalsın */
+  const vv=window.visualViewport;if(vv){const fit=()=>{if(!b.isConnected){vv.removeEventListener('resize',fit);return}const kb=innerHeight-vv.height-vv.offsetTop;b.style.position=kb>60?'fixed':'';b.style.bottom=kb>60?(kb+8)+'px':'';b.style.right=kb>60?'10px':''};vv.addEventListener('resize',fit)}};
+
+/* ---------- hızlı oyun ---------- */
+let quick=false,quick2=0;
+function quickPlay(){if(myName()==='Sen'){ov('qname',`<h2>⚡ Hızlı oyun</h2><p>Adını yaz, sana masa bulalım.</p><input class="name" id="qN" maxlength="14" placeholder="Adını yaz"><div class="row2"><button class="sb" id="qB">Geri</button><button class="sb pri" id="qG">Masa bul</button></div>`);
+    $('qB').onclick=showMenu;$('qG').onclick=()=>{const v=$('qN').value.trim().slice(0,14);if(!v)return;ST.set('name',v);quickPlay()};return}
+  if(mode!=='off')leaveOnline();clearTimeout(drawT);
+  ov('lobby','<h2>Masa aranıyor…</h2><p>Açık bir masa varsa oturtuyoruz, yoksa sana yeni masa açıyoruz.</p><div class="row2"><button class="sb" id="qC">Vazgeç</button></div>');$('qC').onclick=()=>{leaveOnline();mode='off';showMenu()};
+  KQuick.find('tombala',{onJoin:c=>joinRoom(c),onHost:()=>{hostRoom();quick=true;quick2=0;KQuick.advertise('tombala',room,{n:1,max:MAXP});showLobby()}})}
+function quickTick(){if(!quick||mode!=='host'||started)return;const n=lob.length;KQuick.update({n});
+  if(n>=2&&!quick2)quick2=Date.now();if(n<2)quick2=0;
+  if(n>=MAXP||(n>=2&&Date.now()-quick2>20000)){startOnline();return}
+  if(n===1){const r=KQuick.rival('tombala',room);if(r){leaveOnline();joinRoom(r)}}}
+
+window.KH_HOST=()=>{mode='off';hostRoom();return linkFor(room)};
+const hc=(location.hash||'').slice(1).toUpperCase();
+if(/^[A-Z0-9]{5}$/.test(hc)){const sv=ST.get('host',null);if(sv&&sv.room===hc&&Date.now()-sv.t<36e5)resumeHost(sv);else joinRoom(hc)}else showMenu();
+{const q=new URLSearchParams(location.search);if(q.get('hizli')){try{q.delete('hizli');history.replaceState(null,'',location.pathname+(q.toString()?'?'+q:'')+location.hash)}catch(e){}setTimeout(()=>{try{quickPlay()}catch(e){console.error(e)}},400)}}
+/* arka plandan dönünce torba kaldığı yerden devam etsin */
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&G&&mode!=='guest')schedule()});
+addEventListener('load',()=>{window.KH&&KH.setPresence('Tombala')});
+</script>
+</body></html>

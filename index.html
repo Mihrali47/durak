@@ -1,6 +1,6 @@
 <!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Kahvehane · Online Oyun Salonu</title>
-<meta name="description" content="Durak, Okey, 101 Okey, King, Batak, 1000, Pişti, Tavla, Kızma Birader, Dama ve Satranç. Ücretsiz, kayıt şart değil. Arkadaşına link at ya da hızlı oyunla rakip bul.">
+<meta name="description" content="Durak, Okey, 101 Okey, King, Batak, 1000, Pişti, Tavla, Kızma Birader, Tombala, Dama ve Satranç. Ücretsiz, kayıt şart değil. Arkadaşına link at ya da hızlı oyunla rakip bul.">
 <link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="icon-192.png">
 <meta name="theme-color" content="#21150d"><meta property="og:title" content="Kahvehane · Online Oyun Salonu"><meta property="og:description" content="Durak, Okey, King, Batak, Pişti, Tavla ve daha fazlası. Ücretsiz, kayıt şart değil.">
 <meta property="og:image" content="icon-512.png"><meta name="apple-mobile-web-app-capable" content="yes">
@@ -107,6 +107,7 @@ button{font:inherit}
 .bd.ch{background:repeating-conic-gradient(#efe9dc 0 25%,#2f2f31 0 50%) 0 0/22px 22px}
 .bd.dm{background:repeating-conic-gradient(#d9b98a 0 25%,#7a4a2a 0 50%) 0 0/22px 22px;position:relative}
 .bd.dm::after{content:"";position:absolute;left:14px;top:14px;width:16px;height:16px;border-radius:50%;background:#2a211b;box-shadow:0 0 0 2px #f4ead8}
+.tball{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font:700 22px/1 var(--sign);color:#7d1d10;background:radial-gradient(circle at 34% 30%,#fff 0 8%,#f4ead2 30%,#d8c49b 72%,#a98c5c 100%);box-shadow:0 3px 6px rgba(0,0,0,.4)}
 .dc{display:flex;gap:4px}.dc i{width:14px;height:14px;border-radius:50%;box-shadow:inset 0 -2px 0 rgba(0,0,0,.25)}
 
 .foot-note{color:var(--muted);font-size:14px;max-width:62ch;margin:26px auto 0;text-align:center}
@@ -142,7 +143,7 @@ footer .links{display:flex;gap:16px;flex-wrap:wrap;align-items:center}
   <section class="hello">
     <div>
       <h1>Bugün hangi masaya oturuyorsun?</h1>
-      <p>Durak'tan tavlaya on üç oyun. Bilgisayara karşı hemen başla, bekleyen bir masaya katıl ya da linki atıp arkadaşlarını çağır. Ücretsiz, kayıt gerekmez.</p>
+      <p>Durak'tan tombalaya on dört oyun. Bilgisayara karşı hemen başla, bekleyen bir masaya katıl ya da linki atıp arkadaşlarını çağır. Ücretsiz, kayıt gerekmez.</p>
       <div class="cta">
         <button class="btn tea" id="qBtn"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M9 1 3 9h4l-1 6 6-8H8z" fill="currentColor"/></svg>Hızlı oyun</button>
         <button class="btn out" id="fBtn">Arkadaşını çağır</button>
@@ -214,6 +215,12 @@ footer .links{display:flex;gap:16px;flex-wrap:wrap;align-items:center}
             <span class="ln"><h3 class="nm">Kavgacı Satranç</h3><span class="dots"></span><span class="ppl">2 kişi</span></span>
             <p class="dsc">Taşlar yürür, çifte atar, yumruk sallar. Sesli, animasyonlu satranç.<span class="flags"><span class="meta">Online</span><span class="badges"></span></span></p></a>
         </div>
+        <div class="grp"><h3>Kalabalık masa</h3>
+          <a class="game" href="tombala/" data-online>
+            <span class="pic"><span class="tball">47</span></span>
+            <span class="ln"><h3 class="nm">Tombala</h3><span class="dots"></span><span class="ppl">2–6 kişi</span></span>
+            <p class="dsc">Torbadan sayılar çekilir, kartını işaretle. Çinko, ikinci çinko ve tombala. Coin yok, sadece puan.<span class="flags"><span class="meta">Online</span><span class="badges"></span></span></p></a>
+        </div>
         <div class="grp"><h3>Tek başına</h3>
           <a class="game" href="kahvehane/">
             <span class="pic"><span class="tl"><i class="r">7</i><i class="r">8</i><i class="r">9</i></span></span>
@@ -250,7 +257,7 @@ document.getElementById('fBtn').onclick=()=>{if(window.KH)KH.openProfile()};
     const r=document.createElement('a');r.href=href;r.innerHTML=`<b>${nameOf(href)}</b><span>Yarım kalan oyununa dön</span>`;box.appendChild(r);box.classList.add('has');
     const a=document.querySelector(`a.game[href="${href}"] .badges`);if(a){const b=document.createElement('span');b.className='resume-mark';b.textContent='Yarım kaldı';a.appendChild(b)}}})();
 /* canlı: hızlı oyunda oyuncu bekleyen masalar */
-addEventListener('load',()=>setTimeout(()=>{const go=()=>{if(!window.KQuick)return;const map={durak:'durak/',king:'king/',batak:'batak/',bin:'bin/',kizma:'kizma/',tavla:'tavla/',pisti:'pisti/',okey101:'okey101/',okey:'okey101/?klasik=1',pisti4:'pisti4/',dama:'dama/',damaru:'dama/'};
+addEventListener('load',()=>setTimeout(()=>{const go=()=>{if(!window.KQuick)return;const map={durak:'durak/',king:'king/',batak:'batak/',bin:'bin/',kizma:'kizma/',tavla:'tavla/',pisti:'pisti/',okey101:'okey101/',okey:'okey101/?klasik=1',pisti4:'pisti4/',dama:'dama/',damaru:'dama/',tombala:'tombala/'};
   KQuick.watch(cnt=>{document.querySelectorAll('.live').forEach(x=>x.remove());const tot={};for(const g in cnt){const h=map[g];if(h)tot[h]=(tot[h]||0)+cnt[g]}
     const ul=document.getElementById('nowList');ul.innerHTML='';
     for(const h in tot){const n=tot[h],txt=n===1?'1 masa bekliyor':`${n} masa bekliyor`;
