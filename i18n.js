@@ -170,13 +170,20 @@ const T=[
 ];
 if(L==='ru')T.push(['Nuri','Нури',''],['Rıza','Рыза',''],['Hamdi','Хамди',''],['Cemil','Джемиль',''],['Kâzım','Казым','']);
 T.push(['@mavi','Синий','Blue'],['@yesil','Зелёный','Green'],['@bordo','Бордо','Burgundy'],['@gece','Ночь','Night']);
+T.push(['Bugün hangi masaya oturuyorsun?','За какой стол сядете сегодня?','Which table are you sitting at today?'],
+['Durak\'tan tavlaya on üç oyun. Bilgisayara karşı hemen başla, bekleyen bir masaya katıl ya da linki atıp arkadaşlarını çağır. Ücretsiz, kayıt gerekmez.','Тринадцать игр, от дурака до нард. Играйте с компьютером, садитесь за ждущий стол или отправьте ссылку друзьям. Бесплатно, без регистрации.','Thirteen games, from Durak to backgammon. Play the computer right away, join a waiting table or send friends a link. Free, no sign-up.'],
+['Arkadaşını çağır','Позвать друга','Call a friend'],['Şu an bekleyenler','Сейчас ждут','Waiting right now'],['Bekleyen masa yok. Hızlı oyuna bas, ilk masayı sen aç.','Ждущих столов нет. Нажмите «Быстрая игра» и откройте первый стол.','No tables waiting. Tap Quick game and open the first one.'],
+['Oyun listesi','Список игр','Games'],['Oyunun adına dokun, masa kurulsun.','Нажмите на игру, и стол готов.','Tap a game to set up a table.'],['Kâğıt oyunları','Карточные игры','Card games'],['Taş oyunları','Игры с фишками','Tile games'],['Zar ve tahta','Кости и доска','Dice and board'],['Tek başına','В одиночку','Solo'],
+['1 kişi','1 игрок','1 player'],['1 masa bekliyor','1 стол ждёт','1 table waiting'],['Yarım kalan oyununa dön','Вернуться к незаконченной игре','Back to your unfinished game'],['Yarım kaldı','Не закончена','Unfinished'],['Liderler','Лидеры','Leaders'],
+['Kayıt olmadan oynayabilirsin. Kayıt olursan arkadaş ekler, onları tek dokunuşla masana çağırır, istatistiklerini ve liderlik tablosunu görürsün.','Играть можно без регистрации. С аккаунтом вы добавляете друзей, зовёте их за стол одним касанием и видите статистику и таблицу лидеров.','You can play without signing up. With an account you add friends, call them to your table with one tap and see your stats and the leaderboard.'],
+['Kahvehane, ücretsiz ve reklamsız. Test sürümü.','Kahvehane — бесплатно и без рекламы. Тестовая версия.','Kahvehane is free and ad-free. Test version.'],['Telefona kur','Установить на телефон','Install on phone']);
 T.push(...(window.I18N_EXTRA||[]));
 const I=L==='ru'?1:2,D0={},A0={};for(const r of T){if(r[0][0]==='@')A0[r[0].slice(1)]=r[I];else{D0[r[0]]=r[I];const t=r[0].trim();if(t!==r[0]&&D0[t]==null)D0[t]=String(r[I]).trim()}}
 const SU={maça:['пики','spades'],kupa:['червы','hearts'],karo:['бубны','diamonds'],sinek:['трефы','clubs']},RK={vale:['валет','jack'],'kız':['дама','queen'],papaz:['король','king'],as:['туз','ace']};
 const J=I-1;
 const card=s=>s.replace(/\b(maça|kupa|karo|sinek)\s+(vale|kız|papaz|as|\d+)\b/g,(m,a,b)=>(RK[b]?RK[b][J]:b)+' '+SU[a][J]).replace(/\((koz)\)/g,J?'(trump)':'(козырь)');
 const R=L==='ru'?[
-[/^👥 (\d)–(\d) kişi$/,'👥 $1–$2 игрока'],[/^👥 (\d) kişi$/,'👥 $1 игрока'],[/^👥 Tek kişi$/,'👥 Один игрок'],
+[/^(\d)–(\d) kişi$/,'$1–$2 игрока'],[/^(\d+) masa bekliyor$/,'столов ждут: $1'],[/^👥 (\d)–(\d) kişi$/,'👥 $1–$2 игрока'],[/^👥 (\d) kişi$/,'👥 $1 игрока'],[/^👥 Tek kişi$/,'👥 Один игрок'],
 [/^Giriş adın: (.+)$/,'Имя для входа: $1'],
 [/^(\d)-(\d) kişi$/,'$1–$2 игрока'],[/^(\d) kişi$/,'$1 игрока'],[/^Linkle online (\d)-(\d) kişi$/,'Онлайн по ссылке, $1–$2 игрока'],
 [/^● (\d+) masa oyuncu bekliyor$/,'● столов ждут игроков: $1'],
@@ -194,7 +201,7 @@ const R=L==='ru'?[
 [/^(.+) hepsini kesti, kartlar çıktı$/,'$1 отбился, бито'],[/^Hepsini kestin, kartlar çıktı$/,'Вы отбились, бито'],[/^Yeni el\. Koz (.+)\. (.*)$/,(m,a,b)=>'Новая раздача. Козырь '+(SU[a]?SU[a][0]:a)+'.'],[/^Pes ettin$/,'Вы сдались'],
 [/^(sana|.+) aktardı$/,'перевёл'],[/^(.+) hileyi yakaladı$/,'$1 поймал шулера'],[/^(.+) hileyi yakaladı: (.+)$/,'$1 поймал шулера'],[/^Saldırı sende$/,'Ваша атака'],[/^Aktardın$/,'Переведено'],[/^Sana aktardı$/,'Переведено на вас'],[/^Kurtuldun$/,'Вы выбрались'],[/^Berabere$/,'Ничья'],
 ]:[
-[/^👥 (\d)–(\d) kişi$/,'👥 $1–$2 players'],[/^👥 (\d) kişi$/,'👥 $1 players'],[/^👥 Tek kişi$/,'👥 Solo'],
+[/^(\d)–(\d) kişi$/,'$1–$2 players'],[/^(\d+) masa bekliyor$/,'$1 tables waiting'],[/^👥 (\d)–(\d) kişi$/,'👥 $1–$2 players'],[/^👥 (\d) kişi$/,'👥 $1 players'],[/^👥 Tek kişi$/,'👥 Solo'],
 [/^Giriş adın: (.+)$/,'Login name: $1'],
 [/^(\d)-(\d) kişi$/,'$1–$2 players'],[/^(\d) kişi$/,'$1 players'],[/^Linkle online (\d)-(\d) kişi$/,'Online by link, $1–$2 players'],
 [/^● (\d+) masa oyuncu bekliyor$/,'● $1 tables waiting for players'],
