@@ -25,6 +25,15 @@ body{background:var(--felt-deep);color:var(--ink);font-family:var(--body);-webki
 .app{padding-block:8px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));min-height:100%}
 .rot{display:none;text-align:center;font-size:14px;color:var(--muted);padding:6px 0 10px}
 @media (orientation:portrait) and (max-width:700px){.rot{display:block}}
+/* telefon dik: masa dikey dizilir, ıstaka 3 sıra, taşlar büyük görünür */
+body.port .rot{display:none}
+#stage.port .chip.logo{display:none}
+#stage.port .info{flex-direction:row;flex-wrap:wrap;justify-content:center;align-items:center;gap:8px}
+#stage.port .info .tag{padding:0 10px}
+#stage.port .gw .gos{margin-top:0!important}
+#stage.port .pairs .empty{font-size:12px}
+#stage.port .acts{flex-wrap:wrap;justify-content:center}
+#stage.port .acts>span{display:none}
 #wrap{position:relative;width:100%;height:calc(var(--s,1)*800px);margin:0 auto}
 #stage{position:absolute;left:50%;top:0;width:1280px;height:800px;margin-left:-640px;transform-origin:top center;transform:scale(var(--s,1));
   border-radius:22px;overflow:hidden;
@@ -246,8 +255,8 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
   <div class="rot">Telefonu yan çevirirsen masa büyür.</div>
   <div id="wrap"><div id="stage">
     <!-- üst -->
-    <div class="abs tb" style="left:18px"><span class="chip logo">101 OKEY</span><span class="chip" id="elChip">1. el / 5</span></div>
-    <div class="abs tb" style="right:18px"><button class="chip" id="bSnd" aria-pressed="true">Ses: Açık</button><button class="chip" id="bScore">Puanlar</button><button class="chip" id="bFull">Tam ekran</button><button class="chip" id="bMenu">Menü</button></div>
+    <div class="abs tb" id="tbL" style="left:18px"><span class="chip logo">101 OKEY</span><span class="chip" id="elChip">1. el / 5</span></div>
+    <div class="abs tb" id="tbR" style="right:18px"><button class="chip" id="bSnd" aria-pressed="true">Ses: Açık</button><button class="chip" id="bScore">Puanlar</button><button class="chip" id="bFull">Tam ekran</button><button class="chip" id="bMenu">Menü</button></div>
 
     <!-- rakipler -->
     <div class="abs pl" id="pl2" style="left:530px;top:6px;width:220px"></div>
@@ -265,10 +274,10 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 
     <!-- masa -->
     <div class="abs board" id="board" data-drop="board" style="left:250px;top:68px;width:520px;height:408px"></div>
-    <div class="abs info" style="left:780px;top:68px;width:72px">
+    <div class="abs info" id="info" style="left:780px;top:68px;width:72px">
       <div class="tag" id="tagOpen">101</div><div class="tag hot" id="tagKat">Katlamalı</div><div class="tag" id="tagHelp">Yardımlı</div><div class="tag" id="elTag">5 El</div>
-      <div class="gos" id="gos" style="margin-top:8px"></div><div class="small">Gösterge</div>
-      <button class="deck" id="deck" data-src="deck" data-drop="finish" aria-label="Ortadan çek; son taşı buraya ters koyarak bitir"></button><div class="small">Orta</div>
+      <div class="gw"><div class="gos" id="gos" style="margin-top:8px"></div><div class="small">Gösterge</div></div>
+      <div class="gw"><button class="deck" id="deck" data-src="deck" data-drop="finish" aria-label="Ortadan çek; son taşı buraya ters koyarak bitir"></button><div class="small">Orta</div></div>
     </div>
     <div class="abs board pairs" id="pairs" data-drop="pairs" style="left:862px;top:68px;width:184px;height:408px"></div>
     <div class="abs ticker" id="ticker"></div>
@@ -277,7 +286,7 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
     <div class="abs pl me" id="pl0"></div>
     <div class="bub abs" id="bub0" style="left:770px;top:490px">0</div>
     <div class="abs rack" id="rack"></div>
-    <div class="abs acts">
+    <div class="abs acts" id="acts">
       <button class="btn ghost" id="bSortS">Seri Diz</button>
       <button class="btn ghost" id="bSortP">Çift Diz</button>
       <button class="btn ghost" id="bSortI">İşlek Diz</button>
@@ -762,7 +771,7 @@ const reduce=false;
 const hid=()=>document.hidden;
 const tick=()=>new Promise(r=>{const c=new MessageChannel();c.port1.onmessage=()=>r();c.port2.postMessage(0)});
 const wait=ms=>hid()?tick():new Promise(r=>{let done=false;const f=()=>{if(!done){done=true;document.removeEventListener('visibilitychange',v);r()}},v=()=>{if(hid())f()};document.addEventListener('visibilitychange',v);setTimeout(f,reduce?Math.min(ms,200):ms)});
-const COLS=15,ROWS=2,SW=56,SH=76,SX=59,X0=26,Y0=[10,90];
+let COLS=15,ROWS=2,Y0=[10,90];const SW=56,SH=76,SX=59,X0=26;
 const AV=['S','N','R','H'],AVC=['var(--o0)','var(--o1)','var(--o2)','var(--o3)'];
 const U={rising:true,rig:{all:false,ok:0,pair:false},help:true,sel:new Set(),slots:Array(COLS*ROWS).fill(null),newId:null,busy:false,logs:[]};
 let GM=null,toastT=0;
@@ -783,8 +792,26 @@ function snd(k){if(!soundOn)return;
   else if(k==='bad'){tone(160,.25,'sawtooth',.07);tone(120,.3,'sawtooth',.06,.12)}}
 
 /* ölçek */
-function fit(){const w=$('wrap').clientWidth,h=innerHeight-24-($('.rot')?0:0);
-  const s=Math.min(w/1280,Math.max(.25,(innerHeight-20)/800));$('wrap').style.setProperty('--s',s)}
+/* dikey telefon düzeni: aynı öğeler 680×1250'lik dik sahneye yerleşir */
+const PORT={tbL:'left:12px;top:8px',tbR:'right:12px;top:8px',
+  pl2:'left:230px;top:56px;width:220px',bub2:'left:300px;top:118px',
+  pl3:'left:12px;top:140px',bub3:'left:18px;top:270px',pl1:'left:572px;top:140px',bub1:'left:578px;top:270px',
+  'cr2^':'left:150px;top:50px','cr1^':'left:474px;top:50px','cr3^':'left:32px;top:322px','cr0^':'left:592px;top:322px',
+  board:'left:120px;top:140px;width:440px;height:400px',info:'left:12px;top:552px;width:656px',
+  pairs:'left:12px;top:664px;width:656px;height:108px',ticker:'left:126px;top:auto;bottom:716px;width:428px',
+  pl0:'left:220px;top:784px;width:240px',bub0:'left:470px;top:790px',
+  rack:'left:19px;top:836px;width:642px;height:256px',acts:'left:19px;top:1102px;width:642px',status:'left:19px;top:1206px;width:642px'};
+let PORTON=null;
+function layout(){const port=innerHeight>innerWidth*1.15&&innerWidth<=760;if(port===PORTON)return;PORTON=port;
+  const st=$('stage');st.classList.toggle('port',port);document.body.classList.toggle('port',port);
+  st.style.width=port?'680px':'';st.style.height=port?'1250px':'';st.style.marginLeft=port?'-340px':'';
+  for(const k in PORT){const el=k.endsWith('^')?$(k.slice(0,-1))?.parentElement:$(k);if(!el)continue;
+    if(el.dataset.ls==null)el.dataset.ls=el.getAttribute('style')||'';
+    el.setAttribute('style',port?el.dataset.ls+';'+PORT[k]:el.dataset.ls)}
+  const oc=COLS;COLS=port?10:15;ROWS=port?3:2;Y0=port?[10,90,170]:[10,90];
+  if(oc!==COLS&&typeof S!=='undefined'&&S&&typeof render==='function')try{render()}catch(e){}}
+function fit(){layout();const W=PORTON?680:1280,Hh=PORTON?1250:800,w=$('wrap').clientWidth;
+  const s=Math.min(w/W,Math.max(.25,(innerHeight-20)/Hh));$('wrap').style.setProperty('--s',s);$('wrap').style.height=(s*Hh)+'px'}
 addEventListener('resize',fit);fit();
 
 function tileEl(t,size='lg',tag='div'){
@@ -1014,7 +1041,7 @@ function render(){
     else if(sel1&&H().length>1&&canAttachAny(sel1))m+='<span class="bad">Bu taş işlenir, atarsan 101 ceza!</span> Yeşil diziye dokun ya da sürükle.';
     else if(!m){
       if(H().length===1)m='Son taşın kaldı: ortadaki desteye <b>ters koyarak</b> bit! ';
-      if(S.dealer===0&&S.firstTurn[0])m='Dağıtan sensin: bir taşı sağ alttaki köşeye sürükleyip at. ';
+      if(S.dealer===0&&S.firstTurn[0])m='Dağıtan sensin: bir taşı «Buraya at» köşesine sürükleyip at. ';
       m+=S.opened[0]?'Taşları masadaki dizilere sürükleyip işle, sonra atacağın taşa çift tıkla.':`Serilerini aralarında boşluk bırakarak diz. Istakadaki seriler: <b>${sv}</b> / ${S.minOpen}`;
     }
     st.innerHTML=m;
@@ -1200,7 +1227,7 @@ function showHow(){open(`<h2>Nasıl oynanır?</h2>
     <li>Çifte giden de masadaki serilere işleyebilir ve okey alabilir, ama seri açamaz; elinde kalan taşlar 2 katı yazar.</li>
     <li>Biri çifte gidince sağdaki <b>Çiftler</b> bölümü ortak olur: seriyle açmış olanlar da oraya çift işleyebilir.</li>
     <li>Açtıktan sonra taşı masadaki diziye sürükle ve <b>işle</b>.</li>
-    <li>Atmak için taşa <b>çift tıkla</b>, sağ alt köşeye sürükle ya da seçip <b>At</b>'a bas.</li>
+    <li>Atmak için taşa <b>çift tıkla</b>, «Buraya at» köşesine sürükle ya da seçip <b>At</b>'a bas.</li>
     <li>Son taşını <b>ortadaki desteye</b> sürükle: taş <b>ters döner</b> ve bitersin. Son taş okeyse puanlar ×2.</li>
     <li><b>İşlek Diz</b>: açtıysan ve sıra sendeyse işlenebilen bütün taşların kendiliğinden masadaki yerine gider. Açmadıysan işlek taşları ıstakanın sağ ucuna ayırır.</li>
     <li><b>Çift İşle</b>: sürüklemeden çift koyar. Açmadıysan ve 5 çiftin varsa çifte gidersin. Çifte gittiysen bir taş seçip basarsan o çift, seçmeden basarsan bütün çiftlerin Çiftler bölümüne gider. Bir taşı sağdaki <b>Çiftler</b> bölümüne sürüklersen eşiyle birlikte oraya gider; 5 çiftin varsa sürükleyince çifte gidersin.</li>

@@ -142,6 +142,7 @@ input.name{width:100%;border:1px solid #d9d1bf;border-radius:10px;padding:11px;f
 
 .pile{position:absolute;left:50%;top:46%;width:var(--tw);height:calc(var(--tw)*1.42)}
 .pile .pc{position:absolute;left:50%;top:50%;width:var(--tw);height:calc(var(--tw)*1.42);--w:var(--tw)}
+.pcount.badge{right:auto;z-index:5;background:rgba(0,0,0,.6);color:#fff;font-weight:700;font-size:12px;padding:3px 8px;border-radius:999px;white-space:nowrap;text-align:left}
 .pcount{position:absolute;left:0;right:0;top:calc(46% + var(--tw)*.85);text-align:center;font-size:12.5px;color:var(--muted)}
 .hand .hc.match .card{box-shadow:0 2px 8px rgba(0,0,0,.3),0 0 0 3px var(--gold)}
 .burst{position:fixed;left:50%;top:40%;transform:translate(-50%,-50%);z-index:70;font:800 34px/1 var(--body);color:var(--gold);text-shadow:0 3px 0 #000,0 0 18px rgba(0,0,0,.6);animation:bst 1.2s ease-out forwards;pointer-events:none}
@@ -210,6 +211,9 @@ function render(){if(!M)return;
   const pile=document.createElement('div');pile.className='pile';const vis=M.pile.slice(-6);const off=M.pile.length-vis.length;
   vis.forEach((c,i)=>{const k=off+i,w=document.createElement('div');w.className='pc';const ang=((k*37)%17)-8;w.style.transform=`translate(-50%,-50%) rotate(${ang}deg) translate(${(k%3-1)*4}px,${(k%2)*3}px)`;w.appendChild(k<M.closed?cardBack():cardEl(c));pile.appendChild(w)});
   mid.appendChild(pile);const pc=document.createElement('div');pc.className='pcount';pc.textContent=M.pile.length?`Yerde ${M.pile.length} kart`:'Yer boş';mid.appendChild(pc);
+  /* yazı kartın üstüne binmesin: yığının hemen altına yerleşir */
+  requestAnimationFrame(()=>{const cs=[...pile.querySelectorAll('*')].map(x=>x.getBoundingClientRect()).filter(r=>r.height>0);if(!cs.length)return;const t=Math.min(...cs.map(r=>r.top)),rt=Math.max(...cs.map(r=>r.right)),m=mid.getBoundingClientRect();
+    pc.classList.add('badge');pc.textContent=`${M.pile.length} kart`;pc.style.top=(t-m.top-10)+'px';pc.style.left=(rt-m.left-28)+'px'});
   let m='';if(M.phase==='play'&&!busy)m=M.turn===me?(M.pile.length?'Sıra sende':'Sıra sende, yer boş'):`${names[M.turn]} düşünüyor…`;
   $('msg').textContent=m;renderHand()}
 function cardBack(){const d=document.createElement('div');d.className='card';d.style.background='repeating-linear-gradient(45deg,var(--back) 0 6px,var(--backl) 6px 9px)';return d}
