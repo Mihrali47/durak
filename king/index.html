@@ -179,7 +179,8 @@ let M=null,names=['Sen',...BOTN],me=0,mode='off',human=[true,false,false,false];
 let busy=false,shownTid=null,showing=null,sel=null,botT=null,dealSeen=-1,choiceSeen=null,endT=null,ver=0,matchHands=ST.get('hands',20);
 const SPD=+(new URLSearchParams(location.search).get('spd')||1);
 const myName=()=>(window.KH&&KH.name())||ST.get('name','')||'Sen';
-const V=p=>(p-me+4)%4;
+/* Türk masasında oyun saatin tersine döner: sıradaki oyuncu sağında oturur */
+const V=p=>(me-p+4)%4;
 const pn=p=>p===me?'Sen':names[p];
 
 /* ---------- kart çizimi ---------- */
@@ -308,7 +309,7 @@ function showDealEnd(){const k=M.phase==='over'?'over':'dealEnd';if($('sheet').d
       <ul class="rank">${ord.map(p=>`<li><span>${pn(p)}</span><b>${M.score[p]}</b></li>`).join('')}</ul>
       <div class="row">${mode==='guest'?'<p>Ev sahibi yeni maçı başlatabilir.</p>':`<button class="btn" id="eTab">Puan tablosu</button><button class="btn pri" id="eNew">${mode==='host'?'Rövanş':'Yeni maç'}</button>`}</div>`);
     if(mode!=='guest'){$('eNew').onclick=()=>{showDealEnd.counted=false;newMatch(M.total)};$('eTab').onclick=showScore}return}
-  const s=ov('dealEnd',`<h2><span>${K.NAMES[l.game]}</span> bitti</h2><p><span>${pn(l.chooser)}</span> seçmişti${l.game==='koz'?` · koz <span>${SN[l.trump]}</span>`:''}.</p>
+  const s=ov('dealEnd',`<h2><span>${K.NAMES[l.game]}</span> bitti</h2><p><span>${pn(l.chooser)}</span> seçmişti${l.game==='koz'?` · koz <span>${SN[l.trump]}</span>`:''}.</p>${l.void?'<p><b>Herkes birer kız aldı: el sayılmadı, kartlar yeniden dağıtılıyor.</b></p>':''}
     <table class="sc"><tr><th></th><th>Bu el</th><th>Toplam</th></tr>${[0,1,2,3].map(p=>`<tr><td>${pn(p)}</td><td class="${cls(l.s[p])}">${fmt(l.s[p])}</td><td class="${cls(M.score[p])}">${M.score[p]}</td></tr>`).join('')}</table>
     <div class="row">${mode==='guest'?'<p>Sıradaki el birazdan başlıyor…</p>':'<button class="btn pri" id="eNext">Sonraki el</button>'}</div>`);
   if(mode!=='guest')$('eNext').onclick=()=>{hideOv();act(0,{k:'next'})}}

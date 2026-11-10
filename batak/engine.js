@@ -6,7 +6,7 @@ const cs=c=>c[0],cr=c=>+c.slice(1);
 function rng(seed){let s=seed>>>0||1;return()=>{s=Math.imul(s^s>>>15,1|s);s^=s+Math.imul(s^s>>>7,61|s);return((s^s>>>14)>>>0)/4294967296}}
 function deck(){const d=[];for(const s of SU)for(let r=2;r<=14;r++)d.push(s+r);return d}
 function sortHand(h){const o={S:0,H:1,C:2,D:3};return h.sort((a,b)=>o[cs(a)]-o[cs(b)]||cr(a)-cr(b))}
-function newMatch(o={}){return {n:4,mode:o.mode||'ihaleli',total:o.hands||11,deal:0,first:o.first??0,seed:o.seed??((Math.random()*1e9)|0),score:[0,0,0,0],log:[],over:false,phase:'idle',minBid:4}}
+function newMatch(o={}){return {n:4,mode:o.mode||'ihaleli',total:o.hands||11,deal:0,first:o.first??0,seed:o.seed??((Math.random()*1e9)|0),score:[0,0,0,0],log:[],over:false,phase:'idle',minBid:o.minBid===4?4:o.minBid===5?5:4}}
 function startDeal(M){if(M.over)return;const r=rng(M.seed+M.deal*7919);const d=deck();
   for(let i=d.length-1;i>0;i--){const j=(r()*(i+1))|0;[d[i],d[j]]=[d[j],d[i]]}
   M.hands=[0,1,2,3].map(p=>sortHand(d.slice(p*13,p*13+13)));M.dealer=(M.first+M.deal)%4;

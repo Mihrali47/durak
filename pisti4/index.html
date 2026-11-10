@@ -188,7 +188,8 @@ let M=null,names=['Sen',...BOTN],me=0,mode='off',human=[true,false,false,false];
 let busy=false,sel=null,botT=null,dealSeen=-1,endT=null,ver=0,shownEid=null;
 const SPD=+(new URLSearchParams(location.search).get('spd')||1);
 const myName=()=>(window.KH&&KH.name())||ST.get('name','')||'Sen';
-const V=p=>(p-me+4)%4;
+/* Türk masasında oyun saatin tersine döner: sıradaki oyuncu sağında oturur */
+const V=p=>(me-p+4)%4;
 const pn=p=>p===me?'Sen':names[p];
 const tm=p=>p%2;
 /* ---------- kart çizimi ---------- */

@@ -14,7 +14,10 @@ function newMatch(o={}){const total=o.hands===12?12:20;
     phase:'idle',chooser:0,game:null,trump:null,hands:null,trick:[],leader:0,taken:null,tricks:0,broken:false,last:null}}
 function startDeal(M){if(M.over)return;const r=rng(M.seed+M.deal*7919);const d=deck();
   for(let i=d.length-1;i>0;i--){const j=(r()*(i+1))|0;[d[i],d[j]]=[d[j],d[i]]}
-  M.hands=[0,1,2,3].map(p=>sortHand(d.slice(p*13,p*13+13)));M.chooser=(M.first+M.deal)%4;M.phase='choose';M.game=null;M.trump=null;
+  M.hands=[0,1,2,3].map(p=>sortHand(d.slice(p*13,p*13+13)));
+  // ilk eli karo ikilisi kimdeyse o seçer; sonra seçme sırası sağa (saatin tersine) döner
+  if(M.deal===0&&!M.firstSet){M.first=M.hands.findIndex(h=>h.includes('D2'));M.firstSet=true}
+  M.chooser=(M.first+M.deal)%4;M.phase='choose';M.game=null;M.trump=null;
   M.trick=[];M.taken=[0,1,2,3].map(()=>[]);M.won=[0,0,0,0];M.tricks=0;M.broken=false;M.last=null;M.leader=M.chooser}
 function options(M,p=M.chooser){const pk=M.picks[p],o=[];
   if(pk.koz<M.per.koz)o.push('koz');
@@ -74,7 +77,11 @@ function play(M,p,c){if(M.phase!=='play')return 'Oyun yok';if(p!==M.turn)return 
   M.tid=(M.tid||0)+1;M.last={trick:M.trick,w,id:M.tid};M.trick=[];M.leader=w;M.turn=w;
   if(done(M))finishDeal(M);
   return null}
-function finishDeal(M){const s=handScore(M);for(let p=0;p<4;p++)M.score[p]+=s[p];
+function finishDeal(M){
+  // Kız almaz'da dört oyuncu birer kız aldıysa el sayılmaz, aynı kişi yeniden seçer (Türk kingi kuralı)
+  if(M.game==='kiz'&&M.taken.every(t=>t.filter(c=>cr(c)===12).length===1)){M.used.kiz--;M.picks[M.chooser].ceza--;
+    M.log.push({deal:M.deal,chooser:M.chooser,game:M.game,trump:null,s:[0,0,0,0],void:true});M.phase='dealEnd';M.voided=true;M.seed=(M.seed+104729)>>>0;return}
+  M.voided=false;const s=handScore(M);for(let p=0;p<4;p++)M.score[p]+=s[p];
   M.log.push({deal:M.deal,chooser:M.chooser,game:M.game,trump:M.trump,s});
   if(M.game==='koz'){const k=M.won.findIndex(x=>x>=11);if(k>=0){M.king=k;M.over=true}}
   M.phase='dealEnd';M.lastTwo=null;M.deal++;if(M.deal>=M.total)M.over=true}

@@ -4,6 +4,7 @@ const SU={'Maça':['Пики','Spades'],'Kupa':['Червы','Hearts'],'Karo':['
 const BN={Nuri:'Нури','Rıza':'Рыза',Hamdi:'Хамди',Sen:'Вы'};
 const nm=(n,j)=>j?(n==='Sen'?'You':n):(BN[n]||n);
 window.I18N_EXTRA=[
+['Herkes birer kız aldı: el sayılmadı, kartlar yeniden dağıtılıyor.','Каждый взял по даме: раздача не засчитана, сдаём заново.','Everyone took one queen: the hand does not count, redealing.'],
 [' Yerdeki renkte senden büyük bir kart oynanmışsa ceza kartını (kız, papaz, vale ya da kupa papazı) atmak zorundasın.',' Если в масти хода уже сыграна старшая карта, нужно сбросить штрафную (даму, короля, валета или короля червей).',' If a higher card of the led suit has been played, you must drop your penalty card (queen, king, jack or king of hearts).'],['Yerde daha büyük kart var, kızını atmak zorundasın','На столе старшая карта — сбросьте даму','A higher card is down, you must drop your queen'],['Yerde daha büyük kart var, papazını ya da valeni atmak zorundasın','На столе старшая карта — сбросьте короля или валета','A higher card is down, you must drop your king or jack'],
 ['Son el','Последняя взятка','Last trick'],['aldı','взял','took it'],['Henüz el alınmadı','Взяток ещё не было','No tricks taken yet'],
 ['King','Кинг','King'],['Menü','Меню','Menu'],['Puanlar','Очки','Scores'],['Sen','Вы','You'],

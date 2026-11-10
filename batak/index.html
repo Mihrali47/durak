@@ -174,12 +174,13 @@ const RN=r=>({11:'J',12:'Q',13:'K',14:'A'})[r]||String(r);
 const BOTN=['Nuri','Rıza','Hamdi'];
 const ST={get(k,d){try{const v=localStorage.getItem('batak_'+k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem('batak_'+k,JSON.stringify(v))}catch(e){}},del(k){try{localStorage.removeItem('batak_'+k)}catch(e){}}};
 const UID=ST.get('uid',null)||(()=>{const u=Math.random().toString(36).slice(2,10);ST.set('uid',u);return u})();
-let gmode=ST.get('mode','ihaleli');const MODES={ihaleli:'İhaleli',esli:'Eşli',kozmaca:'Koz Maça'};
+let gmode=ST.get('mode','ihaleli'),minB=ST.get('minb',5);const MODES={ihaleli:'İhaleli',esli:'Eşli',kozmaca:'Koz Maça'};
 let M=null,names=['Sen',...BOTN],me=0,mode='off',human=[true,false,false,false];
 let busy=false,shownTid=null,showing=null,sel=null,botT=null,dealSeen=-1,choiceSeen=null,endT=null,ver=0,matchHands=ST.get('hands',11);
 const SPD=+(new URLSearchParams(location.search).get('spd')||1);
 const myName=()=>(window.KH&&KH.name())||ST.get('name','')||'Sen';
-const V=p=>(p-me+4)%4;
+/* Türk masasında oyun saatin tersine döner: sıradaki oyuncu sağında oturur */
+const V=p=>(me-p+4)%4;
 const pn=p=>p===me?'Sen':names[p];
 
 /* ---------- kart çizimi ---------- */
@@ -257,7 +258,7 @@ function act(p,a){if(mode==='guest'){send({t:'act',uid:UID,a});return}
   else if(a.k==='next'){if(M.phase!=='dealEnd')return;clearTimeout(endT);K.next(M)}
   if(e){if(p===me)toast(e);return}
   ver++;bcastState();sync()}
-function newMatch(hands){M=K.newMatch({hands,mode:gmode,first:(Math.random()*4)|0});K.startDeal(M);shownTid=null;dealSeen=-1;choiceSeen=null;sel=null;showDealEnd.counted=false;
+function newMatch(hands){M=K.newMatch({hands,mode:gmode,minBid:minB,first:(Math.random()*4)|0});K.startDeal(M);shownTid=null;dealSeen=-1;choiceSeen=null;sel=null;showDealEnd.counted=false;
   if(mode==='off'){names=[myName(),...BOTN];human=[true,false,false,false];me=0}
   ver++;bcastState();hideOv();sync()}
 
@@ -317,7 +318,7 @@ function showScore(){if(!M)return;
     <div class="row"><button class="btn pri" id="sOk">Tamam</button></div>`);
   $('sOk').onclick=()=>{hideOv();afterRender()}}
 function showRules(){ov('rules',`<h2>Batak nasıl oynanır?</h2>
-  <p>4 kişi, 52 kart, herkese 13 kart. Önce <b>ihale</b>: sırayla kaç el alacağını söylersin (en az 4) ya da pas dersin. En yüksek söyleyen kozu seçer ve ilk eli açar. Herkes pas derse dağıtan 4 ile almak zorundadır.</p>
+  <p>4 kişi, 52 kart, herkese 13 kart. Önce <b>ihale</b>: sırayla kaç el alacağını söylersin (en az 5; menüden 4 yapılabilir) ya da pas dersin. En yüksek söyleyen kozu seçer ve ilk eli açar. Herkes pas derse dağıtan en düşük ihaleyle almak zorundadır.</p>
   <p>Yerdeki renkten atmak zorunludur ve büyüğün varsa büyük atmalısın. Rengin yoksa koz atmak zorundasın; kozla kesilmişse daha büyük koz atmalısın. Koz kırılmadan kozla açılmaz.</p>
   <p><b>Puan:</b> herkes aldığı el kadar puan alır. İhaleyi alan söylediğini tutturursa aldığı el kadar yazar; tutturamazsa <b>batar</b> ve söylediği kadar puanı silinir.</p>
   <p><b>Eşli:</b> karşındaki ortağındır. İhaleyi ortaklar birlikte tutturur, puanlar takım olarak yazılır.</p>
@@ -327,6 +328,7 @@ function showMenu(){const sv=ST.get('save',null),rec=ST.get('rec',[0,0]);
   const s=ov('menu',`<h2>Batak</h2><p>İhaleli, kozlu dört kişilik kahvehane batağı. Söylediğin kadar el al, batma.</p>
 <p class="lbl">Bilgisayar</p><div class="seg" id="mL">${[["kolay","Kolay"],["normal","Normal"]].map(([k,v])=>`<button data-l="${k}" class="${botLvl===k?'on':''}">${v}</button>`).join('')}</div>
     <p class="lbl">Oyun türü</p><div class="seg" id="mM">${Object.entries(MODES).map(([k,v])=>`<button data-m="${k}" class="${gmode===k?'on':''}">${v}</button>`).join('')}</div>
+    <p class="lbl">En düşük ihale</p><div class="seg" id="mB">${[4,5].map(v=>`<button data-b="${v}" class="${minB===v?'on':''}">${v} el</button>`).join('')}</div>
     <p class="lbl">Kaç el?</p><div class="seg" id="mH">${[5,11,21].map(h=>`<button data-h="${h}" class="${matchHands===h?'on':''}">${h} el</button>`).join('')}</div>
     <div class="row" style="flex-direction:column">
       ${M&&M.phase!=='over'&&mode!=='guest'?'<button class="btn pri" id="mBack">Oyuna dön</button>':''}
@@ -340,6 +342,7 @@ function showMenu(){const sv=ST.get('save',null),rec=ST.get('rec',[0,0]);
     <p style="font-size:12.5px;margin-top:10px">Rekorun: ${rec[0]} galibiyet, ${rec[1]} mağlubiyet.</p>`);
   s.querySelectorAll('#mL button').forEach(b=>b.onclick=()=>{botLvl=b.dataset.l;try{localStorage.setItem('kh_botlvl',JSON.stringify(botLvl))}catch(e){};s.querySelectorAll('#mL button').forEach(x=>x.classList.toggle('on',x===b))});
   s.querySelectorAll('#mM button,#oM button').forEach(b=>b.onclick=()=>{gmode=b.dataset.m;ST.set('mode',gmode);s.querySelectorAll('#mM button,#oM button').forEach(x=>x.classList.toggle('on',x===b))});
+  s.querySelectorAll('#mB button').forEach(b=>b.onclick=()=>{minB=+b.dataset.b;ST.set('minb',minB);s.querySelectorAll('#mB button').forEach(x=>x.classList.toggle('on',x===b))});
   s.querySelectorAll('#mH button').forEach(b=>b.onclick=()=>{matchHands=+b.dataset.h;ST.set('hands',matchHands);s.querySelectorAll('#mH button').forEach(x=>x.classList.toggle('on',x===b))});
   if($('mBack'))$('mBack').onclick=()=>{hideOv();afterRender()};
   if($('mLoad'))$('mLoad').onclick=()=>{mode='off';M=sv.M;names=sv.names;names[0]=myName();human=[true,false,false,false];me=0;shownTid=M.last?M.last.id:null;dealSeen=M.deal;choiceSeen=M.trump?M.deal+':'+M.trump:null;hideOv();sync()};
@@ -401,7 +404,7 @@ function showLobby(){if(mode==='host'&&started)return;if(mode!=='host'&&mode!=='
   $('lBack').onclick=()=>{leaveOnline();mode='off';M=null;history.replaceState(null,'',location.pathname);showMenu()};
   if($('lGo'))$('lGo').onclick=startOnline}
 function startOnline(){if(window.KQuick)KQuick.update({started:true});quick=false;started=true;me=0;let b=0;names=seats.map((s,i)=>s?s.name:BOTN[b++]);human=seats.map(s=>!!s);
-  M=K.newMatch({hands:matchHands,mode:gmode,first:(Math.random()*4)|0});K.startDeal(M);shownTid=null;dealSeen=-1;choiceSeen=null;ver++;$('bEmo').hidden=false;hideOv();bcastState();sync()}
+  M=K.newMatch({hands:matchHands,mode:gmode,minBid:minB,first:(Math.random()*4)|0});K.startDeal(M);shownTid=null;dealSeen=-1;choiceSeen=null;ver++;$('bEmo').hidden=false;hideOv();bcastState();sync()}
 function joinRoom(code){leaveOnline();mode='guest';room=code;started=false;M=null;
   if(!ST.get('name','')){const s=ov('join',`<h2>Batak masasına davet</h2><p>Adını yaz ve masaya otur.</p><input class="name" id="jName" maxlength="14" placeholder="Adını yaz"><div class="row"><button class="btn pri" id="jGo">Masaya otur</button></div>`);
     $('jGo').onclick=()=>{ST.set('name',($('jName').value.trim()||'Misafir').slice(0,14));joinRoom(code)};return}
