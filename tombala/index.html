@@ -58,15 +58,17 @@ header h1{flex:1;margin:0;text-align:center;font:700 30px/1 var(--sign);letter-s
 .prize.done.mine{background:rgba(165,48,28,.45);border-color:#e0764f}
 
 /* kartlar */
-.cards{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding:2px 0 4px;scrollbar-width:thin}
+.cards{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;align-items:center;gap:var(--cg,10px);padding:2px 0 4px;scrollbar-width:thin}
+.cards .card{width:var(--cardw,100%)}
 .card{--cc:#e3b54a;background:var(--cc);border-radius:7px;padding:6px 6px 6px;box-shadow:0 3px 0 rgba(0,0,0,.35),0 8px 16px rgba(0,0,0,.3);position:relative}
 .card.c1{--cc:#c6473b}.card.c2{--cc:#3f72b3}
+.cards.tight .card .hd{padding-bottom:2px;font-size:15px}.cards.tight .card{padding:5px 6px}
 .card .hd{display:flex;justify-content:space-between;align-items:center;padding:0 3px 4px;font:700 17px/1 var(--sign);color:rgba(0,0,0,.6)}
 .card .hd span{font:500 12px/1 var(--body);color:rgba(0,0,0,.6)}
 .rows{display:grid;gap:3px}
 .grid{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:3px}
 .cell{aspect-ratio:1/1.08;border-radius:4px;background:rgba(255,250,236,.38);display:grid;place-items:center;position:relative;border:0;padding:0}
-.cell.n{background:#fbf6e8;box-shadow:inset 0 -2px 0 rgba(0,0,0,.12);font:700 clamp(17px,5.6vw,27px)/1 var(--sign);color:#2a1d10}
+.cell.n{background:#fbf6e8;box-shadow:inset 0 -2px 0 rgba(0,0,0,.12);font:700 clamp(13px,var(--fs,5.6vw),28px)/1 var(--sign);color:#2a1d10}
 .cell.n.out:not(.mk){box-shadow:inset 0 0 0 2px var(--tea),0 0 10px rgba(165,48,28,.55);animation:want 1.2s ease-in-out infinite}
 @keyframes want{50%{box-shadow:inset 0 0 0 3px var(--tea),0 0 14px rgba(165,48,28,.8)}}
 .cell{isolation:isolate}
@@ -124,9 +126,15 @@ input.name{width:100%;border:1px solid #d3c5a5;border-radius:8px;padding:11px;fo
 .bub{position:fixed;z-index:31;max-width:170px;background:#fff;color:#222;border-radius:10px;padding:6px 9px;font-size:13px;box-shadow:0 4px 12px rgba(0,0,0,.3);pointer-events:none}
 .emo{position:fixed;font-size:30px;z-index:30;pointer-events:none;animation:emo 2.2s ease-out forwards}
 @keyframes emo{0%{opacity:0;transform:translateY(8px) scale(.6)}15%{opacity:1;transform:none}80%{opacity:1}100%{opacity:0;transform:translateY(-24px)}}
+/* kısa ekranlar: üst kısım küçülür, kartlara yer kalır */
+@media (max-height:700px){header{min-height:34px}header h1{font-size:25px}.hb{padding:5px 9px}.app{gap:6px}
+  .pl{padding:3px 8px;min-width:64px}.pl b{font-size:12.5px}.pl span{font-size:11px}
+  .table{padding:8px 10px;gap:10px}.ball{width:70px;height:70px}.ball b{font-size:40px}.ball.empty b{font-size:13px}
+  .recent{min-height:24px}.recent i{width:24px;height:24px;font-size:14px}.prize{padding:3px 6px}.prize b{font-size:16px}.prize span{font-size:10.5px}
+  .btn{padding:8px 12px}}
 @media (max-width:420px){.recent i:nth-child(n+4){display:none}}
 @media (max-width:380px){.recent i:nth-child(n+3){display:none}.ball{width:80px;height:80px}.ball b{font-size:44px}.table{gap:10px;padding:10px}.prize b{font-size:17px}}
-@media (min-width:700px){.cell.n{font-size:28px}}
+
 </style>
 </head>
 <body>
@@ -171,6 +179,14 @@ function sayText(t){if(!voice||!window.speechSynthesis)return;try{const L=window
 
 /* ---------- çizim ---------- */
 function drawnSet(){return new Set(G?G.drawn:[])}
+/* bütün kartlar kaydırmadan ekrana sığsın: boş yüksekliğe ve kart sayısına göre hücre boyu */
+function fitCards(){const box=$('cards'),n=box.querySelectorAll(':scope>.card').length;if(!n)return;
+  const W=box.clientWidth,H=box.clientHeight-6,gap=n>2?6:10;box.style.setProperty('--cg',gap+'px');
+  const hd=n>2?18:22,pad=12,g=3;// başlık, kart iç boşluğu, hücre arası
+  const byW=(W-pad-8*g)/9,perH=(H-gap*(n-1))/n,byH=(perH-pad-hd-2*g-6)/(3*1.08);
+  const cw=Math.max(17,Math.min(byW,byH,64));box.style.setProperty('--cardw',Math.round(cw*9+8*g+pad)+'px');box.style.setProperty('--fs',Math.round(cw*.62)+'px');
+  box.classList.toggle('tight',n>2)}
+addEventListener('resize',()=>fitCards());try{new ResizeObserver(()=>fitCards()).observe($('cards'))}catch(e){}
 function render(){if(!G)return;const set=drawnSet();
   // oyuncular
   $('players').innerHTML=G.seats.map(p=>{const m=TB.missing(G,p),sc=(G.score[p]||0);
@@ -193,6 +209,7 @@ function render(){if(!G)return;const set=drawnSet();
       '<div class="rows">'+c.map(rw=>`<div class="grid row${rw.every(n=>!n||set.has(n))?' done':''}">${rw.map(n=>n?`<button class="cell n${set.has(n)?' out':''}${marks[ci].has(n)?' mk':''}" data-c="${ci}" data-n="${n}" aria-label="${n}">${n}</button>`:'<span class="cell"></span>').join('')}</div>`).join('')+'</div></div>'}).join('');
   // alt çubuk
   const host=mode!=='guest';$('bPause').hidden=!(host&&G.phase==='draw');$('bPause').textContent=paused?'Devam et':'Duraklat';
+  fitCards();
   $('st').textContent=G.phase==='over'?'Oyun bitti':paused?'Durdu':G.drawn.length?`${G.drawn.length}. top`:'Başlıyor…'}
 $('cards').addEventListener('click',e=>{const c=e.target.closest('.cell.n');if(!c||!G)return;const n=+c.dataset.n,ci=+c.dataset.c;
   if(!drawnSet().has(n)){toast('Bu sayı daha çıkmadı');return}
