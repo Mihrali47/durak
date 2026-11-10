@@ -44,8 +44,10 @@ function play(G,col,m){if(G.phase!=='play')return 'Oyun bitti';if(col!==G.turn)r
   else{
     // üç kez aynı konum berabere; alma ya da taş (dama olmayan) hamlesi olunca sayaç sıfırlanır
     if(!G.quiet)G.reps={};const key=G.turn+G.b.map(x=>x?x.c+(x.k?'K':'m'):'.').join('');G.reps=G.reps||{};G.reps[key]=(G.reps[key]||0)+1;
-    const lim=G.v==='ru'?30:50;   // Rus daması: 15'er hamle yalnız damalar, almasız; Türk daması: 25'er
-    if(G.quiet>=lim||G.reps[key]>=3){G.winner=null;G.games++;G.phase='gameOver';G.drawWhy=G.reps[key]>=3?'rep':'quiet'}}
+    const lim=G.v==='ru'?30:32;   // Rus daması: 15'er hamle yalnız damalar, almasız; Türk daması: 16'şar dama hamlesi almasız
+    // Türk daması: iki tarafta da tek taş kaldıysa berabere
+    const one=G.v!=='ru'&&G.b.filter(x=>x&&x.c==='w').length===1&&G.b.filter(x=>x&&x.c==='b').length===1;
+    if(one||G.quiet>=lim||G.reps[key]>=3){G.winner=null;G.games++;G.phase='gameOver';G.drawWhy=one?'one':G.reps[key]>=3?'rep':'quiet'}}
   return null}
 function next(G){const n=newGame({v:G.v,score:G.score,target:G.target,games:G.games});n.turn=G.games%2?'b':'w';Object.assign(G,n)}
 /* bot: alfa-beta */
