@@ -110,6 +110,14 @@ button{font:inherit}
 .tball{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font:700 22px/1 var(--sign);color:#7d1d10;background:radial-gradient(circle at 34% 30%,#fff 0 8%,#f4ead2 30%,#d8c49b 72%,#a98c5c 100%);box-shadow:0 3px 6px rgba(0,0,0,.4)}
 .dc{display:flex;gap:4px}.dc i{width:14px;height:14px;border-radius:50%;box-shadow:inset 0 -2px 0 rgba(0,0,0,.25)}
 
+.find{display:flex;align-items:center;gap:8px;max-width:420px;margin:0 auto 6px;background:rgba(0,0,0,.22);border:1.5px solid rgba(239,228,199,.22);border-radius:8px;padding:0 6px 0 12px;color:var(--fmuted)}
+.find:focus-within{border-color:var(--brass);color:var(--ivory)}
+.find input{flex:1;min-width:0;border:0;background:none;color:var(--ivory);font:500 16px/1 var(--body);padding:12px 0;outline:none}
+.find input::placeholder{color:var(--fmuted)}
+.find input::-webkit-search-cancel-button{display:none}
+.find button{border:0;background:none;color:var(--fmuted);font-size:15px;padding:8px;cursor:pointer}
+.board .none{text-align:center;color:var(--fmuted);margin:14px 0 4px}
+.game.hit{background:rgba(207,162,74,.12)}
 .foot-note{color:var(--muted);font-size:14px;max-width:62ch;margin:26px auto 0;text-align:center}
 footer{border-top:1px solid var(--line);margin-top:36px;padding:20px max(16px,env(safe-area-inset-right)) calc(20px + env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));color:var(--muted);font-size:13.5px}
 footer .in{max-width:1080px;margin:0 auto;display:flex;gap:14px;flex-wrap:wrap;align-items:center;justify-content:space-between}
@@ -157,30 +165,32 @@ footer .links{display:flex;gap:16px;flex-wrap:wrap;align-items:center}
   <section class="board" id="oyunlar" aria-label="Oyunlar">
     <h2>Oyun listesi</h2>
     <p class="sub">Oyunun adına dokun, masa kurulsun.</p>
+    <div class="find"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><circle cx="7.5" cy="7.5" r="5.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="m12 12 4.5 4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><input id="q" type="search" placeholder="Oyun ara: okey, tavla, zar…" aria-label="Oyun ara" autocomplete="off" enterkeyhint="go"><button type="button" id="qx" aria-label="Aramayı temizle" hidden>✕</button></div>
+    <p class="none" id="qnone" hidden>Bu adla bir oyun bulamadık. Başka bir kelime dene ya da aramayı temizle.</p>
     <div class="cols">
       <div>
         <div class="grp"><h3>Kâğıt oyunları</h3>
-          <a class="game" href="durak/" data-online>
+          <a class="game" href="durak/" data-k="durak дурак fool kart podkidnoy perevodnoy atmalı aktarmalı rus" data-online>
             <span class="pic"><span class="cd"><i>6</i><i class="r">♥&#xFE0E;</i><i>A</i></span></span>
             <span class="ln"><h3 class="nm">Durak</h3><span class="dots"></span><span class="ppl">2–6 kişi</span></span>
             <p class="dsc">Rusların efsane kart oyunu. Saldır, kozla kes, kesemezsen al; elinde kart kalan durak olur.<span class="flags"><span class="meta">Online</span><span class="badges"></span></span></p></a>
-          <a class="game" href="king/" data-online>
+          <a class="game" href="king/" data-k="king кинг rıfkı kız erkek koz kart" data-online>
             <span class="pic"><span class="cd"><i class="r">K</i><i class="r">♥&#xFE0E;</i><i>Q</i></span></span>
             <span class="ln"><h3 class="nm" lang="en">King</h3><span class="dots"></span><span class="ppl">4 kişi</span></span>
             <p class="dsc">Cezalardan kaç, kozda el topla. El almaz, kız almaz, rıfkı ve diğerleri.<span class="flags"><span class="meta">Online</span><span class="badges"></span></span></p></a>
-          <a class="game" href="batak/" data-online>
+          <a class="game" href="batak/" data-k="batak батак ihale koz spades kart eşli" data-online>
             <span class="pic"><span class="cd"><i>A</i><i>♠&#xFE0E;</i><i class="r">K</i></span></span>
             <span class="ln"><h3 class="nm">Batak</h3><span class="dots"></span><span class="ppl">4 kişi</span></span>
             <p class="dsc">İhale ver, kozu seç, söylediğin kadar el al. Tekli, eşli ve koz maça.<span class="flags"><span class="meta">Online</span><span class="badges"></span></span></p></a>
-          <a class="game" href="bin/" data-online>
+          <a class="game" href="bin/" data-k="1000 bin тысяча thousand rus marriage evlilik prikup kart" data-online>
             <span class="pic"><span class="cd"><i class="r">K</i><i class="r">♥&#xFE0E;</i><i class="r">Q</i></span></span>
             <span class="ln"><h3 class="nm">1000</h3><span class="dots"></span><span class="ppl">3 kişi</span></span>
             <p class="dsc">Üç kişilik Rus kart oyunu. İhaleyi al, evlilik ilan et, 1000'e ilk sen ulaş.<span class="flags"><span class="meta">Online</span><span class="badges"></span></span></p></a>
-          <a class="game" href="pisti/" data-online>
+          <a class="game" href="pisti/" data-k="pişti pisti пишти vale kart" data-online>
             <span class="pic"><span class="cd"><i>♠&#xFE0E;</i><i class="r">♦&#xFE0E;</i><i>♣&#xFE0E;</i></span></span>
             <span class="ln"><h3 class="nm">Pişti</h3><span class="dots"></span><span class="ppl">2 kişi</span></span>
             <p class="dsc">Valeyle topla, tek karta pişti yap, 51 ya da 101 puana oyna.<span class="flags"><span class="meta">Online</span><span class="badges"></span></span></p></a>
-          <a class="game" href="pisti4/" data-online>
+          <a class="game" href="pisti4/" data-k="eşli pişti esli pisti пишти парами partner takım kart" data-online>
             <span class="pic"><span class="cd"><i>J</i><i class="r">♥&#xFE0E;</i><i>J</i></span></span>
             <span class="ln"><h3 class="nm">Eşli Pişti</h3><span class="dots"></span><span class="ppl">4 kişi</span></span>
             <p class="dsc">Karşındaki ortağın; birlikte toplayın, pişti yapın, takım olarak kazanın.<span class="flags"><span class="meta">Online</span><span class="badges"></span></span></p></a>
@@ -188,41 +198,41 @@ footer .links{display:flex;gap:16px;flex-wrap:wrap;align-items:center}
       </div>
       <div>
         <div class="grp"><h3>Taş oyunları</h3>
-          <a class="game" href="okey101/?klasik=1" data-online>
+          <a class="game" href="okey101/?klasik=1" data-k="okey окей rummikub taş istaka çift" data-online>
             <span class="pic"><span class="tl"><i>5</i><i>6</i><i>7</i></span></span>
             <span class="ln"><h3 class="nm">Okey</h3><span class="dots"></span><span class="ppl">4 kişi</span></span>
             <p class="dsc">Per ve seri kur ya da 7 çift diz, 15. taşı ortaya at, bit. Eşli de oynanır.<span class="flags"><span class="meta">Online</span><span class="badges"></span></span></p></a>
-          <a class="game" href="okey101/" data-online>
+          <a class="game" href="okey101/" data-k="101 okey окей 101 taş istaka katlamalı" data-online>
             <span class="pic"><span class="tl"><i class="k">10</i><i class="k">11</i><i class="k">12</i></span></span>
             <span class="ln"><h3 class="nm">101 Okey</h3><span class="dots"></span><span class="ppl">4 kişi</span></span>
             <p class="dsc">101 ya da 5 çiftle aç, masaya işle, rakiplerden önce bitir. Katlamalı ve eşli seçenekleri.<span class="flags"><span class="meta">Online</span><span class="badges"></span></span></p></a>
         </div>
         <div class="grp"><h3>Zar ve tahta</h3>
-          <a class="game" href="tavla/" data-online>
+          <a class="game" href="tavla/" data-k="tavla нарды backgammon zar mars kapı" data-online>
             <span class="pic"><svg class="bd" width="44" height="44" viewBox="0 0 44 44" aria-hidden="true"><rect width="44" height="44" rx="3" fill="#e6d2ac"/><rect x="20.5" width="3" height="44" fill="#5b3d22"/><g fill="#8c2f24"><path d="M1 0h6l-3 17zM13 0h6l-3 17zM25 38h6l-3-14zM37 44h6l-3-17z"/></g><g fill="#1f4d3a"><path d="M7 0h6l-3 15zM31 0h6l-3 15zM1 44h6l-3-17zM13 44h6l-3-15z"/></g><circle cx="10" cy="38" r="3.4" fill="#2a211b"/><circle cx="34" cy="7" r="3.4" fill="#f7efe0" stroke="#a48b63"/></svg></span>
             <span class="ln"><h3 class="nm">Tavla</h3><span class="dots"></span><span class="ppl">2 kişi</span></span>
             <p class="dsc">Zar at, kapı kur, rakibini kır, pullarını ilk sen topla. Mars 2 puan.<span class="flags"><span class="meta">Online</span><span class="badges"></span></span></p></a>
-          <a class="game" href="kizma/" data-online>
+          <a class="game" href="kizma/" data-k="kızma birader ludo не сердись zar piyon boks kavgacı" data-online>
             <span class="pic"><span class="dc"><i style="background:#d64541"></i><i style="background:#2f80d1"></i><i style="background:#2e9e5b"></i></span></span>
             <span class="ln"><h3 class="nm">Kızma Birader</h3><span class="dots"></span><span class="ppl">2–4 kişi</span></span>
             <p class="dsc">Zar at, piyonlarını eve götür, rakibini kır. 4 kişide eşli de oynanır.<span class="flags"><span class="meta">Online</span><span class="badges"></span></span></p></a>
-          <a class="game" href="dama/" data-online>
+          <a class="game" href="dama/" data-k="dama шашки checkers draughts türk rus" data-online>
             <span class="pic"><span class="bd dm"></span></span>
             <span class="ln"><h3 class="nm">Dama</h3><span class="dots"></span><span class="ppl">2 kişi</span></span>
             <p class="dsc">Türk daması ya da Rus daması. Taşını ilerlet, rakibin taşlarını al, dama ol.<span class="flags"><span class="meta">Online</span><span class="badges"></span></span></p></a>
-          <a class="game" href="satranc/" data-online>
+          <a class="game" href="satranc/" data-k="satranç шахматы chess kavgacı at fil vezir" data-online>
             <span class="pic"><span class="bd ch"></span></span>
             <span class="ln"><h3 class="nm">Kavgacı Satranç</h3><span class="dots"></span><span class="ppl">2 kişi</span></span>
             <p class="dsc">Taşlar yürür, çifte atar, yumruk sallar. Sesli, animasyonlu satranç.<span class="flags"><span class="meta">Online</span><span class="badges"></span></span></p></a>
         </div>
         <div class="grp"><h3>Kalabalık masa</h3>
-          <a class="game" href="tombala/" data-online>
+          <a class="game" href="tombala/" data-k="tombala лото bingo lotto tombola çinko torba sayı" data-online>
             <span class="pic"><span class="tball">47</span></span>
             <span class="ln"><h3 class="nm">Tombala</h3><span class="dots"></span><span class="ppl">2–6 kişi</span></span>
             <p class="dsc">Torbadan sayılar çekilir, kartını işaretle. Çinko, ikinci çinko ve tombala. Coin yok, sadece puan.<span class="flags"><span class="meta">Online</span><span class="badges"></span></span></p></a>
         </div>
         <div class="grp"><h3>Tek başına</h3>
-          <a class="game" href="kahvehane/">
+          <a class="game" href="kahvehane/" data-k="kahvehane okey rogue tek kişilik solo tılsım">
             <span class="pic"><span class="tl"><i class="r">7</i><i class="r">8</i><i class="r">9</i></span></span>
             <span class="ln"><h3 class="nm">Kahvehane Okey</h3><span class="dots"></span><span class="ppl">1 kişi</span></span>
             <p class="dsc">Okey taşlarıyla rogue-lite. Tılsım topla, dört kahvehanenin patronunu yen.<span class="flags"><span class="meta"></span><span class="badges"></span></span></p></a>
@@ -251,6 +261,19 @@ document.getElementById('qBtn').onclick=()=>{const o=document.createElement('div
   o.innerHTML='<div class="s" role="dialog" aria-label="Hızlı oyun"><h3>Hızlı oyun</h3><p>Hangi oyunu oynamak istersin? Bekleyen bir masa varsa oturtuyoruz, yoksa sana masa açıyoruz.</p><div class="g">'+L.map(a=>`<button data-q="${a.getAttribute('href')}">${a.querySelector('.nm').textContent}</button>`).join('')+'</div><button class="x">Vazgeç</button></div>';
   document.body.appendChild(o);o.onclick=e=>{if(e.target===o||e.target.classList.contains('x'))o.remove()};o.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>{const h=b.dataset.q;location.href=h+(h.includes('?')?'&':'?')+'hizli=1'})};
 document.getElementById('fBtn').onclick=()=>{if(window.KH)KH.openProfile()};
+/* arama: ad, açıklama, ve farklı dillerdeki adlar (ludo, нарды, bingo…) içinde arar; Türkçe harfler fark etmez */
+(()=>{const q=document.getElementById('q'),x=document.getElementById('qx'),none=document.getElementById('qnone');
+  const norm=t=>String(t||'').toLocaleLowerCase('tr').replace(/[ıi̇]/g,'i').replace(/ş/g,'s').replace(/ç/g,'c').replace(/ğ/g,'g').replace(/ö/g,'o').replace(/ü/g,'u').replace(/â/g,'a').replace(/ё/g,'е').replace(/[^a-z0-9а-я ]+/g,' ');
+  const games=[...document.querySelectorAll('#oyunlar a.game')];
+  const run=()=>{const words=norm(q.value).split(/\s+/).filter(Boolean);let first=null,n=0;
+    for(const a of games){const hay=norm(a.textContent+' '+(a.dataset.k||''));const ok=words.every(w=>hay.includes(w));a.hidden=!ok;a.classList.toggle('hit',ok&&words.length>0);if(ok){n++;first=first||a}}
+    document.querySelectorAll('#oyunlar .grp').forEach(g=>g.hidden=![...g.querySelectorAll('a.game')].some(a=>!a.hidden));
+    none.hidden=n>0;x.hidden=!q.value;run.first=first};
+  q.addEventListener('input',run);
+  q.addEventListener('keydown',e=>{if(e.key==='Enter'&&run.first){e.preventDefault();location.href=run.first.getAttribute('href')}if(e.key==='Escape'){q.value='';run();q.blur()}});
+  x.onclick=()=>{q.value='';run();q.focus()};
+  document.addEventListener('keydown',e=>{if(e.key==='/'&&!/input|textarea/i.test(document.activeElement.tagName)){e.preventDefault();q.focus();q.scrollIntoView({block:'center',behavior:'smooth'})}});
+})();
 /* yarım kalan oyunlar: üstte fiş olarak, listede de işaret */
 (()=>{const S={'king/':'king_save','batak/':'batak_save','bin/':'bin_save','kizma/':'kb_save','tavla/':'tv_save','dama/':'dm_save','pisti4/':'pisti4_save'};const box=document.getElementById('resume');
   for(const href in S){let v=null;try{v=localStorage.getItem(S[href])}catch(e){}if(!v||v==='null')continue;
