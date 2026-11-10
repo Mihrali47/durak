@@ -45,6 +45,13 @@ header h1{flex:1;margin:0;text-align:center;font:700 30px/1 var(--sign);letter-s
 .ball.pop{animation:pop .55s cubic-bezier(.2,.9,.3,1.3)}
 @keyframes pop{0%{transform:translateY(-40px) scale(.4) rotate(-90deg);opacity:0}60%{opacity:1}100%{transform:none}}
 .side{min-width:0;display:flex;flex-direction:column;gap:8px}
+.bw{display:flex;flex-direction:column;align-items:center;gap:4px}
+.nick{font:500 13px/1.1 var(--body);color:#ffdba0;text-align:center;max-width:110px;min-height:14px}
+.cell.n.one{box-shadow:inset 0 0 0 3px #f0c24a,0 0 14px rgba(240,194,74,.8);animation:onep .8s ease-in-out infinite}
+@keyframes onep{50%{transform:scale(1.08)}}
+.oneb{color:#ffd27a}
+.rows.kose .grid:first-child .cell.n:first-of-type,.rows.kose .grid:first-child .cell.n:last-of-type,.rows.kose .grid:last-child .cell.n:first-of-type,.rows.kose .grid:last-child .cell.n:last-of-type{outline:2px dashed rgba(42,29,16,.55);outline-offset:-4px}
+.sheet .hint{font-size:12.5px;color:#6e604b;margin:4px 0 0}
 .recent{display:flex;gap:5px;align-items:center;flex-wrap:nowrap;overflow:hidden;min-height:30px}
 .recent i{font-style:normal;flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font:700 17px/1 var(--sign);color:#5a3b1a;background:#e8dcbc;opacity:.92}
 .recent i:nth-child(n+3){opacity:.7}.recent i:nth-child(n+5){opacity:.5}
@@ -142,7 +149,7 @@ input.name{width:100%;border:1px solid #d3c5a5;border-radius:8px;padding:11px;fo
   <header><button class="hb" id="bMenu">Menü</button><h1>Tombala</h1><button class="hb" id="bRules">Kurallar</button></header>
   <div class="players" id="players"></div>
   <section class="table" aria-live="polite">
-    <div class="ball empty" id="ball"><b>Torba<br>hazır</b></div>
+    <div class="bw"><div class="ball empty" id="ball"><b>Torba<br>hazır</b></div><div class="nick" id="nick"></div></div>
     <div class="side">
       <div class="recent" id="recent"></div>
       <div class="prizes" id="prizes"></div>
@@ -152,6 +159,8 @@ input.name{width:100%;border:1px solid #d3c5a5;border-radius:8px;padding:11px;fo
   <div class="bar">
     <button class="btn" id="bAll">Çekilenler</button>
     <div class="st" id="st"></div>
+    <button class="btn" id="bSwap" hidden>Kart değiştir</button>
+    <button class="btn tea" id="bOpen" hidden>Torbayı aç</button>
     <button class="btn tea" id="bPause" hidden>Duraklat</button>
     <button class="btn" id="bChat" hidden>💬</button>
   </div>
@@ -164,9 +173,16 @@ const ST={get(k,d){try{const v=localStorage.getItem('tb_'+k);return v==null?d:JS
 const UID=ST.get('uid',null)||(()=>{const u=Math.random().toString(36).slice(2,10);ST.set('uid',u);return u})();
 const SPD=+(new URLSearchParams(location.search).get('spd')||1);
 const BOTN=['Nuri','Rıza','Hamdi','Cemil','Kâzım'];
-const KN={c1:'1. Çinko',c2:'2. Çinko',tb:'Tombala'};
+const KN={c1:'1. Çinko',c2:'2. Çinko',tb:'Tombala',ks:'Köşeler'};
+const KNL={ru:{c1:'Первая линия',c2:'Вторая линия',tb:'Лото',ks:'Углы'},en:{c1:'First line',c2:'Second line',tb:'Full house',ks:'Four corners'}};
+/* sayıların lakapları: Rusça olanlar Rus lotosunun geleneksel adları, İngilizceler bingo çağrıları, Türkçeler kahvehane şakası */
+const NICK={tr:{1:'tek başına',11:'iki direk',22:'iki ördek',45:'yarı yol',50:'yarım yüz',77:'iki balta',88:'iki gözlüklü',90:'dede'},
+  ru:{1:'кол',2:'лебедь',3:'сообразим на троих',4:'стул',7:'кочерга',8:'матрёшка',11:'барабанные палочки',12:'дюжина',13:'чёртова дюжина',22:'утята',33:'кудри',44:'стульчики',48:'половину просим',50:'полста',55:'перчатки',66:'валенки',69:'туда-сюда',77:'топорики',88:'бабушка',89:'дедушкин сосед',90:'дедушка'},
+  en:{1:"Kelly's eye",11:'legs eleven',22:'two little ducks',45:'halfway there',66:'clickety click',88:'two fat ladies',90:'top of the shop'}};
+const nick=n=>(NICK[window.LANG||'tr']||NICK.tr)[n]||'';
 const IV={yavas:6000,normal:4000,hizli:2500};
-let nPlayers=ST.get('n',4),perCards=ST.get('per',3),speed=ST.get('spd','normal'),autoMark=ST.get('auto',false),voice=ST.get('voice',true);
+const TH={klasik:'1. çinko, 2. çinko ve tombala.',hizli:'Sadece 1. çinko ve tombala; daha çabuk biter.',kose:'Önce kartın dört köşesini kapatan kazanır, sonra tombala.'};
+let gType=ST.get('type','klasik'),nPlayers=ST.get('n',4),perCards=ST.get('per',3),speed=ST.get('spd','normal'),autoMark=ST.get('auto',false),voice=ST.get('voice',true);
 let G=null,names=[],me=0,mode='off',human=[],ver=0,paused=false,drawT=null,shownDid=0,shownWins=0,marks=[],tot=ST.get('tot',{}),roundNo=0;
 const myName=()=>(window.KH&&KH.name())||ST.get('name','')||'Sen';
 const pn=p=>p===me&&mode==='off'?'Sen':names[p];
@@ -174,7 +190,7 @@ const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',
 function toast(h,ms=2200){const t=$('toast');t.innerHTML=h;t.hidden=false;t.style.opacity=1;clearTimeout(toast.t);toast.t=setTimeout(()=>{t.style.opacity=0;setTimeout(()=>t.hidden=true,300)},ms)}
 
 /* sesli okuma: sayılar seçilen dilde okunur */
-function say(n){if(!voice||!window.speechSynthesis)return;try{const L=window.LANG||'tr';const u=new SpeechSynthesisUtterance(String(n));u.lang=L==='ru'?'ru-RU':L==='en'?'en-GB':'tr-TR';u.rate=1;speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){}}
+function say(n){if(!voice||!window.speechSynthesis)return;try{const L=window.LANG||'tr';const u=new SpeechSynthesisUtterance(String(n)+(nick(n)?', '+nick(n):''));u.lang=L==='ru'?'ru-RU':L==='en'?'en-GB':'tr-TR';u.rate=1;speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){}}
 function sayText(t){if(!voice||!window.speechSynthesis)return;try{const L=window.LANG||'tr';const u=new SpeechSynthesisUtterance(t);u.lang=L==='ru'?'ru-RU':L==='en'?'en-GB':'tr-TR';speechSynthesis.speak(u)}catch(e){}}
 
 /* ---------- çizim ---------- */
@@ -193,24 +209,29 @@ function render(){if(!G)return;const set=drawnSet();
     return `<button class="pl${p===me?' me':''}${G.phase==='draw'&&m<=1?' hot':''}" data-p="${p}"><b>${esc(pn(p))}</b><span>${G.phase==='over'?`${sc} puan`:m===0?'Tamam!':`${m} eksik`}${sc&&G.phase!=='over'?` · ${sc} puan`:''}</span></button>`}).join('');
   $('players').querySelectorAll('.pl').forEach(b=>b.onclick=()=>showCards(+b.dataset.p));
   // top
-  const ball=$('ball');if(G.last){ball.classList.remove('empty');ball.innerHTML=`<b>${G.last}</b>`}else{ball.classList.add('empty');ball.innerHTML='<b>Torba<br>hazır</b>'}
+  const ball=$('ball');if(G.last){ball.classList.remove('empty');ball.innerHTML=`<b>${G.last}</b>`}else{ball.classList.add('empty');ball.innerHTML=G.ready===false?'<b>Kartına<br>bak</b>':'<b>Torba<br>hazır</b>'}
+  $('nick').textContent=G.last&&nick(G.last)?nick(G.last):'';
   const rec=G.drawn.slice(-6,-1).reverse();const left=typeof G.bag==='number'?G.bag:G.bag.length;
   $('recent').innerHTML=rec.map(n=>`<i>${n}</i>`).join('')+`<small>Torbada ${left}</small>`;
   // ödüller
-  $('prizes').innerHTML=['c1','c2','tb'].map(k=>{const w=G.wins.find(x=>x.k===k);const mine=w&&w.ps.includes(me);
+  const ord=TB.ORDER[G.type||'klasik'];$('prizes').style.gridTemplateColumns=`repeat(${ord.length},minmax(0,1fr))`;
+  $('prizes').innerHTML=ord.map(k=>{const w=G.wins.find(x=>x.k===k);const mine=w&&w.ps.includes(me);
     return `<div class="prize${w?' done':''}${mine?' mine':''}${G.next===k?' next':''}"><b>${KN[k]}</b><span>${w?w.ps.map(p=>esc(pn(p))).join(', '):G.next===k?'Sırada':'Bekliyor'}</span></div>`}).join('');
   // kartlarım
   const my=G.cards[me]||[];
   if(!marks.length||marks.length!==my.length)marks=my.map(()=>new Set());
   if(autoMark)my.forEach((c,ci)=>c.flat().forEach(n=>{if(n&&set.has(n))marks[ci].add(n)}));
   const winCards=new Set(G.wins.flatMap(w=>w.cards.filter(x=>x.p===me).map(x=>x.ci)));
+  const one=G.phase==='draw'?TB.oneAway(G,me):[];const oneN=new Set(one.map(x=>x.ci+':'+x.n));
+  const oneKey=one.map(x=>x.n).sort().join();if(oneKey&&oneKey!==render.oneKey){KSfx.play('turn')}render.oneKey=oneKey;
   $('cards').innerHTML=my.map((c,ci)=>{const left=c.flat().filter(n=>n&&!set.has(n)).length;
     return `<div class="card c${ci%3}${winCards.has(ci)?' win':''}"><div class="hd">${my.length>1?`${ci+1}. kart`:'Kartın'}<span>${left?`${left} sayı kaldı`:'Tombala!'}</span></div>`+
-      '<div class="rows">'+c.map(rw=>`<div class="grid row${rw.every(n=>!n||set.has(n))?' done':''}">${rw.map(n=>n?`<button class="cell n${set.has(n)?' out':''}${marks[ci].has(n)?' mk':''}" data-c="${ci}" data-n="${n}" aria-label="${n}">${n}</button>`:'<span class="cell"></span>').join('')}</div>`).join('')+'</div></div>'}).join('');
+      '<div class="rows'+(G.type==='kose'&&G.next==='ks'?' kose':'')+'">'+c.map(rw=>`<div class="grid row${rw.every(n=>!n||set.has(n))?' done':''}">${rw.map(n=>n?`<button class="cell n${set.has(n)?' out':''}${marks[ci].has(n)?' mk':''}${oneN.has(ci+':'+n)?' one':''}" data-c="${ci}" data-n="${n}" aria-label="${n}">${n}</button>`:'<span class="cell"></span>').join('')}</div>`).join('')+'</div></div>'}).join('');
   // alt çubuk
-  const host=mode!=='guest';$('bPause').hidden=!(host&&G.phase==='draw');$('bPause').textContent=paused?'Devam et':'Duraklat';
+  const host=mode!=='guest',pre=G.ready===false;$('bPause').hidden=!(host&&G.phase==='draw'&&!pre);$('bPause').textContent=paused?'Devam et':'Duraklat';
+  $('bOpen').hidden=!(host&&pre);$('bSwap').hidden=!(mode==='off'&&pre);$('bAll').hidden=pre&&host;
   fitCards();
-  $('st').textContent=G.phase==='over'?'Oyun bitti':paused?'Durdu':G.drawn.length?`${G.drawn.length}. top`:'Başlıyor…'}
+  $('st').innerHTML=G.phase==='over'?'Oyun bitti':pre?(host?'Kartlarını beğenmediysen değiştir':'Ev sahibi torbayı açacak'):one.length?`<b class="oneb">Bir sayı kaldı: ${[...new Set(one.map(x=>x.n))].join(', ')}</b>`:paused?'Durdu':G.drawn.length?`${G.drawn.length}. top`:'Başlıyor…'}
 $('cards').addEventListener('click',e=>{const c=e.target.closest('.cell.n');if(!c||!G)return;const n=+c.dataset.n,ci=+c.dataset.c;
   if(!drawnSet().has(n)){toast('Bu sayı daha çıkmadı');return}
   if(marks[ci].has(n))marks[ci].delete(n);else{marks[ci].add(n);KSfx.play('tap')}
@@ -222,14 +243,21 @@ function sync(){if(!G)return;
   if(G.did!==shownDid){const fresh=G.did===shownDid+1;shownDid=G.did;if(fresh&&G.last){const b=$('ball');b.classList.remove('pop');void b.offsetWidth;b.classList.add('pop');KSfx.play('card');say(G.last)}}
   render();
   while(shownWins<G.wins.length){const w=G.wins[shownWins++];const mine=w.ps.includes(me);
-    shout(KN[w.k]+'!',w.ps.map(p=>esc(pn(p))).join(', ')+(w.ps.length>1?' · paylaştı':''),mine);setTimeout(()=>sayText(({ru:{c1:'Первая линия',c2:'Вторая линия',tb:'Лото'},en:{c1:'First line',c2:'Second line',tb:'Full house'}}[window.LANG]||KN)[w.k]),900)}
+    shout((KNL[window.LANG]||KN)[w.k]+'!',w.ps.map(p=>esc(pn(p))).join(', ')+(w.ps.length>1?' · paylaştı':''),mine);setTimeout(()=>sayText((KNL[window.LANG]||KN)[w.k]),900)}
   if(G.phase==='over'){clearTimeout(drawT);if(!sync.overShown){sync.overShown=true;setTimeout(showOver,2600)}return}
   schedule()}
 function schedule(){clearTimeout(drawT);if(!G||mode==='guest'||paused||G.phase!=='draw')return;
-  drawT=setTimeout(()=>{if(!G||paused||G.phase!=='draw')return;TB.draw(G);ver++;bcastState();sync()},(G.drawn.length?IV[speed]:1200)/SPD)}
+  /* başlamadan önce kartlara bakma süresi: düğmeye basılmazsa 20 sn sonra torba kendiliğinden açılır */
+  if(G.ready===false){drawT=setTimeout(openBag,20000/SPD);return}
+  drawT=setTimeout(()=>{if(!G||paused||G.phase!=='draw')return;TB.draw(G);ver++;bcastState();sync()},(G.drawn.length?IV[speed]:900)/SPD)}
+function openBag(){if(!G||G.ready!==false||mode==='guest')return;G.ready=true;ver++;bcastState();KSfx.play('dice');sync()}
+$('bOpen').onclick=openBag;
+/* kart değiştir: sadece bilgisayara karşı, torba açılmadan */
+$('bSwap').onclick=()=>{if(!G||mode!=='off'||G.ready!==false)return;const r=Math.random,used=new Set(G.seats.flatMap(p=>G.cards[p].map(c=>c.flat().join()))),k=G.cards[me].length;
+  G.cards[me]=[...Array(k)].map(()=>{let c;do{c=TB.makeCard(r)}while(used.has(c.flat().join()));used.add(c.flat().join());return c});marks=[];KSfx.play('card');render()};
 $('bPause').onclick=()=>{paused=!paused;ver++;bcastState();render();schedule();if(paused)toast('Torba durdu')};
 function newGame(){clearTimeout(drawT);paused=false;
-  if(mode==='off'){me=0;const seats=[...Array(Math.max(2,Math.min(6,nPlayers))).keys()];G=TB.newGame({seats,cards:perCards});names=[myName(),...BOTN];human=seats.map(p=>p===0)}
+  if(mode==='off'){me=0;const seats=[...Array(Math.max(2,Math.min(6,nPlayers))).keys()];G=TB.newGame({seats,cards:perCards,type:gType});G.ready=false;names=[myName(),...BOTN];human=seats.map(p=>p===0)}
   marks=[];shownDid=G.did;shownWins=0;sync.overShown=false;hideOv();ver++;bcastState();sync()}
 
 /* ---------- paneller ---------- */
@@ -243,7 +271,7 @@ function showOver(){if(!G)return;
   const ord=G.seats.slice().sort((a,b)=>(G.score[b]||0)-(G.score[a]||0));
   const tb=G.wins.find(w=>w.k==='tb');
   ov('over',`<h2>${tb?(tb.ps.includes(me)?'Tombala senin!':`Tombala: ${esc(tb.ps.map(pn).join(', '))}`):'Torba bitti'}</h2>
-    <p>${G.drawn.length} top çekildi. Puanlar: 1. çinko 1, 2. çinko 2, tombala 4.</p>
+    <p>${G.drawn.length} top çekildi. Puanlar: 1. çinko 1, 2. çinko 2, köşeler 2, tombala 4.</p>
     <ul class="rank">${ord.map(p=>`<li><b style="flex:1">${esc(pn(p))}</b><span>${G.wins.filter(w=>w.ps.includes(p)).map(w=>KN[w.k]).join(', ')||'—'}</span><b>${G.score[p]||0}</b></li>`).join('')}</ul>
     <div class="row2">${mode==='guest'?'<p>Ev sahibi yeni oyunu başlatabilir.</p>':`<button class="sb" id="oMenu">Menü</button><button class="sb pri" id="oNew">${mode==='host'?'Yeni el':'Yeni oyun'}</button>`}</div>`);
   if(mode!=='guest'){$('oNew').onclick=()=>{if(mode==='host')startOnline(true);else newGame()};$('oMenu').onclick=showMenu}}
@@ -252,6 +280,7 @@ function showRules(){ov('rules',`<h2>Tombala nasıl oynanır?</h2>
   <p>Çekilen sayı kartındaysa üstüne dokunup pulunu koy. Kartında yanıp sönen sayılar çıkmış ama henüz işaretlemediğin sayılardır. İstersen menüden otomatik işaretlemeyi açabilirsin.</p>
   <p><b>1. Çinko:</b> bir kartta bir sırayı ilk tamamlayan. <b>2. Çinko:</b> aynı kartta iki sırayı ilk tamamlayan. <b>Tombala:</b> kartın 15 sayısını ilk tamamlayan; oyun biter.</p>
   <p>Aynı topla birden fazla kişi tamamlarsa ödülü paylaşırlar. Ödüller kendiliğinden verilir; işaretlemeyi unutsan da kaybetmezsin. Bu oyunda coin yok, sadece puan: 1. çinko 1, 2. çinko 2, tombala 4.</p>
+  <p><b>Oyun türleri:</b> <b>Klasik</b> 1. çinko, 2. çinko, tombala. <b>Kısa</b> sadece 1. çinko ve tombala. <b>Köşeler</b> önce kartın dört köşesi (üst ve alt sıranın ilk ve son sayısı), sonra tombala. Torba açılmadan kartlarını beğenmezsen değiştirebilirsin. Tek sayın kalınca o sayı sarı yanar.</p>
   <div class="row2"><button class="sb pri" id="rOk">Tamam</button></div>`);$('rOk').onclick=()=>G?hideOv():showMenu()}
 function showAll(){if(!G)return;const set=drawnSet();
   ov('all',`<h2>Çekilen sayılar</h2><p>${G.drawn.length} top çekildi, torbada ${typeof G.bag==='number'?G.bag:G.bag.length} kaldı.</p>
@@ -265,6 +294,7 @@ function seg(id,items,cur){return `<div class="seg" id="${id}">${items.map(([v,l
 function bindSeg(s,id,f){s.querySelectorAll(`#${id} button`).forEach(b=>b.onclick=()=>{f(b.dataset.v);s.querySelectorAll(`#${id} button`).forEach(x=>x.classList.toggle('on',x===b))})}
 function showMenu(){const s=ov('menu',`<h2>Tombala</h2><p>Torbadan sayılar çekilir, kartını ilk dolduran kazanır. Bilgisayara karşı ya da linkle arkadaşlarınla. Bu oyunda coin yok.</p>
     <p class="lbl">Masada kaç kişi?</p>${seg('mN',[[2,'2'],[3,'3'],[4,'4'],[5,'5'],[6,'6']],nPlayers)}
+    <p class="lbl">Oyun türü</p>${seg('mT',[['klasik','Klasik'],['hizli','Kısa'],['kose','Köşeler']],gType)}<p class="hint" id="mTh">${TH[gType]}</p>
     <p class="lbl">Kişi başı kart</p>${seg('mC',[[1,'1 kart'],[2,'2 kart'],[3,'3 kart']],perCards)}
     <p class="lbl">Torba hızı</p>${seg('mS',[['yavas','Yavaş'],['normal','Normal'],['hizli','Hızlı']],speed)}
     <p class="lbl">İşaretleme</p>${seg('mA',[[0,'Kendim'],[1,'Otomatik']],autoMark?1:0)}
@@ -279,8 +309,9 @@ function showMenu(){const s=ov('menu',`<h2>Tombala</h2><p>Torbadan sayılar çek
       <a class="sb" href="../">Salona dön</a></div>
     <p style="font-size:12.5px;margin-top:10px">Toplam puanın: ${tot._me||0}.</p>`);
   /* oyun sürerken kart ya da kişi sayısı değişirse yeni ayarla hemen yeni oyun başlar */
-  const changed=()=>G&&mode==='off'&&G.phase!=='over'&&(G.per!==perCards||G.seats.length!==nPlayers);
-  const relabel=()=>{const b=$('mBack');if(b)b.textContent=changed()?`${perCards} kartla yeni oyun başlat`:'Oyuna dön'};
+  const changed=()=>G&&mode==='off'&&G.phase!=='over'&&(G.per!==perCards||G.seats.length!==nPlayers||(G.type||'klasik')!==gType);
+  bindSeg(s,'mT',v=>{gType=v;ST.set('type',gType);$('mTh').textContent=TH[gType];relabel();if(mode==='host'&&started)toast('Oyun türü yeni elde geçerli olur')});
+  const relabel=()=>{const b=$('mBack');if(b)b.textContent=changed()?'Yeni ayarla yeni oyun başlat':'Oyuna dön'};
   bindSeg(s,'mN',v=>{nPlayers=+v;ST.set('n',nPlayers);relabel()});bindSeg(s,'mC',v=>{perCards=+v;ST.set('per',perCards);relabel();if(mode==='host'&&started)toast('Kart sayısı yeni elde geçerli olur')});
   bindSeg(s,'mS',v=>{speed=v;ST.set('spd',speed);if(mode!=='guest'){ver++;bcastState();schedule()}});
   bindSeg(s,'mA',v=>{autoMark=v==='1';ST.set('auto',autoMark);render()});bindSeg(s,'mV',v=>{voice=v==='1';ST.set('voice',voice)});
@@ -318,6 +349,7 @@ function showLobby(){if(mode==='host'&&started)return;if(mode!=='host'&&mode!=='
   const s=ov('lobby',`<h2>${mode==='host'?'Masa hazır':'Masaya oturdun'}</h2>
     ${mode==='host'?`<p>Bu linki arkadaşlarına gönder. Herkes gelince başlat.</p><div class="lnk"><input id="lk" readonly value="${linkFor(room||'')}"><button id="lkC">Kopyala</button></div>
       ${window.KH?'<div class="row2" style="margin-top:8px"><button class="sb" id="lkF">👥 Arkadaşlarını çağır</button></div>':''}
+      <p class="lbl">Oyun türü</p>${seg('lT',[['klasik','Klasik'],['hizli','Kısa'],['kose','Köşeler']],gType)}
       <p class="lbl">Kişi başı kart</p>${seg('lC',[[1,'1 kart'],[2,'2 kart'],[3,'3 kart']],perCards)}
       <p class="lbl">Az kişi olursa</p>${seg('lF',[[1,'Bilgisayar otursun (4 kişiye kadar)'],[0,'Sadece biz']],fill?1:0)}`:'<p>Ev sahibi oyunu başlatınca torba açılacak.</p>'}
     ${quick&&mode==='host'?'<p><b>Oyuncu aranıyor…</b> Masa dolunca ya da 2. kişi geldikten 20 saniye sonra oyun kendiliğinden başlar.</p>':''}
@@ -326,13 +358,14 @@ function showLobby(){if(mode==='host'&&started)return;if(mode!=='host'&&mode!=='
   if($('lkF'))$('lkF').onclick=()=>KH.invitePicker('Tombala',linkFor(room));
   if($('lkC'))$('lkC').onclick=async()=>{const v=$('lk').value;try{if(navigator.share&&matchMedia('(pointer:coarse)').matches){await navigator.share({title:'Tombala',url:v});return}await navigator.clipboard.writeText(v);toast('Link kopyalandı')}catch(e){toast('Linki seçip kopyala')}};
   if(s.querySelector('#lC'))bindSeg(s,'lC',v=>{perCards=+v;ST.set('per',perCards)});
+  if(s.querySelector('#lT'))bindSeg(s,'lT',v=>{gType=v;ST.set('type',gType)});
   if(s.querySelector('#lF'))bindSeg(s,'lF',v=>{fill=v==='1';ST.set('fill',fill)});
   $('lBack').onclick=()=>{leaveOnline();mode='off';G=null;history.replaceState(null,'',location.pathname);showMenu()};
   if($('lGo'))$('lGo').onclick=()=>startOnline()}
 function startOnline(again){if(window.KQuick)KQuick.update({started:true});quick=false;started=true;me=0;
   const n=lob.length,total=fill?Math.max(n,4):n;const seats=[...Array(total).keys()];seatOf={};names=[];human=seats.map(()=>false);
   lob.forEach((x,k)=>{seatOf[x.uid]=k;names[k]=x.name;human[k]=true});let b=0;seats.forEach(p=>{if(!names[p])names[p]=BOTN[b++]});
-  G=TB.newGame({seats,cards:perCards});$('bChat').hidden=false;newGame()}
+  G=TB.newGame({seats,cards:perCards,type:gType});G.ready=false;$('bChat').hidden=false;newGame()}
 function joinRoom(code){leaveOnline();mode='guest';room=code;started=false;G=null;
   if(myName()==='Sen'){ov('join',`<h2>Tombala masasına davet</h2><p>Adını yaz ve masaya otur.</p><input class="name" id="jName" maxlength="14" placeholder="Adını yaz"><div class="row2"><button class="sb pri" id="jGo">Masaya otur</button></div>`);
     $('jGo').onclick=()=>{ST.set('name',($('jName').value.trim()||'Misafir').slice(0,14));joinRoom(code)};return}
