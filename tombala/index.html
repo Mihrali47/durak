@@ -30,11 +30,29 @@ header h1{flex:1;margin:0;text-align:center;font:700 30px/1 var(--sign);letter-s
 /* oyuncular */
 .players{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
 .players::-webkit-scrollbar{display:none}
-.pl{flex:none;display:flex;flex-direction:column;align-items:flex-start;gap:1px;padding:5px 10px;border-radius:8px;background:rgba(0,0,0,.25);border:1.5px solid transparent;min-width:76px;text-align:left}
+.pl{flex:none;display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:5px 7px;border-radius:8px;background:rgba(0,0,0,.25);border:1.5px solid transparent;min-width:76px;text-align:left}
 .pl b{font-size:13.5px;font-weight:500;max-width:110px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pl span{font-size:11.5px;color:var(--muted)}
 .pl.hot{border-color:var(--tea)}.pl.hot span{color:#ff9d84}
-.pl.me{border-color:#5b4128}
+.pl.me{border-color:#5b4128;justify-content:center}
+.pl .tp{display:flex;flex-direction:column;gap:1px;align-items:flex-start}
+.pl:not(.me) .tp{flex-direction:row;gap:6px;align-items:baseline}
+.minis{display:flex;gap:4px}
+.mc{--cc:#e3b54a;background:var(--cc);border-radius:3px;padding:2px;display:grid;grid-template-columns:repeat(9,var(--mw,11px));gap:1px}
+.mc.c1{--cc:#c6473b}.mc.c2{--cc:#3f72b3}
+.mc i{font-style:normal;height:calc(var(--mw,11px) + 1px);border-radius:1px;background:#fbf6e8;color:#2a1d10;font:700 calc(var(--mw,11px)*.78)/calc(var(--mw,11px) + 1px) var(--sign);text-align:center}
+.mc i.e{background:rgba(255,250,236,.32)}
+.mc i.d{background:#c12e17;color:#fff3e6}
+.mc.win{outline:2px solid #fff2b8;outline-offset:1px}
+/* telefonda rakip kartları yana kayar; sağda devamı olduğunu gösteren gölge */
+.players{-webkit-mask-image:linear-gradient(90deg,#000 88%,transparent);mask-image:linear-gradient(90deg,#000 88%,transparent)}
+/* geniş ekran: solda torba ve senin kartların, sağda masadaki herkesin kartı */
+@media (min-width:900px) and (min-height:560px){
+  .app{max-width:1180px;display:grid;grid-template-columns:minmax(0,1fr) minmax(330px,42%);grid-template-rows:auto auto minmax(0,1fr) auto;column-gap:16px;row-gap:8px}
+  header{grid-column:1/3}
+  .table{grid-column:1;grid-row:2}.cards{grid-column:1;grid-row:3}.bar{grid-column:1;grid-row:4}
+  .players{grid-column:2;grid-row:2/5;flex-direction:column;flex-wrap:nowrap;overflow-y:auto;overflow-x:hidden;-webkit-mask-image:none;mask-image:none;align-content:flex-start}
+  .pl{width:100%}.pl.me{display:none}.minis{flex-wrap:wrap}.mc{--mw:14px}}
 
 /* torba ve çıkan top */
 .table{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:center;background:radial-gradient(130% 120% at 30% 0%,var(--felt),var(--felt2));border-radius:8px;padding:12px;box-shadow:0 0 0 4px #3a2616,0 0 0 5px #5b3d22}
@@ -205,8 +223,13 @@ function fitCards(){const box=$('cards'),n=box.querySelectorAll(':scope>.card').
 addEventListener('resize',()=>fitCards());try{new ResizeObserver(()=>fitCards()).observe($('cards'))}catch(e){}
 function render(){if(!G)return;const set=drawnSet();
   // oyuncular
-  $('players').innerHTML=G.seats.map(p=>{const m=TB.missing(G,p),sc=(G.score[p]||0);
-    return `<button class="pl${p===me?' me':''}${G.phase==='draw'&&m<=1?' hot':''}" data-p="${p}"><b>${esc(pn(p))}</b><span>${G.phase==='over'?`${sc} puan`:m===0?'Tamam!':`${m} eksik`}${sc&&G.phase!=='over'?` · ${sc} puan`:''}</span></button>`}).join('');
+  /* masa: herkesin kartları açık; rakiplerinki küçük, çıkan sayılar kırmızı. Dokununca büyür. */
+  const winBy=new Map();G.wins.forEach(w=>w.cards.forEach(x=>winBy.set(x.p+':'+x.ci,1)));
+  const order=[me,...G.seats.filter(p=>p!==me)];
+  $('players').innerHTML=order.map(p=>{const m=TB.missing(G,p),sc=(G.score[p]||0);
+    const stat=G.phase==='over'?`${sc} puan`:m===0?'Tamam!':`${m} eksik`;
+    const minis=p===me?'':`<div class="minis">${G.cards[p].map((c,ci)=>`<div class="mc c${ci%3}${winBy.has(p+':'+ci)?' win':''}">${c.flat().map(n=>n?`<i class="${set.has(n)?'d':''}">${n}</i>`:'<i class="e"></i>').join('')}</div>`).join('')}</div>`;
+    return `<button class="pl${p===me?' me':''}${G.phase==='draw'&&m<=1?' hot':''}" data-p="${p}"><span class="tp"><b>${esc(pn(p))}</b><span>${stat}${sc&&G.phase!=='over'?` · ${sc} puan`:''}</span></span>${minis}</button>`}).join('');
   $('players').querySelectorAll('.pl').forEach(b=>b.onclick=()=>showCards(+b.dataset.p));
   // top
   const ball=$('ball');if(G.last){ball.classList.remove('empty');ball.innerHTML=`<b>${G.last}</b>`}else{ball.classList.add('empty');ball.innerHTML=G.ready===false?'<b>Kartına<br>bak</b>':'<b>Torba<br>hazır</b>'}
