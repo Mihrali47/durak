@@ -166,7 +166,7 @@ const SPD=+(new URLSearchParams(location.search).get('spd')||1);
 const BOTN=['Nuri','Rıza','Hamdi','Cemil','Kâzım'];
 const KN={c1:'1. Çinko',c2:'2. Çinko',tb:'Tombala'};
 const IV={yavas:6000,normal:4000,hizli:2500};
-let nPlayers=ST.get('n',4),perCards=ST.get('per',2),speed=ST.get('spd','normal'),autoMark=ST.get('auto',false),voice=ST.get('voice',true);
+let nPlayers=ST.get('n',4),perCards=ST.get('per',3),speed=ST.get('spd','normal'),autoMark=ST.get('auto',false),voice=ST.get('voice',true);
 let G=null,names=[],me=0,mode='off',human=[],ver=0,paused=false,drawT=null,shownDid=0,shownWins=0,marks=[],tot=ST.get('tot',{}),roundNo=0;
 const myName=()=>(window.KH&&KH.name())||ST.get('name','')||'Sen';
 const pn=p=>p===me&&mode==='off'?'Sen':names[p];
@@ -278,10 +278,13 @@ function showMenu(){const s=ov('menu',`<h2>Tombala</h2><p>Torbadan sayılar çek
       <button class="sb" id="mSnd">${KSfx.on?'Ses: Açık':'Ses: Kapalı'}</button>
       <a class="sb" href="../">Salona dön</a></div>
     <p style="font-size:12.5px;margin-top:10px">Toplam puanın: ${tot._me||0}.</p>`);
-  bindSeg(s,'mN',v=>{nPlayers=+v;ST.set('n',nPlayers)});bindSeg(s,'mC',v=>{perCards=+v;ST.set('per',perCards)});
+  /* oyun sürerken kart ya da kişi sayısı değişirse yeni ayarla hemen yeni oyun başlar */
+  const changed=()=>G&&mode==='off'&&G.phase!=='over'&&(G.per!==perCards||G.seats.length!==nPlayers);
+  const relabel=()=>{const b=$('mBack');if(b)b.textContent=changed()?`${perCards} kartla yeni oyun başlat`:'Oyuna dön'};
+  bindSeg(s,'mN',v=>{nPlayers=+v;ST.set('n',nPlayers);relabel()});bindSeg(s,'mC',v=>{perCards=+v;ST.set('per',perCards);relabel();if(mode==='host'&&started)toast('Kart sayısı yeni elde geçerli olur')});
   bindSeg(s,'mS',v=>{speed=v;ST.set('spd',speed);if(mode!=='guest'){ver++;bcastState();schedule()}});
   bindSeg(s,'mA',v=>{autoMark=v==='1';ST.set('auto',autoMark);render()});bindSeg(s,'mV',v=>{voice=v==='1';ST.set('voice',voice)});
-  if($('mBack'))$('mBack').onclick=hideOv;
+  if($('mBack'))$('mBack').onclick=()=>{if(changed())newGame();else hideOv()};
   $('mBot').onclick=()=>{if(mode!=='off')leaveOnline();mode='off';newGame()};$('mQuick').onclick=quickPlay;$('mOn').onclick=showOnline;$('mRules').onclick=showRules;
   $('mSnd').onclick=e=>{e.target.textContent=KSfx.toggle()?'Ses: Açık':'Ses: Kapalı'}}
 $('bMenu').onclick=showMenu;$('bRules').onclick=showRules;

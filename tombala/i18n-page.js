@@ -41,7 +41,7 @@ const mk=j=>[
 [/^(\d+) sayı kaldı$/,(m,n)=>j?`${n} left`:`осталось ${n}`],[/^Başlat \((\d) kişi\)$/,(m,n)=>j?`Start (${n} players)`:`Начать (игроков: ${n})`],
 [/^(\d+) top çekildi, torbada (\d+) kaldı\.$/,(m,a,b)=>j?`${a} balls drawn, ${b} left in the bag.`:`Вытянуто ${a}, в мешке осталось ${b}.`],
 [/^(\d+) top çekildi\. Puanlar: 1\. çinko 1, 2\. çinko 2, tombala 4\.$/,(m,a)=>j?`${a} balls drawn. Points: 1st line 1, 2nd line 2, full house 4.`:`Вытянуто ${a}. Очки: 1-я линия 1, 2-я линия 2, лото 4.`],
-[/^Tombala: (.+)$/,(m,a)=>j?`Full house: ${a}`:`Лото: ${a}`],[/^Toplam puanın: (\d+)\.$/,(m,n)=>j?`Your total points: ${n}.`:`Ваши очки: ${n}.`],
+[/^(\d) kartla yeni oyun başlat$/,(m,n)=>j?`Start a new game with ${n} cards`:`Новая игра: ${n} карт.`],[/^Kart sayısı yeni elde geçerli olur$/,()=>j?'Card count applies from the next round':'Число карточек изменится в следующей партии'],[/^Tombala: (.+)$/,(m,a)=>j?`Full house: ${a}`:`Лото: ${a}`],[/^Toplam puanın: (\d+)\.$/,(m,n)=>j?`Your total points: ${n}.`:`Ваши очки: ${n}.`],
 [/^(1\. Çinko|2\. Çinko|Tombala)!$/,(m,k)=>(KN[k]?KN[k][j]:k)+'!'],[/^(.+) · paylaştı$/,(m,a)=>j?`${a} · shared`:`${a} · поровну`],
 ];
 window.I18N_RULES={ru:mk(0),en:mk(1)};
